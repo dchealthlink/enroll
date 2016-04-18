@@ -3,7 +3,6 @@ class DocumentsController < ApplicationController
   before_action :set_doc, only: [:change_doc_status, :change_person_aasm_state]
   respond_to :html, :js
 
-  include ActionController::Live
   include DocumentDownloads
 
   def download
