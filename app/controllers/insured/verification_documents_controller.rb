@@ -31,12 +31,12 @@ class Insured::VerificationDocumentsController < ApplicationController
 
   end
 
+  include DocumentDownloads
   def download
     document = get_document(params[:key])
+
     if document.present?
-      bucket = env_bucket_name('id-verification')
-      uri = "urn:openhbx:terms:v1:file_storage:s3:bucket:#{bucket}##{params[:key]}"
-      send_data Aws::S3Storage.find(uri), download_options(document)
+      download_with_options(env_bucket_name('id-verification'), params[:key], document.format, document.title)
     else
       flash[:error] = "File does not exist or you are not authorized to access it."
       redirect_to documents_index_insured_families_path
