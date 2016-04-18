@@ -3,12 +3,14 @@ class DocumentsController < ApplicationController
   before_action :set_person, only: [:enrollment_docs_state, :update_individual, :fed_hub_request, :enrollment_verification]
   respond_to :html, :js
 
+  include DocumentDownloads
+
   def download
     bucket = params[:bucket]
     key = params[:key]
-    uri = "urn:openhbx:terms:v1:file_storage:s3:bucket:#{bucket}##{key}"
-    send_data Aws::S3Storage.find(uri), get_options(params)
+    download_with_options(bucket, key)
   end
+
 
   def update_individual
     @person.consumer_role.import! verification_attr
@@ -56,17 +58,17 @@ class DocumentsController < ApplicationController
 
   def extend_due_date
     family = Family.find(params[:family_id])
-      if family.try(:active_household).try(:hbx_enrollments).try(:verification_needed).try(:first).try(:special_verification_period)
-        family.active_household.hbx_enrollments.verification_needed.first.special_verification_period += 30.days
-        if family.save!
-          flash[:success] = "Special verification period was extended for 30 days."
-        end
-      else
-        if family.try(:active_household).try(:hbx_enrollments).try(:verification_needed).try(:first)
-          family.active_household.hbx_enrollments.verification_needed.first.update_attributes(:special_verification_period => TimeKeeper.date_of_record + 30.days)
-          flash[:success] = "You set special verification period for this Enrollment. Verification due date now is #{family.active_household.hbx_enrollments.verification_needed.first.special_verification_period}"
-        end
+    if family.try(:active_household).try(:hbx_enrollments).try(:verification_needed).try(:first).try(:special_verification_period)
+      family.active_household.hbx_enrollments.verification_needed.first.special_verification_period += 30.days
+      if family.save!
+        flash[:success] = "Special verification period was extended for 30 days."
       end
+    else
+      if family.try(:active_household).try(:hbx_enrollments).try(:verification_needed).try(:first)
+        family.active_household.hbx_enrollments.verification_needed.first.update_attributes(:special_verification_period => TimeKeeper.date_of_record + 30.days)
+        flash[:success] = "You set special verification period for this Enrollment. Verification due date now is #{family.active_household.hbx_enrollments.verification_needed.first.special_verification_period}"
+      end
+    end
     redirect_to :back
   end
 
@@ -112,9 +114,9 @@ class DocumentsController < ApplicationController
 
   def verification_attr
     OpenStruct.new({
-       :vlp_verified_at => Time.now,
-       :vlp_authority => "hbx",
-       :citizen_status => params[:citizenship]
-                   })
+      :vlp_verified_at => Time.now,
+      :vlp_authority => "hbx",
+      :citizen_status => params[:citizenship]
+    })
   end
 end

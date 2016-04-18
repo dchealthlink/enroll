@@ -28,6 +28,18 @@ class Insured::VerificationDocumentsController < ApplicationController
     redirect_to verification_insured_families_path
   end
 
+  include DocumentDownloads
+
+  def download
+    document = get_document(params[:key])
+    if document.present?
+      download_with_options(env_bucket_name('id-verification'), params[:key], document.format, document.title)
+    else
+      flash[:error] = "File does not exist or you are not authorized to access it."
+      redirect_to documents_index_insured_families_path
+    end
+  end
+
   def download
     document = get_document(params[:key])
     if document.present?
