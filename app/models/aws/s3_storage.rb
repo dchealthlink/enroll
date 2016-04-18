@@ -35,14 +35,18 @@ module Aws
     # e.g. send_data Aws::S3Storage.find(uri), :stream => true, :buffer_size => ‘4096’
     def find(uri)
       begin
-        bucket_and_key = uri.split(':').last
-        bucket_name, key = bucket_and_key.split('#')
-        env_bucket_name = set_correct_env_bucket_name(bucket_name)
-        object = get_object(env_bucket_name, key)
+        object = find_object(uri)
         read_object(object)
       rescue Exception => e
         nil
       end
+    end
+
+    def find_object(uri)
+      bucket_and_key = uri.split(':').last
+      bucket_name, key = bucket_and_key.split('#')
+      env_bucket_name = set_correct_env_bucket_name(bucket_name)
+      get_object(env_bucket_name, key)
     end
 
     # The param uri is present in Document model. Document.identifier
@@ -52,6 +56,10 @@ module Aws
     # e.g. send_data Aws::S3Storage.find(uri), :stream => true, :buffer_size => ‘4096’
     def self.find(uri)
       Aws::S3Storage.new.find(uri)
+    end
+
+    def self.find_by_uri(uri)
+      Aws::S3Storage.new.find_object(uri)
     end
 
     private
@@ -82,8 +90,8 @@ module Aws
     end
 
     def setup
-      client=Aws::S3::Client.new
-      @resource=Aws::S3::Resource.new(client: client)
+      client = Aws::S3::Client.new
+      @resource = Aws::S3::Resource.new(client: client)
     end
   end
 end
