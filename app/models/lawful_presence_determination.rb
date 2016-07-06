@@ -15,6 +15,7 @@ class LawfulPresenceDetermination
   field :vlp_authority, type: String
   field :vlp_document_id, type: String
   field :citizen_status, type: String
+  field :citizenship_result, type: String
   field :aasm_state, type: String
   embeds_many :workflow_state_transitions, as: :transitional
 
@@ -33,6 +34,12 @@ class LawfulPresenceDetermination
       transitions from: :verification_pending, to: :verification_outstanding, after: :record_denial_information
       transitions from: :verification_outstanding, to: :verification_outstanding, after: :record_denial_information
     end
+
+    event :revert, :after => :record_transition do
+      transitions from: :verification_pending, to: :verification_pending, after: :record_denial_information
+      transitions from: :verification_outstanding, to: :verification_pending, after: :record_denial_information
+      transitions from: :verification_successful, to: :verification_pending
+    end
   end
 
   def latest_denial_date
@@ -42,18 +49,6 @@ class LawfulPresenceDetermination
     else
       nil
     end
-  end
-
-  def start_determination_process(requested_start_date)
-    if should_use_ssa?
-      start_ssa_process
-    else
-      start_vlp_process(requested_start_date)
-    end
-  end
-
-  def should_use_ssa?
-    ::ConsumerRole::US_CITIZEN_STATUS == self.citizen_status
   end
 
   def start_ssa_process
@@ -78,14 +73,14 @@ class LawfulPresenceDetermination
         end
       end
     end
-    self.citizen_status = approval_information.citizen_status
+    self.citizenship_result = approval_information.citizen_status
   end
 
   def record_denial_information(*args)
     denial_information = args.first
     self.vlp_verified_at = denial_information.determined_at
     self.vlp_authority = denial_information.vlp_authority
-    #    self.citizen_status = ::ConsumerRole::NOT_LAWFULLY_PRESENT_STATUS
+    self.citizenship_result = ::ConsumerRole::NOT_LAWFULLY_PRESENT_STATUS
   end
 
   def record_transition(*args)

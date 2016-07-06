@@ -30,6 +30,9 @@ Rails.application.routes.draw do
       collection do
         get :family_index
         get :employer_index
+        get :employer_invoice
+        post :employer_invoice_datatable
+        post :generate_invoice
         get :broker_agency_index
         get :general_agency_index
         get :issuer_index
@@ -119,6 +122,8 @@ Rails.application.routes.draw do
         get 'check_qle_date'
         get 'purchase'
         get 'family'
+        get 'upload_notice_form'
+        post 'upload_notice'
       end
 
       resources :people do
@@ -144,8 +149,9 @@ Rails.application.routes.draw do
         get 'new_message_to_broker'
         post 'send_message_to_broker'
         post :match
-        get 'welcome'
         get 'search'
+        get 'privacy'
+        get 'welcome'
       end
     end
 
@@ -187,8 +193,12 @@ Rails.application.routes.draw do
       get 'my_account'
       get 'show_profile'
       get 'consumer_override'
+      get 'export_census_employees'
       get 'bulk_employee_upload_form'
       post 'bulk_employee_upload'
+      member do
+        get "download_invoice"
+      end
       collection do
         get 'welcome'
         get 'search'
@@ -370,12 +380,13 @@ Rails.application.routes.draw do
   resources :office_locations, only: [:new]
 
   get "document/download/:bucket/:key" => "documents#download", as: :document_download
+  get "document/authorized_download/:model/:model_id/:relation/:relation_id" => "documents#authorized_download", as: :authorized_document_download
+
 
   resources :documents, only: [:update, :destroy, :update] do
     collection do
       put :change_person_aasm_state
       get :show_docs
-      get :update_individual
       put :update_verification_type
       get :enrollment_verification
       put :enrollment_docs_state
