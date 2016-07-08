@@ -156,6 +156,9 @@ class BrokerAgencies::ProfilesController < ApplicationController
   end
 
 
+  def phone_format(phone)
+  end
+
   def employers_api
     if current_user.has_broker_agency_staff_role? || current_user.has_hbx_staff_role?
       @orgs = Organization.by_broker_agency_profile(@broker_agency_profile._id)
@@ -180,6 +183,15 @@ class BrokerAgencies::ProfilesController < ApplicationController
           :total_premium => premium_amt_total,
           :employee_contribution => employee_cost_total,
           :employer_contribution => employer_contribution_total,
+          :contacts => staff.map { |s| 
+            #print "\n--->"
+            #p s
+            OpenStruct.new({ 
+            :first => s.first_name, 
+            :phone => s.work_phone.to_s,
+            :mobile => s.mobile_phone.to_s
+              })
+          },
           :emails => staff.map { |s| s.work_email_or_best } || []
         }
     end    

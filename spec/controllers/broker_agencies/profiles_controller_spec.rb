@@ -199,20 +199,43 @@ RSpec.describe BrokerAgencies::ProfilesController do
     let(:broker_role) {FactoryGirl.build(:broker_role)}
     let(:person) {double("person", broker_role: broker_role)}
     let(:user) { double("user", :has_hbx_staff_role? => true, :has_employer_staff_role? => false, :person => person)}
-    let(:organization) {FactoryGirl.create(:organization)}
+    let(:organization) {
+      o = FactoryGirl.create(:employer)
+      o.primary_office_location.address.address_1 = '500 Employers-Api Avenue'
+      o.primary_office_location.phone.number = '555-9999'
+      o.save
+      o
+    }
     let(:broker_agency_profile) { FactoryGirl.create(:broker_agency_profile, organization: organization) }
 
     let(:staff_user) { FactoryGirl.create(:user) }
     let(:staff) do
       s = FactoryGirl.create(:person, :with_work_email, :male)
       s.user = staff_user
+      s.first_name = "Seymour"
+      s.emails << ::Email.new(:kind => 'work', :address => 'seymour@example.com')
+      s.phones << ::Phone.new(:kind => 'mobile', :area_code => '202', :number => '555-0000')
+      s.save
+      s
+    end
+
+    let(:staff_user2) { FactoryGirl.create(:user) }
+    let(:staff2) do
+      s = FactoryGirl.create(:person, :with_work_email, :male)
+      s.user = staff_user2
+      s.first_name = "Beatrice"
+      s.emails << ::Email.new(:kind => 'work', :address => 'beatrice@example.com')
+      s.phones << ::Phone.new(:kind => 'work', :area_code => '202', :number => '555-0001')
+      s.phones << ::Phone.new(:kind => 'mobile', :area_code => '202', :number => '555-0002')
+      s.save
       s
     end
 
     let (:broker_agency_account) { FactoryGirl.build(:broker_agency_account, broker_agency_profile: broker_agency_profile) }
     let (:employer_profile) do 
       e = FactoryGirl.create(:employer_profile) 
-      e.broker_agency_accounts << broker_agency_account      
+      e.broker_agency_accounts << broker_agency_account   
+      e.save   
       e
     end
     
@@ -226,16 +249,36 @@ RSpec.describe BrokerAgencies::ProfilesController do
       )
 
       staff.employer_staff_roles << FactoryGirl.create(:employer_staff_role, employer_profile_id: employer_profile.id)
+      staff2.employer_staff_roles << FactoryGirl.create(:employer_staff_role, employer_profile_id: employer_profile.id)
       allow(user).to receive(:has_broker_agency_staff_role?).and_return(true)
       sign_in user
       xhr :get, :employers_api, id: broker_agency_profile.id, format: :json
       expect(response).to have_http_status(:success)
-      expect(assigns(:employer_details).count).to eq 1
-      expect(assigns(:employer_details)[0][:emails]).to include(staff.work_email.address)
-      expect(assigns(:employer_details)[0][:profile]).to eq employer_profile
-      expect(assigns(:employer_details)[0][:total_premium]).to eq 5500
-      expect(assigns(:employer_details)[0][:employee_contribution]).to eq 2200
-      expect(assigns(:employer_details)[0][:employer_contribution]).to eq 3300
+      details = assigns[:employer_details]
+      detail = details[0]
+      expect(details.count).to eq 1
+      expect(detail[:profile]).to eq employer_profile
+      expect(detail[:total_premium]).to eq 5500
+      expect(detail[:employee_contribution]).to eq 2200
+      expect(detail[:employer_contribution]).to eq 3300
+      contacts = detail[:contacts]
+
+      #contacts.each do |c| p c end
+
+      seymour = contacts.detect { |c| c.first == 'Seymour' }
+      expect(seymour.mobile).to eq '(202) 555-0000'
+      expect(seymour.phone).to eq ''
+      beatrice = contacts.detect { |c| c.first == 'Beatrice' }
+      expect(beatrice.phone).to eq '(202) 555-0001'
+      expect(beatrice.mobile).to eq '(202) 555-0002'
+      #expect(contacts[0][:emails]).to include('seymour@example.com')
+      #expect(contacts[0][:emails]).to include('seymour@example.com')
+      #expect(contacts[0][:phone]).to eq '202-555-0000'
+      #expect(contacts[1][:emails]).to include('beatrice@example.com')
+      #expect(contacts[1][:phone]).to eq '202-555-0001'
+      #expect(contacts[1][:mobile]).to eq '202-555-0002'
+      #expect(contacts[2][:phone]).to eq '202-555-9999'
+      #expect(contacts[2][:phone]).to eq '202-555-9999'
 
       allow_any_instance_of(EmployerProfile).to receive(:enrollments_for_billing).and_call_original
     end
