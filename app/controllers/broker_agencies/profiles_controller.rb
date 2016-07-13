@@ -156,7 +156,11 @@ class BrokerAgencies::ProfilesController < ApplicationController
   end
 
 
-  def phone_format(phone)
+  def contact_struct(first: "", last: "", phone: "", mobile: "", emails: [], address_1: "", address_2: "", 
+                      city: "", state: "", zip: "")
+    OpenStruct.new({ :first => first, :last => last, :phone => phone, :mobile => mobile,
+            :emails => emails, :address_1 => address_1, :address_2 => address_2, :city => city,
+            :state => state, :zip => zip }) 
   end
 
   def employers_api
@@ -178,20 +182,20 @@ class BrokerAgencies::ProfilesController < ApplicationController
         employee_cost_total = enrollments.map(&:total_employee_cost).sum
         employer_contribution_total = enrollments.map(&:total_employer_contribution).sum
         staff = Person.staff_for_employer_including_pending(er)
+        offices = er.organization.office_locations.select { |loc| loc.primary_or_branch? }
         result = {
           :profile => er,
           :total_premium => premium_amt_total,
           :employee_contribution => employee_cost_total,
           :employer_contribution => employer_contribution_total,
-          :contacts => staff.map { |s| 
-            #print "\n--->"
-            #p s
-            OpenStruct.new({ 
-            :first => s.first_name, 
-            :phone => s.work_phone.to_s,
-            :mobile => s.mobile_phone.to_s
-              })
-          },
+          :contacts => staff.map do |s| 
+              contact_struct(first: s.first_name, last: s.last_name, phone: s.work_phone.to_s,
+                             mobile: s.mobile_phone.to_s, emails: [s.work_email_or_best])
+              end + offices.map do |loc|
+                contact_struct(first: loc.address.kind.capitalize, last: "Office", phone: loc.phone.to_s,
+                  address_1: loc.address.address_1, address_2: loc.address.address_2, city: loc.address.city,
+                  state: loc.address.state, zip: loc.address.zip)
+              end,
           :emails => staff.map { |s| s.work_email_or_best } || []
         }
     end    

@@ -201,8 +201,9 @@ RSpec.describe BrokerAgencies::ProfilesController do
     let(:user) { double("user", :has_hbx_staff_role? => true, :has_employer_staff_role? => false, :person => person)}
     let(:organization) {
       o = FactoryGirl.create(:employer)
-      o.primary_office_location.address.address_1 = '500 Employers-Api Avenue'
-      o.primary_office_location.phone.number = '555-9999'
+      o.primary_office_location.address.address_1 = '500 Employers-Api Avenue'      
+      o.primary_office_location.address.address_2 = '#555' 
+      o.primary_office_location.phone = Phone.new(:kind => 'main', :area_code => '202', :number => '555-9999')
       o.save
       o
     }
@@ -213,6 +214,7 @@ RSpec.describe BrokerAgencies::ProfilesController do
       s = FactoryGirl.create(:person, :with_work_email, :male)
       s.user = staff_user
       s.first_name = "Seymour"
+      s.emails.clear
       s.emails << ::Email.new(:kind => 'work', :address => 'seymour@example.com')
       s.phones << ::Phone.new(:kind => 'mobile', :area_code => '202', :number => '555-0000')
       s.save
@@ -224,6 +226,7 @@ RSpec.describe BrokerAgencies::ProfilesController do
       s = FactoryGirl.create(:person, :with_work_email, :male)
       s.user = staff_user2
       s.first_name = "Beatrice"
+      s.emails.clear
       s.emails << ::Email.new(:kind => 'work', :address => 'beatrice@example.com')
       s.phones << ::Phone.new(:kind => 'work', :area_code => '202', :number => '555-0001')
       s.phones << ::Phone.new(:kind => 'mobile', :area_code => '202', :number => '555-0002')
@@ -233,8 +236,8 @@ RSpec.describe BrokerAgencies::ProfilesController do
 
     let (:broker_agency_account) { FactoryGirl.build(:broker_agency_account, broker_agency_profile: broker_agency_profile) }
     let (:employer_profile) do 
-      e = FactoryGirl.create(:employer_profile) 
-      e.broker_agency_accounts << broker_agency_account   
+      e = FactoryGirl.create(:employer_profile, organization: organization) 
+      e.broker_agency_accounts << broker_agency_account 
       e.save   
       e
     end
@@ -263,23 +266,23 @@ RSpec.describe BrokerAgencies::ProfilesController do
       expect(detail[:employer_contribution]).to eq 3300
       contacts = detail[:contacts]
 
-      #contacts.each do |c| p c end
-
       seymour = contacts.detect { |c| c.first == 'Seymour' }
+      beatrice = contacts.detect { |c| c.first == 'Beatrice' }
+      office = contacts.detect { |c| c.first == 'Primary' }
       expect(seymour.mobile).to eq '(202) 555-0000'
       expect(seymour.phone).to eq ''
-      beatrice = contacts.detect { |c| c.first == 'Beatrice' }
       expect(beatrice.phone).to eq '(202) 555-0001'
       expect(beatrice.mobile).to eq '(202) 555-0002'
-      #expect(contacts[0][:emails]).to include('seymour@example.com')
-      #expect(contacts[0][:emails]).to include('seymour@example.com')
-      #expect(contacts[0][:phone]).to eq '202-555-0000'
-      #expect(contacts[1][:emails]).to include('beatrice@example.com')
-      #expect(contacts[1][:phone]).to eq '202-555-0001'
-      #expect(contacts[1][:mobile]).to eq '202-555-0002'
-      #expect(contacts[2][:phone]).to eq '202-555-9999'
-      #expect(contacts[2][:phone]).to eq '202-555-9999'
+      expect(seymour.emails).to include('seymour@example.com')
+      expect(beatrice.emails).to include('beatrice@example.com')
+      expect(office.phone).to eq '(202) 555-9999'
+      expect(office.address_1).to eq '500 Employers-Api Avenue'
+      expect(office.address_2).to eq '#555'
+      expect(office.city).to eq 'Washington'
+      expect(office.state).to eq 'DC'
+      expect(office.zip).to eq '11117'
 
+      
       allow_any_instance_of(EmployerProfile).to receive(:enrollments_for_billing).and_call_original
     end
   end
