@@ -5,6 +5,7 @@
       @employer_details.each do |detail| 
         er = detail[:profile] 
         year = er.show_plan_year 
+        contacts = detail[:contacts]
     %><%= ',' unless first_element %>
       {
          "employer_name" : "<%= er.legal_name %>",
@@ -36,16 +37,9 @@
             "employee_contribution": <%= detail[:employee_contribution] %>,
             "employer_contribution": <%= detail[:employer_contribution] %>
          },
-         "contact_info": {
-                <% office = er.organization.primary_office_location %>
-               "phone": "<%= office.phone.area_code %>-<%= office.phone.number %>",
-               "emails": <%= detail[:emails].to_json.html_safe %>,
-               "address_1": "<%= office.address.address_1 %>",
-               "address_2": "<%= office.address.address_2 %>",
-               "city": "<%= office.address.city %>",
-               "state": "<%= office.address.state %>",
-               "zip": "<%= office.address.zip %>"
-         },
+         "contact_info": [
+            <%= raw(contacts.map { |c| c.to_h.to_json }.join(",\n")) %>
+         ],
           "active_general_agency": "<%= er.active_general_agency_legal_name %>"
       }<% 
 
