@@ -38,7 +38,7 @@
             "employer_contribution": <%= detail[:employer_contribution] %>
          },
          "contact_info": [
-            <%= raw(contacts.map { |c| c.to_h.to_json }.join(",\n")) %>
+            <%= raw(contacts.map { |c| JSON.pretty_generate(c.to_h) }.join(",\n")) %>
          ],
           "active_general_agency": "<%= er.active_general_agency_legal_name %>"
       }<% 
@@ -46,4 +46,4 @@
         first_element = false
       end %>
     ]
-} 
+}
