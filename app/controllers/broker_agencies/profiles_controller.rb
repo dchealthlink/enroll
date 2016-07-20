@@ -177,14 +177,20 @@ class BrokerAgencies::ProfilesController < ApplicationController
     @renewals_offset_in_months = Settings.aca.shop_market.renewal_application.earliest_start_prior_to_effective_on.months
 
     @employer_details = @employer_profiles.map do |er| 
-        enrollments = er.enrollments_for_billing
+
+        #discover the appropriate month to provide premium info for
+        billing_plan_year, billing_report_date = er.billing_plan_year
+
+        enrollments = er.enrollments_for_billing(billing_report_date)
         premium_amt_total   = enrollments.map(&:total_premium).sum
         employee_cost_total = enrollments.map(&:total_employee_cost).sum
         employer_contribution_total = enrollments.map(&:total_employer_contribution).sum
+
         staff = Person.staff_for_employer_including_pending(er)
         offices = er.organization.office_locations.select { |loc| loc.primary_or_branch? }
         result = {
           :profile => er,
+          :billing_report_date => billing_report_date,
           :total_premium => premium_amt_total,
           :employee_contribution => employee_cost_total,
           :employer_contribution => employer_contribution_total,

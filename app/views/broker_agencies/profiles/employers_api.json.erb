@@ -34,6 +34,8 @@
          "minimum_participation_required": null,
       <% end %>
          "estimated_premium": {
+            "billing_report_date": "<%= detail[:billing_report_date] %>",
+            "total_premium": <%= detail[:total_premium] %>,
             "employee_contribution": <%= detail[:employee_contribution] %>,
             "employer_contribution": <%= detail[:employer_contribution] %>
          },
