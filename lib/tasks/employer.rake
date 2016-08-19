@@ -18,7 +18,7 @@ namespace :broker do
     #print "\n^^^^ make employers\n"
     Organization.all.collect(&:broker_agency_profile).each_with_index do |broker, index|
       (0..9).each do |employer_index|
-        organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: Forgery('name').company_name, fein: '47-' + (1000000 + index),is_active: 'true')
+        organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: Forgery('name').company_name, fein: '47-' + (1000000 + index).to_s, is_active: 'true')
         organization.office_locations <<= office('primary')
         organization.office_locations <<= office('branch')
 
