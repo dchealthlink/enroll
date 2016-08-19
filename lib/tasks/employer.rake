@@ -7,7 +7,7 @@ namespace :broker do
     Organization.all.destroy_all if Organization.all.count > 0
     #print "\n^^^^ make brokers\n"
     (0..4).each_with_index do |org_index, index|
-      organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: Forgery('name').company_name + " " + "Agency", fein: '45'-(1000000 + index).to_s,is_active: 'true')
+      organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: Forgery('name').company_name + " " + "Agency", fein: '45-' + (1000000 + index).to_s,is_active: 'true')
       #print "\nabout to save org: #{organization.legal_name}\n"
       organization.save(validate: false)
 
@@ -18,7 +18,7 @@ namespace :broker do
     #print "\n^^^^ make employers\n"
     Organization.all.collect(&:broker_agency_profile).each_with_index do |broker, index|
       (0..9).each do |employer_index|
-        organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: Forgery('name').company_name, fein: '47'-(1000000 + index),is_active: 'true')
+        organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: Forgery('name').company_name, fein: '47-' + (1000000 + index),is_active: 'true')
         organization.office_locations <<= office('primary')
         organization.office_locations <<= office('branch')
 
@@ -30,6 +30,7 @@ namespace :broker do
         employer_profile = organization.build_employer_profile(entity_kind: "s_corporation", aasm_state: "applicant", profile_source: "self_serve")
         employer_profile.save(validate: false)
         employer_profile.broker_agency_accounts.build(broker_agency_profile: broker, writing_agent_id: nil, start_on: Date.today).save  
+        employer_profile.hire_broker_agency(broker)
       end
     end
     
