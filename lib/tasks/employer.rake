@@ -4,10 +4,12 @@ namespace :broker do
   desc "Import Database"
 
   task :employer => :environment do
+
     Organization.all.destroy_all if Organization.all.count > 0
+
     #print "\n^^^^ make brokers\n"
     (0..4).each_with_index do |org_index, index|
-      organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: Forgery('name').company_name + " " + "Agency", fein: '45-' + (1000000 + index).to_s,is_active: 'true')
+      organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: Forgery('name').company_name + " " + "Agency", fein: (100000000 + index).to_s, is_active: 'true')
       #print "\nabout to save org: #{organization.legal_name}\n"
       organization.save(validate: false)
 
@@ -17,8 +19,8 @@ namespace :broker do
 
     #print "\n^^^^ make employers\n"
     Organization.all.collect(&:broker_agency_profile).each_with_index do |broker, index|
-      (0..9).each do |employer_index|
-        organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: Forgery('name').company_name, fein: '47-' + (2000000 + index).to_s, is_active: 'true')
+      (0..30).each do |employer_index|
+        organization = Organization.new(hbx_id: SecureRandom.hex(16), legal_name: "Big " +  Forgery('name').company_name, fein: (200000000 + (100000 * index) + employer_index).to_s, is_active: 'true')
         organization.office_locations <<= office('primary')
         organization.office_locations <<= office('branch')
 
@@ -30,7 +32,7 @@ namespace :broker do
         employer_profile = organization.build_employer_profile(entity_kind: "s_corporation", aasm_state: "applicant", profile_source: "self_serve")
         employer_profile.save(validate: false)
         employer_profile.broker_agency_accounts.build(broker_agency_profile: broker, writing_agent_id: nil, start_on: Date.today).save  
-        employer_profile.hire_broker_agency(broker)
+        #employer_profile.hire_broker_agency(broker)
       end
     end
     
@@ -53,7 +55,7 @@ namespace :broker do
       plan_year.save(validate: false)
       benefit_group = plan_year.benefit_groups.build(title: Forgery('name').industry,reference_plan_id: plan.id,plan_option_kind: plan_option,lowest_cost_plan_id: plan.id,highest_cost_plan_id: plan.id)
       benefit_group.save(validate: false)
-      (1..20).each do |index|
+      (1..90).each do |index|
         employee = employer.census_employees.new(first_name: Forgery('name').first_name, last_name: Forgery('name').last_name, dob: Forgery('date').date, hired_on: Forgery('date').date, gender: Forgery('personal').gender, _type: "CensusEmployee",aasm_state: "eligible")
         employee.save(validate: false)
       end
@@ -67,8 +69,6 @@ namespace :broker do
       end 
     end
   end
-
-
 
   def office(kind)            
     a = Forgery('address')
