@@ -166,16 +166,16 @@ class BrokerAgencies::ProfilesController < ApplicationController
     if current_user.has_broker_agency_staff_role? || current_user.has_hbx_staff_role?
       @orgs = Organization.by_broker_agency_profile(@broker_agency_profile._id)
     else
-      broker_role_id = current_user.person.broker_role.id
+      broker_role_id = current_user.includes(:person).broker_role.id
       @orgs = Organization.by_broker_role(broker_role_id)
     end
-    @employer_profiles = @orgs.map {|o| o.employer_profile}
-    @broker_role = current_user.person.broker_role || nil
+    @employer_profiles = @orgs.pluck(:employer_profile)
+    @broker_role = current_user.includes(:person).broker_role || nil
     @general_agency_profiles = GeneralAgencyProfile.all_by_broker_role(@broker_role)
 
     @renewals_offset_in_months = Settings.aca.shop_market.renewal_application.earliest_start_prior_to_effective_on.months
 
-    employer_ids = @employer_profiles.map { |er| er.id }
+    employer_ids = @employer_profiles.pluck(:id)
     all_staff_by_employer_id = Person.staff_for_employers_including_pending(employer_ids)
 
     @employer_details = @employer_profiles.map do |er| 
@@ -183,27 +183,27 @@ class BrokerAgencies::ProfilesController < ApplicationController
         billing_plan_year, billing_report_date = er.billing_plan_year
 
         enrollments = er.enrollments_for_billing(billing_report_date)
-        premium_amt_total   = enrollments.map(&:total_premium).sum
-        employee_cost_total = enrollments.map(&:total_employee_cost).sum
-        employer_contribution_total = enrollments.map(&:total_employer_contribution).sum
+        premium_amt_total   = enrollments.pluck(:total_premium).sum
+        employee_cost_total = enrollments.pluck(:total_employee_cost).sum
+        employer_contribution_total = enrollments.pluck(:total_employer_contribution).sum
 
-        offices = er.organization.office_locations.select { |loc| loc.primary_or_branch? }
+        offices = er.includes(:organization).office_locations.select { |loc| loc.primary_or_branch? }
         result = {
           :profile => er,
           :billing_report_date => billing_report_date,
           :total_premium => premium_amt_total,
           :employee_contribution => employee_cost_total,
           :employer_contribution => employer_contribution_total,
-          :contacts => all_staff[er.id].map do |s| 
-              contact_struct(first: s.first_name, last: s.last_name, phone: s.work_phone.to_s,
-                             mobile: s.mobile_phone.to_s, emails: [s.work_email_or_best])
+          :contacts => all_staff_by_employer_id[er.try(:id)].map do |s|
+              contact_struct(first: s.try(:first_name), last: s.try(:last_name), phone: s.try(:work_phone).to_s,
+                             mobile: s.try(:mobile_phone).to_s, emails: [s.try(:work_email_or_best)])
               end + offices.map do |loc|
-                contact_struct(first: loc.address.kind.capitalize, last: "Office", phone: loc.phone.to_s,
-                  address_1: loc.address.address_1, address_2: loc.address.address_2, city: loc.address.city,
-                  state: loc.address.state, zip: loc.address.zip)
+                contact_struct(first: loc.try(:address).kind.capitalize, last: "Office", phone: loc.try(:phone).to_s,
+                  address_1: loc.try(:address).try(:address_1), address_2: loc.try(:address).try(:address_2), city: loc.try(:address).try(:city),
+                  state: loc.try(:address).state, zip: loc.try(:address).try(:zip))
               end
         }
-    end    
+    end      
 
     #maybe the query is only executed here, when its elements are needed in the erb?
     #that's how Linq would do it anyway
