@@ -155,58 +155,11 @@ class BrokerAgencies::ProfilesController < ApplicationController
   end
 
   def employers_api
-
-    if current_user.has_broker_agency_staff_role? || current_user.has_hbx_staff_role?
-      @orgs = Organization.by_broker_agency_profile(@broker_agency_profile._id)
-    else
-      broker_role_id = current_user.person.broker_role.id
-      @orgs = Organization.by_broker_role(broker_role_id)
-    end
-    @employer_profiles = @orgs.map {|o| o.employer_profile}
-    @broker_role = current_user.person.broker_role || nil
-    @general_agency_profiles = GeneralAgencyProfile.all_by_broker_role(@broker_role)
-
-    @renewals_offset_in_months = Settings.aca.shop_market.renewal_application.earliest_start_prior_to_effective_on.months
-       
+    employers
     all_staff_by_employer_id = Person.staff_for_employers_including_pending(@employer_profiles.map(&:id))
-
-    @employer_details = @employer_profiles.map do |er| 
-        #discover the appropriate month to provide premium info for
-        billing_plan_year, billing_report_date = er.billing_plan_year #TODO do we need this? is it the right date for enrollments?
-
-
-      # TODO move to detail API  
-      #  enrollments = er.enrollments_for_billing(billing_report_date)
-      #  premium_amt_total, employee_cost_total, employer_contribution_total = enrollments.inject([0,0,0]) do |(pt, eec, erc), en|
-      #    info = en.decorated_hbx_enrollment
-      #    [ pt + info.total_premium, eec + info.total_employee_cost, erc + info.total_employer_contribution]
-      #  end
-
-       
-       # TODO move this block to plan_year 
-       subscribers_already_counted = {}
-       if er.show_plan_year.nil? then
-         subscriber_count = nil
-       else 
-         show_plan_year_enrollments = er.show_plan_year.hbx_enrollments_by_month(billing_report_date).compact
-         subscriber_count = show_plan_year_enrollments.inject(0) do |subs, en|
-
-           if (!subscribers_already_counted[en.subscriber.applicant_id]) then
-             subscribers_already_counted[en.subscriber.applicant_id] = true
-             subs += 1
-           end
-           print " >>>> Enrollment for: #{ en.subscriber.inspect } \n"
-           subs 
-         end
-       end
-
-       staff = all_staff_by_employer_id[er.id] || [] ##
-       offices = er.organization.office_locations.select { |loc| loc.primary_or_branch? }
-       Employers::EmployerHelper.render_employer_summary_json(er, er.show_plan_year, staff, offices, subscriber_count, 
-        @renewals_offset_in_months) 
-    end   
-                                              
-   respond_to do |format|                       
+    @employer_details = Employers::EmployerHelper.employer_details(@employer_profiles, all_staff_by_employer_id)
+                         
+    respond_to do |format|                       
       format.json { 
         render json: {
            broker_agency: @broker_agency_profile.legal_name,
@@ -215,6 +168,7 @@ class BrokerAgencies::ProfilesController < ApplicationController
       } 
     end                                          
   end
+
 
 
   def general_agency_index
@@ -441,4 +395,45 @@ class BrokerAgencies::ProfilesController < ApplicationController
     policy = ::AccessPolicies::GeneralAgencyProfile.new(current_user)
     policy.authorize_set_default_ga(self, @broker_agency_profile)
   end
+
+# def employer_details(employer_profiles, all_staff_by_employer_id)
+#     @employer_details = employer_profiles.map do |er| 
+#     billing_plan_year, billing_report_date = er.billing_plan_year 
+#     subscribers_already_counted = {}
+#     if er.show_plan_year.nil? then
+#        subscriber_count = nil
+#     else 
+#        show_plan_year_enrollments = er.show_plan_year.hbx_enrollments_by_month(billing_report_date).compact
+#        subscriber_count = show_plan_year_enrollments.inject(0) do |subs, en|
+#       if (!subscribers_already_counted[en.subscriber.applicant_id]) then
+#          subscribers_already_counted[en.subscriber.applicant_id] = true
+#          subs += 1
+#          end
+#          print " >>>> Enrollment for: #{ en.subscriber.inspect } \n"
+#          subs 
+#       end
+#     end
+
+#     staff = all_staff_by_employer_id[er.id] || [] ## 
+#     offices = er.organization.office_locations.select { |loc| loc.primary_or_branch? }
+#    # Employers::EmployerHelper.render_employer_summary_json(er, er.show_plan_year, staff, offices, subscriber_count, @renewals_offset_in_months) 
+#    year = er.show_plan_year
+#    { 
+#       employer_name: er.legal_name,
+#       employees_total: er.roster_size,   
+#       employees_enrolled:             subscriber_count,  
+#       employees_waived:               year ? year.waived_count                             : nil,
+#       open_enrollment_begins:         year ? year.open_enrollment_start_on                 : nil,
+#       open_enrollment_ends:           year ? year.open_enrollment_end_on                   : nil,
+#       plan_year_begins:               year ? year.start_on                                 : nil,
+#       renewal_in_progress:            year ? year.is_renewing?                             : nil,
+#       renewal_application_available:  year ? (year.start_on >> @renewals_offset_in_months)  : nil,
+#       renewal_application_due:        year ? year.due_date_for_publish                     : nil,
+#       binder_payment_due:             "",
+#       minimum_participation_required: year ? year.minimum_enrolled_count                   : nil,
+#       contact_info:                   self.render_employee_contacts_json(staff, offices), 
+#       active_general_agency:          er.active_general_agency_legal_name 
+#     } 
+# end
+#   end
 end
