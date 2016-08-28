@@ -251,7 +251,7 @@ RSpec.describe BrokerAgencies::ProfilesController do
       allow_any_instance_of(EmployerProfile).to receive(:enrollments_for_billing).and_return(
         [
           double("enrollment", :total_premium => 500, :total_employee_cost => 200, :total_employer_contribution => 300 ),
-          double("enrollment",  :total_premium => 5000, :total_employee_cost => 2000, :total_employer_contribution => 3000 )
+          double("enrollment", :total_premium => 5000, :total_employee_cost => 2000, :total_employer_contribution => 3000 )
         ]
       )
 
@@ -264,11 +264,8 @@ RSpec.describe BrokerAgencies::ProfilesController do
       details = assigns[:employer_details]
       detail = details[0]
       expect(details.count).to eq 1
-      expect(detail[:profile]).to eq employer_profile
-      expect(detail[:total_premium]).to eq 5500
-      expect(detail[:employee_contribution]).to eq 2200
-      expect(detail[:employer_contribution]).to eq 3300
-      contacts = detail[:contacts]
+      expect(detail[:employer_name]).to eq employer_profile.legal_name
+      contacts = detail[:contact_info]
 
       seymour = contacts.detect { |c| c.first == 'Seymour' }
       beatrice = contacts.detect { |c| c.first == 'Beatrice' }
