@@ -161,8 +161,8 @@ module Api::V1::MobileApiHelper
 
   def benefit_group_ids_of_enrollments_in_status(enrollments, status_list)
     enrollments.select do |enrollment| 
-      status_list.include? (enrollment.aasm_state) 
-    end.map(&:benefit_group_assignment_id)
+      status_list.include? (enrollment[:aasm_state]) 
+    end.map { |e| e[:benefit_group_assignment_id] }
   end
 
   # A faster way of counting employees who are enrolled (not waived) 
@@ -177,19 +177,27 @@ module Api::V1::MobileApiHelper
 
     return [] if benefit_group_assignments.blank?
     id_list = benefit_group_assignments.map(&:id) #.uniq
-    families = Family.where(:"households.hbx_enrollments".elem_match => { 
-      :"benefit_group_assignment_id".in => id_list, 
-      :aasm_state.in => enrolled_or_renewal + waived, 
-      :kind => "employer_sponsored", 
-      :coverage_kind => "health",
-      :is_active => true #???  
-    } )
 
-    all_enrollments =  families.map { |f| f.households.map {|h| h.hbx_enrollments} }.flatten.compact
+    db = Mongoid::Clients.default
+
+    families = db[:families].find(
+      {:"households.hbx_enrollments" => 
+        { "$elemMatch" => 
+          {
+            "benefit_group_assignment_id" => { "$in" => id_list }, 
+            :aasm_state => { "$in" => enrolled_or_renewal + waived }, 
+            :kind => "employer_sponsored", 
+            :coverage_kind => "health",
+            :is_active => true #???  
+          }
+        }
+      })
+
+    all_enrollments =  families.map { |f| f[:households].map {|h| h[:hbx_enrollments]} }.flatten.compact
     relevant_enrollments = all_enrollments.select do |enrollment|
-      enrollment.kind == "employer_sponsored" &&
-      enrollment.coverage_kind == "health" &&
-      enrollment.is_active
+      enrollment[:kind] == "employer_sponsored" &&
+      enrollment[:coverage_kind] == "health" &&
+      enrollment[:is_active]
     end
 
     enrolled_ids = benefit_group_ids_of_enrollments_in_status(relevant_enrollments, enrolled_or_renewal)
