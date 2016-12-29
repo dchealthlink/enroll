@@ -1,12 +1,12 @@
 module Api
   module V1
-    class MobileApiController < ApplicationController
+    class MobileController < ApplicationController
       include Api::V1::Mobile::RendererUtil
 
       before_filter :employer_profile, except: [:employers_list, :my_employee_roster, :my_employer_details]
       Mobile = Api::V1::Mobile
 
-      def employers_list
+      def employers
         execute {
           authorized = Mobile::SecurityUtil.new(user: current_user, params: params).authorize_employer_list
           if authorized[:status] == 200

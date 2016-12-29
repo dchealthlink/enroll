@@ -2,6 +2,7 @@ module Api
   module V1
     module Mobile
       class EmployerUtil < BaseUtil
+        include UrlUtil
 
         def initialize args={}
           super args
@@ -106,8 +107,8 @@ module Api
 
         def add_urls! employer_profile, summary
           url_helper = Rails.application.routes.url_helpers
-          summary[:employer_details_url] = url_helper.api_v1_mobile_api_employer_details_path employer_profile.id
-          summary[:employee_roster_url] = url_helper.api_v1_mobile_api_employee_roster_path employer_profile.id
+          summary[:employer_details_url] = employers_details_url employer_profile.id
+          summary[:employee_roster_url] = employers_employees_url employer_profile.id
         end
 
         #TODO null handling

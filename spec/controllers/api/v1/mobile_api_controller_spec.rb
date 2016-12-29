@@ -3,14 +3,14 @@ require 'support/brady_bunch'
 require 'lib/api/v1/support/mobile_broker_data'
 require 'lib/api/v1/support/mobile_broker_agency_data'
 
-RSpec.describe Api::V1::MobileApiController, dbclean: :after_each do
+RSpec.describe Api::V1::MobileController, dbclean: :after_each do
   include_context 'broker_agency_data'
 
   describe "GET employers_list" do
 
     it "should get summaries for employers where broker_agency_account is active" do
       allow(user).to receive(:has_hbx_staff_role?).and_return(true)
-      xhr :get, :employers_list, id: broker_agency_profile.id, format: :json
+      xhr :get, :employers, broker_agency_profile_id: broker_agency_profile.id, format: :json
       expect(response).to have_http_status(:success), "expected status 200, got #{response.status}: \n----\n#{response.body}\n\n"
       details = JSON.parse(response.body)['broker_clients']
       detail = JSON.generate(details[0])
@@ -42,7 +42,7 @@ RSpec.describe Api::V1::MobileApiController, dbclean: :after_each do
       expect(employer).not_to be(nil), "in #{output}"
       expect(employer["employer_name"]).to eq(employer_profile.legal_name)
       expect(employer["employees_total"]).to eq(employer_profile.roster_size)
-      expect(employer["employer_details_url"]).to end_with("mobile_api/employer_details/#{employer_profile.id}")
+      expect(employer["employer_details_url"]).to end_with("mobile/employers/#{employer_profile.id}/details")
     end
   end
 
@@ -96,7 +96,7 @@ RSpec.describe Api::V1::MobileApiController, dbclean: :after_each do
 
       before(:each) do
         sign_in mikes_broker
-        get :employers_list, format: :json
+        get :employers, format: :json
         @output = JSON.parse(response.body)
         mikes_plan_year.update_attributes(aasm_state: "published") if mikes_plan_year.aasm_state != "published"
       end
@@ -148,7 +148,7 @@ RSpec.describe Api::V1::MobileApiController, dbclean: :after_each do
       end
 
       it "should not be able to access Carol's broker's employer list" do
-        get :employers_list, {id: carols_broker_agency_profile.id}, format: :json
+        get :employers, {broker_agency_profile_id: carols_broker_agency_profile.id}, format: :json
         expect(response).to have_http_status(404)
       end
 
@@ -171,7 +171,7 @@ RSpec.describe Api::V1::MobileApiController, dbclean: :after_each do
       end
 
       it "Mikes employer shouldn't be able to see the employers_list and should get 404 status on request" do
-        get :employers_list, id: mikes_broker_agency_profile.id, format: :json
+        get :employers, broker_agency_profile_id: mikes_broker_agency_profile.id, format: :json
         @output = JSON.parse(response.body)
         expect(response.status).to eq 404
       end
@@ -211,7 +211,7 @@ RSpec.describe Api::V1::MobileApiController, dbclean: :after_each do
 
       before(:each) do
         sign_in carols_broker
-        get :employers_list, format: :json
+        get :employers, format: :json
         @output = JSON.parse(response.body)
       end
 
@@ -247,7 +247,7 @@ RSpec.describe Api::V1::MobileApiController, dbclean: :after_each do
       end
 
       it "shouldn't be able to see the employers_list and should get 404 status on request" do
-        get :employers_list, id: carols_broker_agency_profile.id, format: :json
+        get :employers, broker_agency_profile_id: carols_broker_agency_profile.id, format: :json
         @output = JSON.parse(response.body)
         expect(response).to have_http_status(:not_found)
       end
@@ -309,7 +309,7 @@ RSpec.describe Api::V1::MobileApiController, dbclean: :after_each do
 
       it "HBX Admin should be able to see Mikes details" do
         sign_in hbx_user
-        get :employers_list, id: mikes_broker_agency_profile.id, format: :json
+        get :employers, broker_agency_profile_id: mikes_broker_agency_profile.id, format: :json
         @output = JSON.parse(response.body)
         expect(@output["broker_agency"]).to eq("Turner Agency, Inc")
         expect(@output["broker_clients"].count).to eq 1
@@ -318,7 +318,7 @@ RSpec.describe Api::V1::MobileApiController, dbclean: :after_each do
 
       it "HBX Admin should be able to see Carols details" do
         sign_in hbx_user
-        get :employers_list, id: carols_broker_agency_profile.id, format: :json
+        get :employers, broker_agency_profile_id: carols_broker_agency_profile.id, format: :json
         @output = JSON.parse(response.body)
         expect(@output["broker_agency"]).to eq("Alphabet Agency")
         expect(@output["broker_clients"].count).to eq 1

@@ -4,8 +4,8 @@ module Api
       class SecurityUtil < BaseUtil
 
         def authorize_employer_list
-          return broker_role unless @params[:id]
-          @broker_agency_profile = BrokerAgencyProfile.find @params[:id]
+          return broker_role unless @params[:broker_agency_profile_id]
+          @broker_agency_profile = BrokerAgencyProfile.find @params[:broker_agency_profile_id]
           @broker_agency_profile ? admin_or_staff : {status: 404}
         end
 
@@ -18,7 +18,7 @@ module Api
           @user.has_hbx_staff_role? ||
               @user.person.broker_agency_staff_roles.map(&:broker_agency_profile_id).include?(@employer_profile.try(:active_broker_agency_account).try(:broker_agency_profile_id)) ||
               @user.person.active_employer_staff_roles.map(&:employer_profile_id).include?(@employer_profile.id) ||
-              @user.person.broker_role == @employer_profile.active_broker_agency_account.writing_agent)
+              @user.person.broker_role == @employer_profile.try(:active_broker_agency_account).try(:writing_agent))
         end
 
         #
@@ -32,7 +32,7 @@ module Api
         end
 
         def admin_or_staff
-          @user.has_hbx_staff_role? || @user.person.broker_agency_staff_roles.map(&:broker_agency_profile_id).include?(@params[:id]) ? {broker_agency_profile: @broker_agency_profile, status: 200} :
+          @user.has_hbx_staff_role? || @user.person.broker_agency_staff_roles.map(&:broker_agency_profile_id).include?(@params[:broker_agency_profile_id]) ? {broker_agency_profile: @broker_agency_profile, status: 200} :
               {status: 404}
         end
 

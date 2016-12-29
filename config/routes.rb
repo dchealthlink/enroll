@@ -1,10 +1,10 @@
 Rails.application.routes.draw do
 
-  devise_for :users, :controllers => { :registrations => "users/registrations", :sessions => 'users/sessions' }
+  devise_for :users, :controllers => {:registrations => "users/registrations", :sessions => 'users/sessions'}
 
-  get 'check_time_until_logout' => 'session_timeout#check_time_until_logout', :constraints => { :only_ajax => true }
-  get 'reset_user_clock' => 'session_timeout#reset_user_clock', :constraints => { :only_ajax => true }
-  post 'show_hints' => 'welcome#show_hints', :constraints => { :only_ajax => true }
+  get 'check_time_until_logout' => 'session_timeout#check_time_until_logout', :constraints => {:only_ajax => true}
+  get 'reset_user_clock' => 'session_timeout#reset_user_clock', :constraints => {:only_ajax => true}
+  post 'show_hints' => 'welcome#show_hints', :constraints => {:only_ajax => true}
 
   namespace :users do
     resources :orphans, only: [:index, :show, :destroy]
@@ -151,7 +151,7 @@ Rails.application.routes.draw do
       ##get :privacy, on: :collection
     end
 
-    resources :employee, :controller=>"employee_roles", only: [:create, :edit, :update, :show] do
+    resources :employee, :controller => "employee_roles", only: [:create, :edit, :update, :show] do
       collection do
         get 'new_message_to_broker'
         post 'send_message_to_broker'
@@ -326,17 +326,18 @@ Rails.application.routes.draw do
 
   namespace :api, :defaults => {:format => 'xml'} do
     namespace :v1 do
-      resources :slcsp, :only => []  do
+      resources :slcsp, :only => [] do
         collection do
           post :plan
         end
       end
-      namespace :mobile_api do
-        get :employers_list
-        get 'employer_details/:employer_profile_id', action: :employer_details, as: :employer_details
-        get 'employee_roster/:employer_profile_id', action: :employee_roster, as: :employee_roster
-        get :employer_details, action: :my_employer_details
-        get :employee_roster, action: :my_employee_roster
+      namespace :mobile do
+        get :employers
+        get 'employers/broker-agency-profile/:broker_agency_profile_id', action: :employers
+        get 'employers/:employer_profile_id/details', action: :employer_details
+        get 'employers/:employer_profile_id/employees', action: :employee_roster
+        get 'employer/details', action: :my_employer_details
+        get :employees, action: :my_employee_roster
       end
     end
   end
@@ -369,11 +370,11 @@ Rails.application.routes.draw do
 
   end
 
-  match 'families/home', to: 'insured/families#home', via:[:get], as: "family_account"
+  match 'families/home', to: 'insured/families#home', via: [:get], as: "family_account"
 
   match "hbx_profiles/edit_dob_ssn" => "exchanges/hbx_profiles#edit_dob_ssn", as: :edit_dob_ssn, via: [:get, :post]
-  match "hbx_profiles/update_dob_ssn" => "exchanges/hbx_profiles#update_dob_ssn", as: :update_dob_ssn, via: [:get, :post], defaults: { format: 'js' }
-  match "hbx_profiles/verify_dob_change" => "exchanges/hbx_profiles#verify_dob_change", as: :verify_dob_change, via: [:get], defaults: { format: 'js' }
+  match "hbx_profiles/update_dob_ssn" => "exchanges/hbx_profiles#update_dob_ssn", as: :update_dob_ssn, via: [:get, :post], defaults: {format: 'js'}
+  match "hbx_profiles/verify_dob_change" => "exchanges/hbx_profiles#verify_dob_change", as: :verify_dob_change, via: [:get], defaults: {format: 'js'}
 
   resources :families do
     get 'page/:page', :action => :index, :on => :collection
