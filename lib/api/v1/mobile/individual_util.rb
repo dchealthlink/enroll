@@ -34,7 +34,7 @@ module Api
           Jbuilder.encode do |json|
             employee_role = @person.employee_roles.first
             employee_role.census_employee.tap do |employee|
-              json.dependents @employee_util.add_dependents employee
+              json.dependents @employee_util.include_dependents employee
             end if employee_role
           end
         end

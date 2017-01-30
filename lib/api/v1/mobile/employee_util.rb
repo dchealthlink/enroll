@@ -58,7 +58,7 @@ module Api
           end
         end
 
-        def add_dependents employee
+        def include_dependents employee
           dependents_of(employee).map do |d|
             JSON.parse(basic_individual(d)).merge(relationship: relationship_with(d))
           end
@@ -96,7 +96,7 @@ module Api
           enrollment_util = EnrollmentUtil.new benefit_group_assignments: benefit_group_assignments
           enrollment_util.grouped_bga_enrollments = grouped_bga_enrollments if grouped_bga_enrollments
           result[:enrollments] = enrollment_util.employee_enrollments
-          result[:dependents] = add_dependents employee
+          result[:dependents] = include_dependents employee
           result
         end
 
