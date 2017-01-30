@@ -5,17 +5,17 @@ module Api
         BASE = '/api/v1/mobile'
 
         #
-        # get :employers
+        # get :broker
         #
-        def employers_url
-          "#{BASE}/employers"
+        def broker_url
+          "#{BASE}/broker"
         end
 
         #
-        # get 'employers/broker-agency-profile/:broker_agency_profile_id', action: :employers
+        # get 'broker_agency_profile_id/:broker_agency_profile_id', action: :broker
         #
-        def employers_with_broker_agency_url broker_agency_profile_id
-          "#{BASE}/employers/broker-agency-profile/#{broker_agency_profile_id}"
+        def broker_with_broker_agency_url broker_agency_profile_id
+          "#{BASE}/broker_agency_profile_id/#{broker_agency_profile_id}"
         end
 
         #
@@ -40,10 +40,10 @@ module Api
         end
 
         #
-        # get :employees, action: :my_employee_roster
+        # get 'employer/employees', action: :my_employee_roster
         #
         def employees_url
-          "#{BASE}/employees"
+          "#{BASE}/employer/employees"
         end
 
       end

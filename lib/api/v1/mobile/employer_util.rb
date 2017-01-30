@@ -2,10 +2,13 @@ module Api
   module V1
     module Mobile
       class EmployerUtil < BaseUtil
+        include UrlUtil
 
         def initialize args={}
           super args
           @plan_years = select_current_and_upcoming (@employer_profile.try(:plan_years) || [])
+          all_years = @employer_profile.try(:plan_years) || []
+          @plan_years = all_years.select { |y| PlanYearUtil.new(plan_year: y).is_current_or_upcoming? }
         end
 
         def employers_and_broker_agency
@@ -45,7 +48,7 @@ module Api
         def select_current_and_upcoming years
           years.select { |y| PlanYearUtil.new(plan_year: y).is_current_or_upcoming? }
         end
-
+        
         def organizations
           @organizations ||= @authorized.has_key?(:broker_role) ? Organization.by_broker_role(@authorized[:broker_role].id) :
               Organization.by_broker_agency_profile(@authorized[:broker_agency_profile]._id)
@@ -109,8 +112,8 @@ module Api
 
         def add_urls! employer_profile, summary
           url_helper = Rails.application.routes.url_helpers
-          summary[:employer_details_url] = url_helper.api_v1_mobile_api_employer_details_path employer_profile.id
-          summary[:employee_roster_url] = url_helper.api_v1_mobile_api_employee_roster_path employer_profile.id
+          summary[:employer_details_url] = employers_details_url employer_profile.id
+          summary[:employee_roster_url] = employers_employees_url employer_profile.id
         end
 
         #TODO null handling
