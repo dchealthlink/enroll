@@ -4,6 +4,11 @@ module Api
       class EnrollmentUtil < BaseUtil
         attr_accessor :grouped_bga_enrollments
 
+        def initialize args={}
+          super args
+          @assignments = current_or_upcoming_assignments if @benefit_group_assignments
+        end
+
         def benefit_group_assignment_ids enrolled, waived, terminated
           yield bg_assignment_ids(enrolled), bg_assignment_ids(waived), bg_assignment_ids(terminated)
         end
@@ -32,6 +37,10 @@ module Api
         # Private
         #
         private
+
+        def current_or_upcoming_assignments
+          @benefit_group_assignments.select { |a| PlanYearUtil.new(plan_year: a.plan_year).is_current_or_upcoming? }
+        end
 
         def bg_assignment_ids statuses
           active_employer_sponsored_health_enrollments.select do |enrollment|

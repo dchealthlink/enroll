@@ -332,12 +332,14 @@ Rails.application.routes.draw do
         end
       end
       namespace :mobile do
-        get :employers
-        get 'employers/broker-agency-profile/:broker_agency_profile_id', action: :employers
+        get :broker
+        get 'broker/:broker_agency_profile_id', action: :broker
         get 'employers/:employer_profile_id/details', action: :employer_details
         get 'employers/:employer_profile_id/employees', action: :employee_roster
         get 'employer/details', action: :my_employer_details
-        get :employees, action: :my_employee_roster
+        get 'employer/employees', action: :my_employee_roster
+        get :individual
+        get 'individuals/:person_id', action: :individuals
       end
     end
   end

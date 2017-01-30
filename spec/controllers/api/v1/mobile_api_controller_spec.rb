@@ -2,6 +2,7 @@ require 'rails_helper'
 require 'support/brady_bunch'
 require 'lib/api/v1/support/mobile_broker_data'
 require 'lib/api/v1/support/mobile_broker_agency_data'
+require 'lib/api/v1/support/mobile_individual_data'
 
 RSpec.describe Api::V1::MobileController, dbclean: :after_each do
   include_context 'broker_agency_data'
@@ -10,7 +11,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
 
     it "should get summaries for employers where broker_agency_account is active" do
       allow(user).to receive(:has_hbx_staff_role?).and_return(true)
-      xhr :get, :employers, broker_agency_profile_id: broker_agency_profile.id, format: :json
+      xhr :get, :broker, broker_agency_profile_id: broker_agency_profile.id, format: :json
       expect(response).to have_http_status(:success), "expected status 200, got #{response.status}: \n----\n#{response.body}\n\n"
       details = JSON.parse(response.body)['broker_clients']
       detail = JSON.generate(details[0])
@@ -96,7 +97,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
 
       before(:each) do
         sign_in mikes_broker
-        get :employers, format: :json
+        get :broker, format: :json
         @output = JSON.parse(response.body)
         mikes_plan_year.update_attributes(aasm_state: "published") if mikes_plan_year.aasm_state != "published"
       end
@@ -148,7 +149,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       end
 
       it "should not be able to access Carol's broker's employer list" do
-        get :employers, {broker_agency_profile_id: carols_broker_agency_profile.id}, format: :json
+        get :broker, {broker_agency_profile_id: carols_broker_agency_profile.id}, format: :json
         expect(response).to have_http_status(404)
       end
 
@@ -171,7 +172,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       end
 
       it "Mikes employer shouldn't be able to see the employers_list and should get 404 status on request" do
-        get :employers, broker_agency_profile_id: mikes_broker_agency_profile.id, format: :json
+        get :broker, broker_agency_profile_id: mikes_broker_agency_profile.id, format: :json
         @output = JSON.parse(response.body)
         expect(response.status).to eq 404
       end
@@ -211,7 +212,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
 
       before(:each) do
         sign_in carols_broker
-        get :employers, format: :json
+        get :broker, format: :json
         @output = JSON.parse(response.body)
       end
 
@@ -247,7 +248,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       end
 
       it "shouldn't be able to see the employers_list and should get 404 status on request" do
-        get :employers, broker_agency_profile_id: carols_broker_agency_profile.id, format: :json
+        get :broker, broker_agency_profile_id: carols_broker_agency_profile.id, format: :json
         @output = JSON.parse(response.body)
         expect(response).to have_http_status(:not_found)
       end
@@ -309,7 +310,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
 
       it "HBX Admin should be able to see Mikes details" do
         sign_in hbx_user
-        get :employers, broker_agency_profile_id: mikes_broker_agency_profile.id, format: :json
+        get :broker, broker_agency_profile_id: mikes_broker_agency_profile.id, format: :json
         @output = JSON.parse(response.body)
         expect(@output["broker_agency"]).to eq("Turner Agency, Inc")
         expect(@output["broker_clients"].count).to eq 1
@@ -318,14 +319,173 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
 
       it "HBX Admin should be able to see Carols details" do
         sign_in hbx_user
-        get :employers, broker_agency_profile_id: carols_broker_agency_profile.id, format: :json
+        get :broker, broker_agency_profile_id: carols_broker_agency_profile.id, format: :json
         @output = JSON.parse(response.body)
         expect(@output["broker_agency"]).to eq("Alphabet Agency")
         expect(@output["broker_clients"].count).to eq 1
         expect(@output["broker_clients"][0]["employer_name"]).to eq(carols_employer_profile.legal_name)
       end
     end
-
   end
-end
 
+  context "Routes: /individual, /individuals/:id" do
+    include_context 'BradyWorkAfterAll'
+    include_context 'BradyBunch'
+
+    before :each do
+      create_brady_census_families
+    end
+
+    context "Mike's Broker" do
+      include_context 'broker_data'
+
+      before :each do
+        sign_in mikes_broker
+      end
+
+      it 'should return individual details of user (/individuals/:person_id)' do
+        get :individuals, person_id: mikes_broker_role.person.id, format: :json
+        output = JSON.parse response.body
+        expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
+                                  'gender', 'id', 'employments')
+      end
+
+      it 'should return individual details of user (/individual)' do
+        get :individual, format: :json
+        output = JSON.parse response.body
+        expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
+                                  'gender', 'id', 'employments')
+      end
+
+      it 'should not return individual details of user it does not have access to' do
+        get :individuals, person_id: carols_broker_role.person.id, format: :json
+        output = JSON.parse response.body
+        expect(response).to have_http_status(404)
+        expect(output['error']).to eq 'no individual details found'
+      end
+
+      it 'should return individual details of user (/individuals/:person_id)' do
+        get :individuals, person_id: mikes_employer_profile_person.id, format: :json
+        output = JSON.parse response.body
+        expect(response).to have_http_status(404)
+        expect(output['error']).to eq 'no individual details found'
+      end
+    end
+
+    context "Carol's employer" do
+      include_context 'broker_data'
+
+      before :each do
+        sign_in carols_employer_profile_user
+      end
+
+      it 'should return the individual details' do
+        get :individuals, person_id: carols_employer_profile_person.id, format: :json
+        output = JSON.parse response.body
+        expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
+                                  'gender', 'id', 'employments')
+        expect(output['first_name']).to eq 'Pinkman'
+        expect(output['date_of_birth']).to eq '1972-04-04'
+        expect(output['gender']).to eq 'male'
+      end
+
+      it 'should not return individual details of user it does not have access to' do
+        get :individuals, person_id: mikes_employer_profile_person.id, format: :json
+        output = JSON.parse response.body
+        expect(response).to have_http_status(404)
+        expect(output['error']).to eq 'no individual details found'
+      end
+    end
+
+    context "Person with employee role" do
+      include_context 'individual_data'
+
+      before :each do
+        sign_in user
+      end
+
+      it 'should return the individual details by person id' do
+        allow(person).to receive(:broker_agency_staff_roles).and_return([broker_agency_staff_role])
+        allow(census_employee).to receive(:census_dependents).and_return([census_dependent])
+        allow(benefit_group_assignment).to receive(:hbx_enrollments).and_return([hbx_enrollment])
+
+        get :individuals, person_id: person.id, format: :json
+        output = JSON.parse(response.body)
+        expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
+                                  'gender', 'id', 'employments')
+        expect(output['first_name']).to eq 'John'
+        expect(output['date_of_birth']).to eq '1965-01-01'
+        expect(output['ssn_masked']).to eq '***-**-1111'
+        expect(output['gender']).to eq 'male'
+        expect(output['employments']).to be_a_kind_of Array
+        expect(output['employments'].size).to eq 1
+
+        employment = output['employments'].first
+        expect(employment).to include('employer_profile_id', 'employer_name', 'hired_on', 'is_business_owner', 'enrollments')
+        expect(employment['employer_name']).to eq 'Turner Agency, Inc'
+        expect(employment['hired_on']).to eq '2015-04-01'
+        expect(employment['is_business_owner']).to be false
+        expect(employment['enrollments']).to be_a_kind_of Array
+        expect(employment['enrollments'].size).to eq 1
+
+        enrollment = employment['enrollments'].first
+        expect(enrollment).to include('start_on', 'health', 'dental')
+        expect(enrollment['start_on']).to eq '2017-01-01'
+
+        health = enrollment['health']
+        expect(health).to include('status', 'employer_contribution', 'employee_cost', 'total_premium', 'plan_name',
+                                  'plan_type', 'metal_level', 'benefit_group_name')
+        expect(health['status']).to eq 'Enrolled'
+        expect(enrollment['dental']['status']).to eq 'Not Enrolled'
+
+        expect(output['dependents'].size).to eq 1
+        dependent = output['dependents'].first
+        expect(dependent).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
+                                     'gender', 'id', 'relationship')
+        expect(dependent['first_name']).to eq 'Mary'
+        expect(dependent['last_name']).to eq 'Doe'
+        expect(dependent['date_of_birth']).to eq '1980-12-01'
+        expect(dependent['ssn_masked']).to eq '***-**-3333'
+        expect(dependent['gender']).to eq 'female'
+        expect(dependent['relationship']).to eq 'spouse'
+      end
+
+      it 'should return the individual details' do
+        allow(person).to receive(:broker_agency_staff_roles).and_return([broker_agency_staff_role])
+        allow(census_employee).to receive(:census_dependents).and_return([census_dependent])
+        allow(benefit_group_assignment).to receive(:hbx_enrollments).and_return([hbx_enrollment])
+
+        get :individual, format: :json
+        output = JSON.parse(response.body)
+        expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
+                                  'gender', 'id', 'employments')
+
+        employment = output['employments'].first
+        expect(employment).to include('employer_profile_id', 'employer_name', 'hired_on', 'is_business_owner', 'enrollments')
+
+        enrollment = employment['enrollments'].first
+        expect(enrollment).to include('start_on', 'health', 'dental')
+
+        health = enrollment['health']
+        expect(health).to include('status', 'employer_contribution', 'employee_cost', 'total_premium', 'plan_name',
+                                  'plan_type', 'metal_level', 'benefit_group_name')
+
+        dependent = output['dependents'].first
+        expect(dependent).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
+                                     'gender', 'id', 'relationship')
+      end
+
+      it 'should not return the individual details when access is denied' do
+        allow(person).to receive(:broker_agency_staff_roles).and_return([broker_agency_staff_role])
+        allow(census_employee).to receive(:census_dependents).and_return([census_dependent])
+        allow(benefit_group_assignment).to receive(:hbx_enrollments).and_return([hbx_enrollment])
+
+        get :individuals, person_id: another_person.id, format: :json
+        output = JSON.parse(response.body)
+        expect(response).to have_http_status(404)
+        expect(output['error']).to eq 'no individual details found'
+      end
+    end
+  end
+
+end
