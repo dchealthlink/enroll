@@ -58,6 +58,25 @@ module Api
           end
         end
 
+        def add_dependents employee
+          dependents_of(employee).map do |d|
+            JSON.parse(basic_individual(d)).merge(relationship: relationship_with(d))
+          end
+        end
+
+        def basic_individual person
+          Jbuilder.encode do |json|
+            json.first_name person.first_name
+            json.middle_name person.middle_name
+            json.last_name person.last_name
+            json.name_suffix person.name_sfx
+            json.date_of_birth person.dob
+            json.ssn_masked ssn_masked person
+            json.gender person.gender
+            json.id person.id
+          end
+        end
+
         #
         # Private
         #
@@ -74,44 +93,15 @@ module Api
 
         def roster_employee employee, benefit_group_assignments, grouped_bga_enrollments=nil
           result = employee_hash employee
-          enrollment_util = EnrollmentUtil.new(
-              assignments: current_or_upcoming_assignments(benefit_group_assignments))
+          enrollment_util = EnrollmentUtil.new benefit_group_assignments: benefit_group_assignments
           enrollment_util.grouped_bga_enrollments = grouped_bga_enrollments if grouped_bga_enrollments
           result[:enrollments] = enrollment_util.employee_enrollments
-          add_dependents employee, result
+          result[:dependents] = add_dependents employee
           result
         end
 
-        def add_dependents employee, result
-          result[:dependents] = dependents_of(employee).map do |d|
-            basic_individual(d).merge(relationship: relationship_with(d))
-          end
-        end
-
-        def current_or_upcoming_assignments benefit_group_assignments
-          benefit_group_assignments.select { |a| PlanYearUtil.new(plan_year: a.plan_year).is_current_or_upcoming? }
-        end
-
-        def employee_hash employee
-          result = basic_individual employee
-          result[:id] = employee.id
-          result[:hired_on] = employee.hired_on
-          result[:is_business_owner] = employee.is_business_owner
-          result
-        end
-
-        def basic_individual employee
-          ssn = employee.try(:ssn)
-          ssn_masked = "***-**-#{ ssn.chars.last(4).join }" if ssn
-
-          {first_name: employee.try(:first_name),
-           middle_name: employee.try(:middle_name),
-           last_name: employee.try(:last_name),
-           name_suffix: employee.try(:name_sfx),
-           date_of_birth: employee.try(:dob),
-           ssn_masked: ssn_masked,
-           gender: employee.try(:gender)
-          }
+        def ssn_masked person
+          "***-**-#{person.ssn[5..9]}" if person.ssn
         end
 
         def dependents_of employee
@@ -121,6 +111,13 @@ module Api
           (family_dependents + census_dependents).uniq { |p| p.ssn }
         end
 
+        def employee_hash employee
+          result = JSON.parse basic_individual employee
+          result[:id] = employee.id
+          result[:hired_on] = employee.hired_on
+          result[:is_business_owner] = employee.is_business_owner
+          result
+        end
 
         def relationship_with dependent
           dependent.try(:relationship) || dependent.try(:employee_relationship)

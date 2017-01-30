@@ -84,8 +84,8 @@ RSpec.describe Api::V1::Mobile::EmployerUtil, dbclean: :after_each do
       expect(summary[:employer_name]).to eq employer_profile_cafe.legal_name
       expect(summary[:employees_total]).to eq 0
 
-      expect(summary[:employer_details_url]).to include('/api/v1/mobile_api/employer_details/')
-      expect(summary[:employee_roster_url]).to include('/api/v1/mobile_api/employee_roster/')
+      expect(summary[:employer_details_url]).to match(/\/api\/v1\/mobile\/employers\/[0-9a-f]{24}\/details/)
+      expect(summary[:employee_roster_url]).to match(/\/api\/v1\/mobile\/employers\/[0-9a-f]{24}\/employees/)
       confirm_expected_plan_year_summary_fields_for_cafe summary[:plan_years].first
 
       summary = employer.send(:summary_details, {employer_profile: employer_profile_cafe,
@@ -155,8 +155,8 @@ RSpec.describe Api::V1::Mobile::EmployerUtil, dbclean: :after_each do
 
       confirm_expected_plan_year_summary_fields_for_cafe summary[:plan_years].first
 
-      expect(summary[:employer_details_url]).to include('/api/v1/mobile_api/employer_details/')
-      expect(summary[:employee_roster_url]).to include('/api/v1/mobile_api/employee_roster/')
+      expect(summary[:employer_details_url]).to match(/\/api\/v1\/mobile\/employers\/[0-9a-f]{24}\/details/)
+      expect(summary[:employee_roster_url]).to match(/\/api\/v1\/mobile\/employers\/[0-9a-f]{24}\/employees/)
 
       contact_information = summary[:contact_info]
       expect(contact_information).to be_a_kind_of Array
