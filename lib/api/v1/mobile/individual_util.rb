@@ -2,10 +2,10 @@ module Api
   module V1
     module Mobile
       class IndividualUtil < BaseUtil
+        include InsuredPerson
 
         def build_individual_json
-          @employee_util = EmployeeUtil.new
-          individual = @employee_util.basic_individual @person
+          individual = basic_person @person
           JSON.parse(individual).merge JSON.parse(enrollments).merge JSON.parse(dependents)
         end
 
@@ -34,7 +34,7 @@ module Api
           Jbuilder.encode do |json|
             employee_role = @person.employee_roles.first
             employee_role.census_employee.tap do |employee|
-              json.dependents @employee_util.include_dependents employee
+              json.dependents include_dependents_to employee
             end if employee_role
           end
         end

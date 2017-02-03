@@ -3,6 +3,8 @@ module Api
     module Mobile
       class EmployeeUtil < BaseUtil
         include CacheUtil
+        include InsuredPerson
+
         ROSTER_ENROLLMENT_PLAN_FIELDS_TO_RENDER = [:plan_type, :deductible, :family_deductible, :provider_directory_url, :rx_formulary_url]
 
         def initialize args={}
@@ -58,25 +60,6 @@ module Api
           end
         end
 
-        def include_dependents employee
-          dependents_of(employee).map do |d|
-            JSON.parse(basic_individual(d)).merge(relationship: relationship_with(d))
-          end
-        end
-
-        def basic_individual person
-          Jbuilder.encode do |json|
-            json.first_name person.first_name
-            json.middle_name person.middle_name
-            json.last_name person.last_name
-            json.name_suffix person.name_sfx
-            json.date_of_birth person.dob
-            json.ssn_masked ssn_masked person
-            json.gender person.gender
-            json.id person.id
-          end
-        end
-
         #
         # Private
         #
@@ -96,31 +79,16 @@ module Api
           enrollment_util = EnrollmentUtil.new benefit_group_assignments: benefit_group_assignments
           enrollment_util.grouped_bga_enrollments = grouped_bga_enrollments if grouped_bga_enrollments
           result[:enrollments] = enrollment_util.employee_enrollments
-          result[:dependents] = include_dependents employee
+          result[:dependents] = include_dependents_to employee
           result
         end
 
-        def ssn_masked person
-          "***-**-#{person.ssn[5..9]}" if person.ssn
-        end
-
-        def dependents_of employee
-          all_family_dependents = employee.try(:employee_role).try(:person).try(:primary_family).try(:active_family_members) || []
-          family_dependents = all_family_dependents.reject { |d| relationship_with(d) == 'self' }
-          census_dependents = employee.census_dependents || []
-          (family_dependents + census_dependents).uniq { |p| p.ssn }
-        end
-
         def employee_hash employee
-          result = JSON.parse basic_individual employee
+          result = JSON.parse basic_person employee
           result[:id] = employee.id
           result[:hired_on] = employee.hired_on
           result[:is_business_owner] = employee.is_business_owner
           result
-        end
-
-        def relationship_with dependent
-          dependent.try(:relationship) || dependent.try(:employee_relationship)
         end
 
       end
