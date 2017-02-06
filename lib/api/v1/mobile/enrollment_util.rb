@@ -75,7 +75,8 @@ module Api
         def initialize_enrollment hbx_enrollments, coverage_kind
           enrollment = hbx_enrollments.flatten.detect { |e| e.coverage_kind == coverage_kind } unless !hbx_enrollments || hbx_enrollments.empty?
           rendered_enrollment = if enrollment
-                                  {status: status_label_for(enrollment.aasm_state),
+                                  {hbx_enrollment_id: enrollment.id,
+                                   status: status_label_for(enrollment.aasm_state),
                                    employer_contribution: enrollment.total_employer_contribution,
                                    employee_cost: enrollment.total_employee_cost,
                                    total_premium: enrollment.total_premium,
