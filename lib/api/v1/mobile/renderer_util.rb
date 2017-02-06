@@ -7,40 +7,48 @@ module Api
         NO_EMPLOYEE_ROSTER_FOUND = 'no employee roster found'
         NO_INDIVIDUAL_DETAILS_FOUND = 'no individual details found'
 
-        def render_employers_list response, status='not_found'
-          if response
-            render json: response
-          else
-            render json: {error: NO_BROKER_AGENCY_PROFILE_FOUND}, status: status
-          end
+        def render_broker response
+          render json: response
         end
 
-        def render_individual_details person=nil
-          if person
-            response = IndividualUtil.new(person: person).build_individual_json
-            render json: response
-          else
-            render json: {error: NO_INDIVIDUAL_DETAILS_FOUND}, status: :not_found
-          end
+        def render_employer_details details
+          render json: details
         end
 
-        def render_employer_details details=nil
-          if details
-            render json: details
-          else
-            render json: {error: NO_EMPLOYER_DETAILS_FOUND}, status: :not_found
-          end
+        def render_employee_roster employer_profile, employees
+          render json: {
+              employer_name: employer_profile.legal_name,
+              total_num_employees: employees.size,
+              roster: EmployeeUtil.new(employees: employees.limit(500).to_a, employer_profile: employer_profile).roster_employees}
         end
 
-        def render_employee_roster employer_profile=nil, employees=nil
-          if employees
-            render json: {
-                employer_name: employer_profile.legal_name,
-                total_num_employees: employees.size,
-                roster: EmployeeUtil.new(employees: employees.limit(500).to_a, employer_profile: employer_profile).roster_employees}
-          else
-            render json: {error: NO_EMPLOYEE_ROSTER_FOUND}, :status => :not_found
-          end
+        def render_individual_details person
+          render json: IndividualUtil.new(person: person).build_individual_json
+        end
+
+        def report_broker_error status='not_found'
+          render json: {error: NO_BROKER_AGENCY_PROFILE_FOUND}, status: status
+        end
+
+        def report_individual_error
+          report_error NO_INDIVIDUAL_DETAILS_FOUND
+        end
+
+        def report_employer_error
+          report_error NO_EMPLOYER_DETAILS_FOUND
+        end
+
+        def report_employee_error
+          report_error NO_EMPLOYEE_ROSTER_FOUND
+        end
+
+        #
+        # Private
+        #
+        private
+
+        def report_error message
+          render json: {error: message}, status: :not_found
         end
 
       end

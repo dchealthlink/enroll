@@ -430,7 +430,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
 
         enrollment = employment['enrollments'].first
         expect(enrollment).to include('start_on', 'health', 'dental')
-        expect(enrollment['start_on']).to eq '2017-01-01'
+        expect(enrollment['start_on']).to eq '2017-02-01'
 
         health = enrollment['health']
         expect(health).to include('status', 'employer_contribution', 'employee_cost', 'total_premium', 'plan_name',

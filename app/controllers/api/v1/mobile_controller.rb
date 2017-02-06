@@ -9,9 +9,9 @@ module Api
           authorized = Mobile::SecurityUtil.new(user: current_user, params: params).authorize_employer_list
           if authorized[:status] == 200
             employer = Mobile::EmployerUtil.new authorized: authorized, user: current_user
-            render_employers_list employer.employers_and_broker_agency
+            render_broker employer.employers_and_broker_agency
           else
-            render_employers_list nil, authorized[:status]
+            report_broker_error authorized[:status]
           end
         }
       end
@@ -19,7 +19,11 @@ module Api
       def employer_details
         execute {
           @security = Mobile::SecurityUtil.new user: current_user, params: params
-          render_employer @security.can_view_employer_details?, @security.employer_profile
+          if @security.employer_profile
+            render_employer @security.can_view_employer_details?, @security.employer_profile
+          else
+            report_employer_error
+          end
         }
       end
 
@@ -33,7 +37,11 @@ module Api
       def employee_roster
         execute {
           @security = Mobile::SecurityUtil.new user: current_user, params: params
-          render_employees @security.can_view_employee_roster?, @security.employer_profile
+          if @security.employer_profile
+            render_employees @security.can_view_employee_roster?, @security.employer_profile
+          else
+            report_employee_error
+          end
         }
       end
 
@@ -61,7 +69,7 @@ module Api
       private
 
       def render_individual can_view, person
-        can_view ? render_individual_details(person) : render_individual_details
+        can_view ? render_individual_details(person) : report_individual_error
       end
 
       def render_employer can_view, employer_profile
@@ -69,7 +77,7 @@ module Api
           employer = Mobile::EmployerUtil.new employer_profile: employer_profile, report_date: params[:report_date]
           render_employer_details employer.employer_details
         else
-          render_employer_details
+          report_employer_error
         end
       end
 
@@ -78,9 +86,9 @@ module Api
           employees = Mobile::EmployeeUtil.new(employer_profile: employer_profile,
                                                employee_name: params[:employee_name],
                                                status: params[:status]).employees_sorted_by
-          employees ? render_employee_roster(employer_profile, employees) : render_employee_roster
+          employees ? render_employee_roster(employer_profile, employees) : report_employee_error
         else
-          render_employee_roster
+          report_employee_error
         end
       end
 
