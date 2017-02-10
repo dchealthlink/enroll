@@ -15,7 +15,7 @@ module Api
 
         def merge_all_this *details
           hash = {}
-          details.map { |m| hash.merge! JSON.parse(m) }
+          details.each { |m| hash.merge! JSON.parse(m) }
           hash
         end
 
@@ -35,7 +35,7 @@ module Api
         def enrollments
           result = []
           Jbuilder.encode do |json|
-            @person.employee_roles.map do |employee_role|
+            @person.employee_roles.each do |employee_role|
               employee_role.census_employee.tap do |employee|
                 enrollment_util = EnrollmentUtil.new benefit_group_assignments: employee.benefit_group_assignments
                 result << enrollment_util.employee_enrollments(employee)
