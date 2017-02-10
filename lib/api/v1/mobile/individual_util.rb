@@ -5,8 +5,7 @@ module Api
         include InsuredPerson
 
         def build_individual_json
-          individual = basic_person @person
-          JSON.parse(individual).merge JSON.parse(enrollments).merge JSON.parse(dependents)
+          merge_all_this basic_person(@person), employments, enrollments, dependents
         end
 
         #
@@ -14,7 +13,13 @@ module Api
         #
         private
 
-        def enrollments
+        def merge_all_this *details
+          hash = {}
+          details.map { |m| hash.merge! JSON.parse(m) }
+          hash
+        end
+
+        def employments
           Jbuilder.encode do |json|
             json.employments(@person.employee_roles) do |employee_role|
               employee_role.census_employee.tap do |employee|
@@ -22,11 +27,21 @@ module Api
                 json.employer_name employee.employer_profile.legal_name
                 json.hired_on employee.hired_on
                 json.is_business_owner employee.is_business_owner
-
-                enrollment_util = EnrollmentUtil.new benefit_group_assignments: employee.benefit_group_assignments
-                json.enrollments enrollment_util.employee_enrollments
               end
             end
+          end
+        end
+
+        def enrollments
+          result = []
+          Jbuilder.encode do |json|
+            @person.employee_roles.map do |employee_role|
+              employee_role.census_employee.tap do |employee|
+                enrollment_util = EnrollmentUtil.new benefit_group_assignments: employee.benefit_group_assignments
+                result << enrollment_util.employee_enrollments(employee)
+              end
+            end
+            json.enrollments result.flatten
           end
         end
 

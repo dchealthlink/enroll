@@ -17,10 +17,10 @@ RSpec.describe Api::V1::Mobile::IndividualUtil, dbclean: :after_each do
                                 'gender', 'id', 'employments')
 
       employment = output['employments'].first
-      expect(employment).to include('employer_profile_id', 'employer_name', 'hired_on', 'is_business_owner', 'enrollments')
+      expect(employment).to include('employer_profile_id', 'employer_name', 'hired_on', 'is_business_owner')
 
-      enrollment = employment['enrollments'].first
-      expect(enrollment).to include('start_on', 'health', 'dental')
+      enrollment = output['enrollments'].first
+      expect(enrollment).to include('employer_profile_id', 'start_on', 'health', 'dental')
 
       health = enrollment['health']
       expect(health).to include('status', 'employer_contribution', 'employee_cost', 'total_premium', 'plan_name',

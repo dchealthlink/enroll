@@ -21,10 +21,10 @@ module Api
           yield bg_assignment_ids(enrolled), bg_assignment_ids(waived), bg_assignment_ids(terminated)
         end
 
-        def employee_enrollments
+        def employee_enrollments employee=nil
           @assignments.map do |assignment|
             hbx_enrollments = @grouped_bga_enrollments[assignment.id.to_s] unless !@grouped_bga_enrollments || @grouped_bga_enrollments.empty?
-            enrollment_year = {start_on: assignment.plan_year.start_on}
+            enrollment_year = enrollment_hash employee, assignment
             %w{health dental}.each do |coverage_kind|
               enrollments = hbx_enrollments ? hbx_enrollments : assignment.hbx_enrollments
               enrollment, rendered_enrollment = initialize_enrollment enrollments, coverage_kind
@@ -46,6 +46,13 @@ module Api
         # Private
         #
         private
+
+        def enrollment_hash employee, assignment
+          enrollment = {}
+          enrollment.merge! employer_profile_id: employee.employer_profile_id if employee
+          enrollment.merge! start_on: assignment.plan_year.start_on
+          enrollment
+        end
 
         def current_or_upcoming_assignments
           @benefit_group_assignments.select { |a| PlanYearUtil.new(plan_year: a.plan_year).is_current_or_upcoming? }
@@ -83,22 +90,22 @@ module Api
 
         def initialize_enrollment hbx_enrollments, coverage_kind
           enrollment = hbx_enrollments.flatten.detect { |e| e.coverage_kind == coverage_kind } unless !hbx_enrollments || hbx_enrollments.empty?
-          rendered_enrollment = if enrollment
-                                  {status: status_label_for(enrollment.aasm_state),
-                                   employer_contribution: enrollment.total_employer_contribution,
-                                   employee_cost: enrollment.total_employee_cost,
-                                   total_premium: enrollment.total_premium,
-                                   plan_name: enrollment.plan.try(:name),
-                                   plan_type: enrollment.plan.try(:plan_type),
-                                   metal_level: enrollment.plan.try(coverage_kind == :health ? :metal_level : :dental_level),
-                                   benefit_group_name: enrollment.try(:benefit_group).try(:title)
-                                  }
-                                else
-                                  {status: 'Not Enrolled'}
-                                end
+          rendered_enrollment = enrollment ? enrollment_details(coverage_kind, enrollment) : {status: 'Not Enrolled'}
           return enrollment, rendered_enrollment
         end
 
+        def enrollment_details coverage_kind, enrollment
+          {
+              status: status_label_for(enrollment.aasm_state),
+              employer_contribution: enrollment.total_employer_contribution,
+              employee_cost: enrollment.total_employee_cost,
+              total_premium: enrollment.total_premium,
+              plan_name: enrollment.plan.try(:name),
+              plan_type: enrollment.plan.try(:plan_type),
+              metal_level: enrollment.plan.try(coverage_kind == :health ? :metal_level : :dental_level),
+              benefit_group_name: enrollment.try(:benefit_group).try(:title)
+          }
+        end
 
         def status_label_for enrollment_status
           {

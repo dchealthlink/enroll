@@ -421,15 +421,15 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
         expect(output['employments'].size).to eq 1
 
         employment = output['employments'].first
-        expect(employment).to include('employer_profile_id', 'employer_name', 'hired_on', 'is_business_owner', 'enrollments')
+        expect(employment).to include('employer_profile_id', 'employer_name', 'hired_on', 'is_business_owner')
         expect(employment['employer_name']).to eq 'Turner Agency, Inc'
         expect(employment['hired_on']).to eq '2015-04-01'
         expect(employment['is_business_owner']).to be false
-        expect(employment['enrollments']).to be_a_kind_of Array
-        expect(employment['enrollments'].size).to eq 1
 
-        enrollment = employment['enrollments'].first
-        expect(enrollment).to include('start_on', 'health', 'dental')
+        enrollments = output['enrollments']
+        expect(enrollments).to be_a_kind_of Array
+        enrollment = enrollments.first
+        expect(enrollment).to include('employer_profile_id', 'start_on', 'health', 'dental')
         expect(enrollment['start_on']).to eq '2017-02-01'
 
         health = enrollment['health']
@@ -461,10 +461,10 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
                                   'gender', 'id', 'employments')
 
         employment = output['employments'].first
-        expect(employment).to include('employer_profile_id', 'employer_name', 'hired_on', 'is_business_owner', 'enrollments')
+        expect(employment).to include('employer_profile_id', 'employer_name', 'hired_on', 'is_business_owner')
 
-        enrollment = employment['enrollments'].first
-        expect(enrollment).to include('start_on', 'health', 'dental')
+        enrollment = output['enrollments'].first
+        expect(enrollment).to include('employer_profile_id', 'start_on', 'health', 'dental')
 
         health = enrollment['health']
         expect(health).to include('status', 'employer_contribution', 'employee_cost', 'total_premium', 'plan_name',
