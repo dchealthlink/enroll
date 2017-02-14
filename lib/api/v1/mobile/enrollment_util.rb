@@ -10,6 +10,9 @@ module Api
       end
 
       class EnrollmentUtil < BaseUtil
+        include UrlUtil
+        include ApplicationHelper
+
         attr_accessor :grouped_bga_enrollments
 
         def initialize args={}
@@ -29,10 +32,13 @@ module Api
               enrollments = hbx_enrollments ? hbx_enrollments : assignment.hbx_enrollments
               enrollment, rendered_enrollment = initialize_enrollment enrollments, coverage_kind
 
-              EmployeeUtil::ROSTER_ENROLLMENT_PLAN_FIELDS_TO_RENDER.each do |field|
-                value = enrollment.plan.try(field)
-                rendered_enrollment[field] = value if value
-              end if enrollment && enrollment.plan
+              if enrollment && enrollment.plan
+                EmployeeUtil::ROSTER_ENROLLMENT_PLAN_FIELDS_TO_RENDER.each do |field|
+                  value = enrollment.plan.try(field)
+                  rendered_enrollment[field] = value if value
+                end
+                rendered_enrollment[:carrier] = carrier enrollment if employee
+              end
 
               enrollment_termination! enrollment, rendered_enrollment
               enrollment_waived! enrollment, rendered_enrollment
@@ -52,6 +58,20 @@ module Api
           enrollment.merge! employer_profile_id: employee.employer_profile_id if employee
           enrollment.merge! start_on: assignment.plan_year.start_on
           enrollment
+        end
+
+        def carrier enrollment
+          carrier_name = enrollment.plan.carrier_profile.legal_name
+          {
+              name: carrier_name,
+              terms_and_conditions_url: terms_and_conditions(enrollment)
+          }
+        end
+
+        def terms_and_conditions enrollment
+          document = enrollment.plan.sbc_document
+          document_download_path(*get_key_and_bucket(document.identifier).reverse)
+              .concat("?content_type=application/pdf&filename=#{enrollment.plan.name.gsub(/[^0-9a-z]/i, '')}.pdf&disposition=inline") if document
         end
 
         def current_or_upcoming_assignments

@@ -111,9 +111,8 @@ module Api
         end
 
         def add_urls! employer_profile, summary
-          url_helper = Rails.application.routes.url_helpers
-          summary[:employer_details_url] = employers_details_url employer_profile.id
-          summary[:employee_roster_url] = employers_employees_url employer_profile.id
+          summary[:employer_details_url] = employers_details_path employer_profile.id
+          summary[:employee_roster_url] = employers_employees_path employer_profile.id
         end
 
         #TODO null handling

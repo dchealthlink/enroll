@@ -24,7 +24,10 @@ RSpec.describe Api::V1::Mobile::IndividualUtil, dbclean: :after_each do
 
       health = enrollment['health']
       expect(health).to include('status', 'employer_contribution', 'employee_cost', 'total_premium', 'plan_name',
-                                'plan_type', 'metal_level', 'benefit_group_name')
+                                'plan_type', 'metal_level', 'benefit_group_name', 'carrier')
+
+      carrier = health['carrier']
+      expect(carrier).to include('name', 'terms_and_conditions_url')
 
       dependent = output['dependents'].first
       expect(dependent).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
