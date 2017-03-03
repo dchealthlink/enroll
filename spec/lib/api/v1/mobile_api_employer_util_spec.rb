@@ -84,8 +84,8 @@ RSpec.describe Api::V1::Mobile::EmployerUtil, dbclean: :after_each do
       expect(summary[:employer_name]).to eq employer_profile_cafe.legal_name
       expect(summary[:employees_total]).to eq 0
 
-      expect(summary[:employer_details_url]).to include('/api/v1/mobile_api/employer_details/')
-      expect(summary[:employee_roster_url]).to include('/api/v1/mobile_api/employee_roster/')
+      expect(summary[:employer_details_url]).to match(/\/api\/v1\/mobile\/employers\/[0-9a-f]{24}\/details/)
+      expect(summary[:employee_roster_url]).to match(/\/api\/v1\/mobile\/employers\/[0-9a-f]{24}\/employees/)
       confirm_expected_plan_year_summary_fields_for_cafe summary[:plan_years].first
 
       summary = employer.send(:summary_details, {employer_profile: employer_profile_cafe,
@@ -155,8 +155,8 @@ RSpec.describe Api::V1::Mobile::EmployerUtil, dbclean: :after_each do
 
       confirm_expected_plan_year_summary_fields_for_cafe summary[:plan_years].first
 
-      expect(summary[:employer_details_url]).to include('/api/v1/mobile_api/employer_details/')
-      expect(summary[:employee_roster_url]).to include('/api/v1/mobile_api/employee_roster/')
+      expect(summary[:employer_details_url]).to match(/\/api\/v1\/mobile\/employers\/[0-9a-f]{24}\/details/)
+      expect(summary[:employee_roster_url]).to match(/\/api\/v1\/mobile\/employers\/[0-9a-f]{24}\/employees/)
 
       contact_information = summary[:contact_info]
       expect(contact_information).to be_a_kind_of Array
@@ -263,8 +263,8 @@ RSpec.describe Api::V1::Mobile::EmployerUtil, dbclean: :after_each do
 
 
     it "should count enrollment for two waived in the same family" do
-      @enrollment1.waive_coverage_by_benefit_group_assignment("inactive")
-      @enrollment2.waive_coverage_by_benefit_group_assignment("inactive")
+      @enrollment1.update_attributes(aasm_state: "inactive")
+      @enrollment2.update_attributes(aasm_state: "inactive")
       benefit_group_assignment = [@mikes_benefit_group_assignments, @carols_benefit_group_assignments]
       employee = Api::V1::Mobile::EmployeeUtil.new benefit_group_assignments: benefit_group_assignment
       result = employee.send(:count_by_enrollment_status)

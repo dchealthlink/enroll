@@ -20,7 +20,7 @@ RSpec.describe Api::V1::Mobile::EmployeeUtil, dbclean: :after_each do
       expect(emp[:last_name]).to eq "Heinlein"
       expect(emp[:name_suffix]).to eq "Esq."
       expect(emp[:gender]).to eq "male"
-      expect(emp[:date_of_birth]).to eq Date.parse("1907-07-07")
+      expect(emp[:date_of_birth]).to eq "1907-07-07"
       expect(emp[:ssn_masked]).to eq "***-**-6666"
       expect(emp[:hired_on]).to eq Date.parse("2008-12-08")
       expect(emp[:id]).to eq ce_employee.id
@@ -47,7 +47,8 @@ RSpec.describe Api::V1::Mobile::EmployeeUtil, dbclean: :after_each do
     it_behaves_like 'roster_employees', 'return the employee' do
       let!(:emp) {
         employee = Api::V1::Mobile::EmployeeUtil.new employees: [ce_employee], employer_profile: employer_profile_salon
-        employee.roster_employees.pop
+        ee = employee.roster_employees.pop
+        ee.inject({}) { |memo, (k, v)| memo[k.to_sym] = v; memo }
       }
     end
 
@@ -79,11 +80,12 @@ RSpec.describe Api::V1::Mobile::EmployeeUtil, dbclean: :after_each do
     end
 
     it 'should return the basic individual' do
-      employee = Api::V1::Mobile::EmployeeUtil.new
-      individual = employee.send(:basic_individual, ce_employee)
+      individual_util = Api::V1::Mobile::IndividualUtil.new
+      individual = JSON.parse individual_util.basic_person ce_employee
+      individual = individual.inject({}) { |memo, (k, v)| memo[k.to_sym] = v; memo }
       expect(individual).to include(:first_name, :middle_name, :last_name, :name_suffix, :date_of_birth, :ssn_masked,
                                     :gender)
-      expect(individual[:date_of_birth]).to eq Date.parse('1907-07-07')
+      expect(individual[:date_of_birth]).to eq '1907-07-07'
       expect(individual[:first_name]).to_not be_nil
       expect(individual[:last_name]).to_not be_nil
       expect(individual[:middle_name]).to_not be_nil
