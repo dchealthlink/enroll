@@ -186,7 +186,7 @@ RSpec.describe Api::V1::Mobile::EmployerUtil, dbclean: :after_each do
       expect(active[:health][:reference_plan_name]).to include 'BLUECHOICE SILVER'
       expect(active[:health][:reference_plan_HIOS_id]).to include '41842DC04000'
       expect(active[:health][:carrier_name]).to eq 'United Health Care'
-      expect(active[:health][:plan_type]).to eq 'HMO'
+      expect(active[:health][:plan_type]).to eq 'POS'
       expect(active[:health][:metal_level]).to eq 'Silver'
       expect(active[:health][:plan_option_kind]).to eq 'single_plan'
 

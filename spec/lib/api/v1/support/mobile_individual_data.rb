@@ -26,9 +26,9 @@ module MobileIndividualData
                          benefit_group_assignment_id: benefit_group_assignment.id,
                          aasm_state: 'coverage_enrolled')
     }
-    let(:person) { FactoryGirl.create(:person_with_employee_role, user: user, employer_profile_id: employer_profile.id,
+    let(:person) { FactoryGirl.create(:person_with_employee_role, ssn: 123456789, user: user, employer_profile_id: employer_profile.id,
                                       hired_on: census_employee.hired_on, census_employee_id: census_employee.id) }
-    let(:another_person) { FactoryGirl.create(:person_with_employee_role, employer_profile_id: employer_profile.id,
+    let(:another_person) { FactoryGirl.create(:person_with_employee_role, ssn: 223456789, employer_profile_id: employer_profile.id,
                                               hired_on: census_employee.hired_on, census_employee_id: census_employee.id) }
   end
 end

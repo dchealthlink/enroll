@@ -43,7 +43,7 @@ RSpec.describe Api::V1::Mobile::PlanYearUtil, dbclean: :after_each do
                                 :estimated_plan_participant_max_monthly_cost, :plans_by, :plans_by_summary_text)
       expect(health[:reference_plan_HIOS_id].split('').length).to eq 17
       expect(health[:carrier_name]).to eq 'United Health Care'
-      expect(health[:plan_type]).to eq 'HMO'
+      expect(health[:plan_type]).to eq 'POS'
       expect(health[:metal_level]).to eq 'Silver'
       expect(health[:plan_option_kind]).to eq 'single_plan'
       expect(health[:plans_by]).to eq 'A Single Plan'
@@ -66,7 +66,7 @@ RSpec.describe Api::V1::Mobile::PlanYearUtil, dbclean: :after_each do
                                 :estimated_plan_participant_max_monthly_cost, :plans_by, :plans_by_summary_text)
       expect(dental[:reference_plan_HIOS_id].split('').length).to eq 17
       expect(dental[:carrier_name]).to eq 'United Health Care'
-      expect(dental[:plan_type]).to eq 'HMO'
+      expect(dental[:plan_type]).to eq 'POS'
       expect(dental[:metal_level]).to eq 'Silver'
       expect(dental[:plan_option_kind]).to eq 'single_plan'
       expect(dental[:plans_by]).to eq 'Custom (1 Plans)'

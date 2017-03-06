@@ -414,8 +414,8 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
         expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                   'gender', 'id', 'employments')
         expect(output['first_name']).to eq 'John'
-        expect(output['date_of_birth']).to eq '1965-01-01'
-        expect(output['ssn_masked']).to eq '***-**-1111'
+        expect(output['date_of_birth']).to eq '1972-04-04'
+        expect(output['ssn_masked']).to eq '***-**-6789'
         expect(output['gender']).to eq 'male'
         expect(output['employments']).to be_a_kind_of Array
         expect(output['employments'].size).to eq 1
@@ -430,7 +430,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
         expect(enrollments).to be_a_kind_of Array
         enrollment = enrollments.first
         expect(enrollment).to include('employer_profile_id', 'start_on', 'health', 'dental')
-        expect(enrollment['start_on']).to eq '2017-02-01'
+        expect(enrollment['start_on']).to eq '2017-03-01'
 
         health = enrollment['health']
         expect(health).to include('status', 'employer_contribution', 'employee_cost', 'total_premium', 'plan_name',

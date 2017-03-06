@@ -5,7 +5,7 @@ module Api
         include InsuredPerson
 
         def build_individual_json
-          merge_all_this basic_person(@person), employments, enrollments, dependents
+          merge_all_this basic_person(@person), addresses, employments, enrollments, dependents
         end
 
         #
@@ -17,6 +17,22 @@ module Api
           hash = {}
           details.each { |m| hash.merge! JSON.parse(m) }
           hash
+        end
+
+        def addresses
+          Jbuilder.encode do |json|
+            json.addresses(@person.addresses) do |address|
+              json.kind address.kind
+              json.address_1 address.address_1
+              json.address_2 address.address_2
+              json.city address.city
+              json.county address.county
+              json.state address.state
+              json.location_state_code address.location_state_code
+              json.zip address.zip
+              json.country_name address.country_name
+            end
+          end
         end
 
         def employments

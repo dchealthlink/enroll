@@ -14,13 +14,16 @@ RSpec.describe Api::V1::Mobile::IndividualUtil, dbclean: :after_each do
       individual = Api::V1::Mobile::IndividualUtil.new person: person
       output = individual.build_individual_json
       expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
-                                'gender', 'id', 'employments')
+                                'gender', 'id', 'employments', 'addresses')
 
       employment = output['employments'].first
       expect(employment).to include('employer_profile_id', 'employer_name', 'hired_on', 'is_business_owner')
 
       enrollment = output['enrollments'].first
       expect(enrollment).to include('employer_profile_id', 'start_on', 'health', 'dental')
+
+      addresses = output['addresses'].first
+      expect(addresses).to include('kind', 'address_1', 'address_2', 'city', 'county', 'state', 'location_state_code', 'zip', 'country_name')
 
       health = enrollment['health']
       expect(health).to include('status', 'employer_contribution', 'employee_cost', 'total_premium', 'plan_name',
