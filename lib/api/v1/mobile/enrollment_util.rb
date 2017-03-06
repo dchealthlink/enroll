@@ -116,6 +116,7 @@ module Api
 
         def enrollment_details coverage_kind, enrollment
           {
+              hbx_enrollment_id: enrollment.id,
               status: status_label_for(enrollment.aasm_state),
               employer_contribution: enrollment.total_employer_contribution,
               employee_cost: enrollment.total_employee_cost,
