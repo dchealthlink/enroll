@@ -1,11 +1,11 @@
 module Api
   module V1
-    module Mobile::Util
-      module CacheUtil
+    module Mobile::Cache
+      module PlanCache
 
         def plan_and_benefit_group employees, employer_profile
           begin
-            employees_benefits = employees.map { |e| {"#{e.id}" => e, benefit_group_assignments: e.benefit_group_assignments.select(&:is_active?) } }.flatten
+            employees_benefits = employees.map { |e| {"#{e.id}" => e, benefit_group_assignments: e.benefit_group_assignments.select(&:is_active?)} }.flatten
             benefit_group_assignment_ids = employees_benefits.map { |x| x[:benefit_group_assignments] }.flatten.map(&:id)
             enrollments_for_benefit_groups = hbx_enrollments benefit_group_assignment_ids
             grouped_bga_enrollments = enrollments_for_benefit_groups.group_by { |x| x.benefit_group_assignment_id.to_s }

@@ -80,7 +80,7 @@ RSpec.describe Api::V1::Mobile::EmployeeUtil, dbclean: :after_each do
     end
 
     it 'should return the basic individual' do
-      individual_util = Api::V1::Mobile::IndividualUtil.new
+      individual_util = Api::V1::Mobile::InsuredUtil.new
       individual = JSON.parse individual_util.basic_person ce_employee
       individual = individual.inject({}) { |memo, (k, v)| memo[k.to_sym] = v; memo }
       expect(individual).to include(:first_name, :middle_name, :last_name, :name_suffix, :date_of_birth, :ssn_masked,

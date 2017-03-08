@@ -3,9 +3,9 @@ require 'support/brady_bunch'
 require 'lib/api/v1/support/mobile_employer_data'
 require 'lib/api/v1/support/mobile_employee_data'
 
-RSpec.describe Api::V1::Mobile::CacheUtil, dbclean: :after_each do
+RSpec.describe Api::V1::Mobile::PlanCache, dbclean: :after_each do
   include_context 'employer_data'
-  include Api::V1::Mobile::CacheUtil
+  include Api::V1::Mobile::PlanCache
 
   context "Caching" do
     include_context 'employee_data'

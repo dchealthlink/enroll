@@ -1,7 +1,7 @@
 module Api
   module V1
     module Mobile::Util
-      class IndividualUtil < BaseUtil
+      class InsuredUtil < BaseUtil
         include InsuredPerson
 
         def build_individual_json
