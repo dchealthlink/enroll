@@ -1,8 +1,9 @@
 require "rails_helper"
 require 'lib/api/v1/support/mobile_individual_data'
 
-RSpec.describe Api::V1::Mobile::InsuredUtil, dbclean: :after_each do
+RSpec.describe Api::V1::Mobile::Util::InsuredUtil, dbclean: :after_each do
   include_context 'individual_data'
+  Util = Api::V1::Mobile::Util
 
   context 'Individuals' do
 
@@ -11,8 +12,8 @@ RSpec.describe Api::V1::Mobile::InsuredUtil, dbclean: :after_each do
       allow(census_employee).to receive(:census_dependents).and_return([census_dependent])
       allow(benefit_group_assignment).to receive(:hbx_enrollments).and_return([hbx_enrollment])
 
-      individual = Api::V1::Mobile::InsuredUtil.new person: person
-      output = individual.build_individual_json
+      individual = Util::InsuredUtil.new person: person
+      output = individual.build_insured_json
       expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                 'gender', 'id', 'employments', 'addresses')
 

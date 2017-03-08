@@ -23,7 +23,7 @@ module Api
         end
 
         def render_insured_details person
-          render json: Util::InsuredUtil.new(person: person).build_individual_json
+          render json: Util::InsuredUtil.new(person: person).build_insured_json
         end
 
         def report_broker_error status='not_found'

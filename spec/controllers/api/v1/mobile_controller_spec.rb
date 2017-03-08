@@ -344,28 +344,28 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       end
 
       it 'should return individual details of user (/individuals/:person_id)' do
-        get :individuals, person_id: mikes_broker_role.person.id, format: :json
+        get :insured_person, person_id: mikes_broker_role.person.id, format: :json
         output = JSON.parse response.body
         expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                   'gender', 'id', 'employments')
       end
 
       it 'should return individual details of user (/individual)' do
-        get :individual, format: :json
+        get :insured, format: :json
         output = JSON.parse response.body
         expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                   'gender', 'id', 'employments')
       end
 
       it 'should not return individual details of user it does not have access to' do
-        get :individuals, person_id: carols_broker_role.person.id, format: :json
+        get :insured_person, person_id: carols_broker_role.person.id, format: :json
         output = JSON.parse response.body
         expect(response).to have_http_status(404)
         expect(output['error']).to eq 'no individual details found'
       end
 
       it 'should return individual details of user (/individuals/:person_id)' do
-        get :individuals, person_id: mikes_employer_profile_person.id, format: :json
+        get :insured_person, person_id: mikes_employer_profile_person.id, format: :json
         output = JSON.parse response.body
         expect(response).to have_http_status(404)
         expect(output['error']).to eq 'no individual details found'
@@ -380,7 +380,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       end
 
       it 'should return the individual details' do
-        get :individuals, person_id: carols_employer_profile_person.id, format: :json
+        get :insured_person, person_id: carols_employer_profile_person.id, format: :json
         output = JSON.parse response.body
         expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                   'gender', 'id', 'employments')
@@ -390,7 +390,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       end
 
       it 'should not return individual details of user it does not have access to' do
-        get :individuals, person_id: mikes_employer_profile_person.id, format: :json
+        get :insured_person, person_id: mikes_employer_profile_person.id, format: :json
         output = JSON.parse response.body
         expect(response).to have_http_status(404)
         expect(output['error']).to eq 'no individual details found'
@@ -409,7 +409,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
         allow(census_employee).to receive(:census_dependents).and_return([census_dependent])
         allow(benefit_group_assignment).to receive(:hbx_enrollments).and_return([hbx_enrollment])
 
-        get :individuals, person_id: person.id, format: :json
+        get :insured_person, person_id: person.id, format: :json
         output = JSON.parse(response.body)
         expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                   'gender', 'id', 'employments')
@@ -459,7 +459,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
         allow(census_employee).to receive(:census_dependents).and_return([census_dependent])
         allow(benefit_group_assignment).to receive(:hbx_enrollments).and_return([hbx_enrollment])
 
-        get :individual, format: :json
+        get :insured, format: :json
         output = JSON.parse(response.body)
         expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                   'gender', 'id', 'employments')
@@ -487,7 +487,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
         allow(census_employee).to receive(:census_dependents).and_return([census_dependent])
         allow(benefit_group_assignment).to receive(:hbx_enrollments).and_return([hbx_enrollment])
 
-        get :individuals, person_id: another_person.id, format: :json
+        get :insured_person, person_id: another_person.id, format: :json
         output = JSON.parse(response.body)
         expect(response).to have_http_status(404)
         expect(output['error']).to eq 'no individual details found'

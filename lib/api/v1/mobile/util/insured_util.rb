@@ -2,10 +2,11 @@ module Api
   module V1
     module Mobile::Util
       class InsuredUtil < BaseUtil
-        include InsuredPerson
+        include Api::V1::Mobile::Insured::InsuredPerson
+        include Api::V1::Mobile::Insured::InsuredEmployee
 
-        def build_individual_json
-          merge_all_this basic_person(@person), addresses, employments, enrollments, dependents
+        def build_insured_json
+          merge_all_this basic_person(@person), addresses, ie_employments(@person), ie_enrollments(@person), dependents
         end
 
         #
@@ -32,32 +33,6 @@ module Api
               json.zip address.zip
               json.country_name address.country_name
             end
-          end
-        end
-
-        def employments
-          Jbuilder.encode do |json|
-            json.employments(@person.employee_roles) do |employee_role|
-              employee_role.census_employee.tap do |employee|
-                json.employer_profile_id employee.employer_profile_id
-                json.employer_name employee.employer_profile.legal_name
-                json.hired_on employee.hired_on
-                json.is_business_owner employee.is_business_owner
-              end
-            end
-          end
-        end
-
-        def enrollments
-          result = []
-          Jbuilder.encode do |json|
-            @person.employee_roles.each do |employee_role|
-              employee_role.census_employee.tap do |employee|
-                enrollment_util = EnrollmentUtil.new benefit_group_assignments: employee.benefit_group_assignments
-                result << enrollment_util.employee_enrollments(employee)
-              end
-            end
-            json.enrollments result.flatten
           end
         end
 
