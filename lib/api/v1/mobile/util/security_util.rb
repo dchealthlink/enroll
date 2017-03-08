@@ -1,6 +1,6 @@
 module Api
   module V1
-    module Mobile
+    module Mobile::Util
       class SecurityUtil < BaseUtil
         attr_accessor :employer_profile, :person
 
@@ -24,7 +24,7 @@ module Api
           is_hbx_staff? || is_employers_broker_staff? || is_employers_staff? || is_employers_broker?
         end
 
-        def can_view_individual?
+        def can_view_insured?
           is_hbx_staff? || is_the_person? || one_of_persons_brokers_staff? || one_of_persons_employers_staff? || is_persons_broker?
         end
 

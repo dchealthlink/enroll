@@ -1,6 +1,6 @@
 module Api
   module V1
-    module Mobile
+    module Mobile::Util
       class StaffUtil < BaseUtil
 
         # Returns a hash of arrays of staff members, keyed by employer id

@@ -429,8 +429,8 @@ Rails.application.routes.draw do
         get 'employers/:employer_profile_id/employees', action: :employee_roster
         get 'employer/details', action: :my_employer_details
         get 'employer/employees', action: :my_employee_roster
-        get :individual
-        get 'individuals/:person_id', action: :individuals
+        get :insured
+        get 'insured/:person_id', action: :insured_person
       end
     end
   end

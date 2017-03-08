@@ -1,6 +1,6 @@
 module Api
   module V1
-    module Mobile
+    module Mobile::Util
       module UrlUtil
         BASE = '/api/v1/mobile'
 

@@ -1,6 +1,6 @@
 module Api
   module V1
-    module Mobile
+    module Mobile::Util
       class EmployerUtil < BaseUtil
         include UrlUtil
 
@@ -72,7 +72,7 @@ module Api
         # Check if the plan year is in renewal without triggering an additional query
         #
         def count_by_enrollment_status mobile_plan_year
-          employee = EmployeeUtil.new benefit_group: Api::V1::Mobile::BenefitGroupUtil.new(plan_year: mobile_plan_year.plan_year)
+          employee = EmployeeUtil.new benefit_group: BenefitGroupUtil.new(plan_year: mobile_plan_year.plan_year)
           employee.count_by_enrollment_status
         end
 

@@ -1,6 +1,6 @@
 module Api
   module V1
-    module Mobile
+    module Mobile::Util
       class BenefitGroupUtil < BaseUtil
         attr_accessor :ids, :plan_year
 

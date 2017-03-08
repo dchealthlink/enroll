@@ -1,6 +1,6 @@
 module Api
   module V1
-    module Mobile
+    module Mobile::Util
       class PlanYearUtil < BaseUtil
         MAX_DENTAL_PLANS = 13
         attr_accessor :plan_year

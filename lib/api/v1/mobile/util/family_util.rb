@@ -1,6 +1,6 @@
 module Api
   module V1
-    module Mobile
+    module Mobile::Util
       class FamilyUtil < BaseUtil
 
         def hbx_enrollments

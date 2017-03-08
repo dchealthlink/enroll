@@ -1,9 +1,9 @@
 module Api
   module V1
-    module Mobile
+    module Mobile::Util
       class EmployeeUtil < BaseUtil
         include CacheUtil
-        include InsuredPerson
+        include Api::V1::Mobile::InsuredPerson
 
         ROSTER_ENROLLMENT_PLAN_FIELDS_TO_RENDER = [:plan_type, :deductible, :family_deductible, :provider_directory_url, :rx_formulary_url]
 

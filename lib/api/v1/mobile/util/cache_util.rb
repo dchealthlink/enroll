@@ -1,6 +1,6 @@
 module Api
   module V1
-    module Mobile
+    module Mobile::Util
       module CacheUtil
 
         def plan_and_benefit_group employees, employer_profile
