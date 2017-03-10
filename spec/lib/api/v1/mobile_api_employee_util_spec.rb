@@ -65,7 +65,7 @@ RSpec.describe Api::V1::Mobile::Util::EmployeeUtil, dbclean: :after_each do
       mobile_plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year
       benefit_group = Util::BenefitGroupUtil.new plan_year: mobile_plan_year.plan_year
       employee = Util::EmployeeUtil.new benefit_group: benefit_group
-      bgas = employee.send(:benefit_group_assignments)
+      bgas = employee.send(:_benefit_group_assignments)
       expect(bgas).to be_a_kind_of Array
       expect(bgas.size).to eq 3
       expect(bgas.pop).to be_a_kind_of BenefitGroupAssignment
@@ -81,8 +81,8 @@ RSpec.describe Api::V1::Mobile::Util::EmployeeUtil, dbclean: :after_each do
     end
 
     it 'should return the basic individual' do
-      individual_util = Util::InsuredUtil.new
-      individual = JSON.parse individual_util.basic_person ce_employee
+      individual_util = Api::V1::Mobile::Insured::InsuredPerson.new person: ce_employee
+      individual = JSON.parse individual_util.basic_person 
       individual = individual.inject({}) { |memo, (k, v)| memo[k.to_sym] = v; memo }
       expect(individual).to include(:first_name, :middle_name, :last_name, :name_suffix, :date_of_birth, :ssn_masked,
                                     :gender)

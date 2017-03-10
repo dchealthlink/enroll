@@ -1,7 +1,7 @@
 module Api
   module V1
-    module Mobile::Util
-      class BaseUtil
+    module Mobile
+      class Base
 
         def initialize args={}
           args.each do |k, v|
@@ -16,6 +16,10 @@ module Api
 
         def format_date date
           date.strftime('%m-%d-%Y') if date.respond_to?(:strftime)
+        end
+
+        def ssn_masked person
+          "***-**-#{person.ssn[5..9]}" if person.ssn
         end
 
       end

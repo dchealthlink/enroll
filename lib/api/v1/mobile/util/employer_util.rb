@@ -1,29 +1,29 @@
 module Api
   module V1
     module Mobile::Util
-      class EmployerUtil < BaseUtil
+      class EmployerUtil < Api::V1::Mobile::Base
         include UrlUtil
 
         def initialize args={}
           super args
-          @plan_years = select_current_and_upcoming (@employer_profile.try(:plan_years) || [])
+          @plan_years = _select_current_and_upcoming (@employer_profile.try(:plan_years) || [])
           all_years = @employer_profile.try(:plan_years) || []
           @plan_years = all_years.select { |y| PlanYearUtil.new(plan_year: y).is_current_or_upcoming? }
         end
 
         def employers_and_broker_agency
-          return if organizations.empty?
-          @employer_profiles = organizations.map { |o| o.employer_profile }
+          return if _organizations.empty?
+          @employer_profiles = _organizations.map { |o| o.employer_profile }
           broker_name = @user.person.first_name if @user.person.broker_role
 
           {broker_name: broker_name,
            broker_agency: @authorized[:broker_agency_profile].try(:legal_name),
            broker_agency_id: @authorized[:broker_agency_profile].id,
-           broker_clients: marshall_employer_summaries} if @authorized[:broker_agency_profile]
+           broker_clients: _marshall_employer_summaries} if @authorized[:broker_agency_profile]
         end
 
         def employer_details
-          details = summary_details employer_profile: @employer_profile, years: @plan_years, include_plan_offerings: true
+          details = _summary_details employer_profile: @employer_profile, years: @plan_years, include_plan_offerings: true
           details[:active_general_agency] = @employer_profile.active_general_agency_legal_name # Note: queries DB
           details
         end
@@ -45,21 +45,21 @@ module Api
         #
         private
 
-        def select_current_and_upcoming years
+        def _select_current_and_upcoming years
           years.select { |y| PlanYearUtil.new(plan_year: y).is_current_or_upcoming? }
         end
         
-        def organizations
+        def _organizations
           @organizations ||= @authorized.has_key?(:broker_role) ? Organization.by_broker_role(@authorized[:broker_role].id) :
               Organization.by_broker_agency_profile(@authorized[:broker_agency_profile]._id)
         end
 
-        def marshall_employer_summaries
+        def _marshall_employer_summaries
           return [] if @employer_profiles.blank?
           staff_by_employer_id = StaffUtil.new(employer_profiles: @employer_profiles).keyed_by_employer_id
           @employer_profiles.map do |er|
-            summary_details employer_profile: er,
-                            years: select_current_and_upcoming(er.plan_years),
+            _summary_details employer_profile: er,
+                            years: _select_current_and_upcoming(er.plan_years),
                             staff: staff_by_employer_id[er.id],
                             offices: er.organization.office_locations.select { |loc| loc.primary_or_branch? },
                             include_details_url: true
@@ -71,29 +71,29 @@ module Api
         # Returns a list of number enrolled (actually enrolled, not waived) and waived
         # Check if the plan year is in renewal without triggering an additional query
         #
-        def count_by_enrollment_status mobile_plan_year
+        def _count_by_enrollment_status mobile_plan_year
           employee = EmployeeUtil.new benefit_group: BenefitGroupUtil.new(plan_year: mobile_plan_year.plan_year)
           employee.count_by_enrollment_status
         end
 
-        def summary_details employer_profile:, years: [], staff: nil, offices: nil, include_details_url: false, include_enrollment_counts: false, include_plan_offerings: false
+        def _summary_details employer_profile:, years: [], staff: nil, offices: nil, include_details_url: false, include_enrollment_counts: false, include_plan_offerings: false
           summary = {
               employer_name: employer_profile.legal_name,
               employees_total: employer_profile.roster_size,
-              plan_years: plan_year_summary(include_enrollment_counts, include_plan_offerings, years),
+              plan_years: _plan_year_summary(include_enrollment_counts, include_plan_offerings, years),
               binder_payment_due: ''
           }
-          summary[:contact_info] = add_contact_info(staff || [], offices || []) if staff || offices
-          add_urls! employer_profile, summary if include_details_url
+          summary[:contact_info] = _add_contact_info(staff || [], offices || []) if staff || offices
+          _add_urls! employer_profile, summary if include_details_url
           summary
         end
 
-        def plan_year_summary include_enrollment_counts, include_plan_offerings, years
+        def _plan_year_summary include_enrollment_counts, include_plan_offerings, years
           years.map do |year|
             mobile_plan_year = PlanYearUtil.new plan_year: year, as_of: TimeKeeper.date_of_record
-            plan_year_summary = include_plan_offerings ? mobile_plan_year.render_details : mobile_plan_year.render_summary
-            add_count_to_plan_year_summary! include_enrollment_counts, mobile_plan_year, plan_year_summary
-            plan_year_summary
+            plan_year = include_plan_offerings ? mobile_plan_year.render_details : mobile_plan_year.render_summary
+            _add_count_to_plan_year_summary! include_enrollment_counts, mobile_plan_year, plan_year
+            plan_year
           end
         end
 
@@ -102,21 +102,21 @@ module Api
         # (list of all employers for a broker) we only bother counting the subscribers
         # if the employer is currently in OE
         #
-        def add_count_to_plan_year_summary! include_enrollment_counts, mobile_plan_year, plan_year_summary
-          return unless include_enrollment_counts && mobile_plan_year.open_enrollment?
-          enrolled, waived, terminated = count_by_enrollment_status mobile_plan_year
+        def _add_count_to_plan_year_summary! include_enrollment_counts, mobile_plan_year, plan_year_summary
+          # return unless include_enrollment_counts && mobile_plan_year.open_enrollment?
+          enrolled, waived, terminated = _count_by_enrollment_status mobile_plan_year
           plan_year_summary[:employees_enrolled] = enrolled
           plan_year_summary[:employees_waived] = waived
           plan_year_summary[:employees_terminated] = terminated
         end
 
-        def add_urls! employer_profile, summary
+        def _add_urls! employer_profile, summary
           summary[:employer_details_url] = employers_details_path employer_profile.id
           summary[:employee_roster_url] = employers_employees_path employer_profile.id
         end
 
         #TODO null handling
-        def add_contact_info staff, offices
+        def _add_contact_info staff, offices
           staff.map do |s|
             {first: s.first_name,
              last: s.last_name,

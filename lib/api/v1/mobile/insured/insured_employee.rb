@@ -1,12 +1,12 @@
 module Api
   module V1
     module Mobile::Insured
-      module InsuredEmployee
-        Util = Api::V1::Mobile::Util
+      class InsuredEmployee < InsuredPerson
+        Mobile = Api::V1::Mobile
 
-        def ie_employments person
+        def ins_employments
           Jbuilder.encode do |json|
-            json.employments(person.employee_roles) do |employee_role|
+            json.employments(@person.employee_roles) do |employee_role|
               employee_role.census_employee.tap do |employee|
                 json.employer_profile_id employee.employer_profile_id
                 json.employer_name employee.employer_profile.legal_name
@@ -17,17 +17,15 @@ module Api
           end
         end
 
-        def ie_enrollments person
+        def ins_enrollments
           result = []
-          Jbuilder.encode do |json|
-            person.employee_roles.each do |employee_role|
-              employee_role.census_employee.tap do |employee|
-                enrollment_util = Util::EnrollmentUtil.new benefit_group_assignments: employee.benefit_group_assignments
-                result << enrollment_util.employee_enrollments(employee)
-              end
+          @person.employee_roles.each do |employee_role|
+            employee_role.census_employee.tap do |employee|
+              enrollment = Mobile::Enrollment::EmployeeEnrollment.new benefit_group_assignments: employee.benefit_group_assignments
+              result << enrollment.populate_enrollments(employee)
             end
-            json.enrollments result.flatten
           end
+          result
         end
 
       end

@@ -1,7 +1,7 @@
 module Api
   module V1
     module Mobile::Util
-      class PlanYearUtil < BaseUtil
+      class PlanYearUtil < Api::V1::Mobile::Base
         MAX_DENTAL_PLANS = 13
         attr_accessor :plan_year
 
@@ -18,15 +18,15 @@ module Api
         end
 
         def employee_max?
-          @plan_year && plan_year_employee_max?
+          @plan_year && _plan_year_employee_max?
         end
 
         def plan_offerings
           @plan_year.benefit_groups.compact.map do |benefit_group|
             {benefit_group_name: benefit_group.title,
              eligibility_rule: BenefitGroupUtil.new(benefit_group: benefit_group).eligibility_rule,
-             health: health_offering(benefit_group),
-             dental: dental_offering(benefit_group)}
+             health: _health_offering(benefit_group),
+             dental: _dental_offering(benefit_group)}
           end
         end
 
@@ -56,26 +56,26 @@ module Api
         #
         private
 
-        def dental_offering benefit_group
-          render_plan_offering(
+        def _dental_offering benefit_group
+          _render_plan_offering(
               plan: benefit_group.dental_reference_plan,
               plan_option_kind: benefit_group.plan_option_kind,
               relationship_benefits: benefit_group.dental_relationship_benefits,
               employer_estimated_max: benefit_group.monthly_employer_contribution_amount(benefit_group.dental_reference_plan),
               employee_estimated_min: benefit_group.monthly_min_employee_cost('dental'),
               employee_estimated_max: benefit_group.monthly_max_employee_cost('dental'),
-              elected_dental_plans: elected_dental_plans(benefit_group)) if benefit_group.is_offering_dental? && benefit_group.dental_reference_plan
+              elected_dental_plans: _elected_dental_plans(benefit_group)) if benefit_group.is_offering_dental? && benefit_group.dental_reference_plan
         end
 
-        def elected_dental_plans benefit_group
+        def _elected_dental_plans benefit_group
           benefit_group.elected_dental_plans.map do |p|
             {carrier_name: p.carrier_profile.legal_name,
              plan_name: p.name}
           end if benefit_group.elected_dental_plan_ids.count < MAX_DENTAL_PLANS
         end
 
-        def health_offering benefit_group
-          render_plan_offering(
+        def _health_offering benefit_group
+          _render_plan_offering(
               plan: benefit_group.reference_plan,
               plan_option_kind: benefit_group.plan_option_kind,
               relationship_benefits: benefit_group.relationship_benefits,
@@ -84,14 +84,14 @@ module Api
               employee_estimated_max: benefit_group.monthly_max_employee_cost)
         end
 
-        def render_plan_offering plan: nil, plan_option_kind: nil, relationship_benefits: [], employer_estimated_max: 0,
+        def _render_plan_offering plan: nil, plan_option_kind: nil, relationship_benefits: [], employer_estimated_max: 0,
                                  employee_estimated_min: 0, employee_estimated_max: 0, elected_dental_plans: nil
-          render_plans_by!(
+          _render_plans_by!(
               reference_plan_name: plan.name.try(:upcase),
               reference_plan_HIOS_id: plan.hios_id,
               carrier_name: plan.carrier_profile.try(:legal_name),
               plan_type: plan.try(:plan_type).try(:upcase),
-              metal_level: display_metal_level(plan),
+              metal_level: _display_metal_level(plan),
               plan_option_kind: plan_option_kind,
               employer_contribution_by_relationship:
                   Hash[relationship_benefits.map do |rb|
@@ -104,7 +104,7 @@ module Api
           )
         end
 
-        def render_plans_by! rendered
+        def _render_plans_by! rendered
           count_dental_plans = rendered[:elected_dental_plans].try(:count)
           plans_by, plans_by_summary_text =
               case rendered[:plan_option_kind]
@@ -125,11 +125,11 @@ module Api
           rendered
         end
 
-        def display_metal_level plan
+        def _display_metal_level plan
           (plan.active_year == 2015 || plan.coverage_kind == 'health' ? plan.metal_level : plan.dental_level).try(:titleize)
         end
 
-        def plan_year_employee_max?
+        def _plan_year_employee_max?
           @plan_year.employer_profile.census_employees.count < 100
         end
 

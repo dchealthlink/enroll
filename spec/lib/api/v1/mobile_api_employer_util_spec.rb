@@ -8,7 +8,7 @@ RSpec.describe Api::V1::Mobile::Util::EmployerUtil, dbclean: :after_each do
 
   shared_examples 'organizations_by' do |desc|
     it "should #{desc}" do
-      organizations = employer.send(:organizations)
+      organizations = employer.send(:_organizations)
       expect(organizations).to be_a_kind_of Mongoid::Criteria
       org = organizations.first
       expect(org).to be_a_kind_of Organization
@@ -57,7 +57,7 @@ RSpec.describe Api::V1::Mobile::Util::EmployerUtil, dbclean: :after_each do
       mobile_plan_year = Util::PlanYearUtil.new plan_year: plan_year, as_of: Time.now
       employer = Util::EmployerUtil.new user: user, employer_profile: employer_profile_cafe
 
-      result = employer.send(:count_by_enrollment_status, mobile_plan_year)
+      result = employer.send(:_count_by_enrollment_status, mobile_plan_year)
       expect(result).to eq [2, 0, 0]
     end
 
@@ -74,7 +74,7 @@ RSpec.describe Api::V1::Mobile::Util::EmployerUtil, dbclean: :after_each do
 
     it 'should return the summary details,including URLs' do
       employer = Util::EmployerUtil.new user: user, employer_profile: employer_profile
-      summary = employer.send(:summary_details, {employer_profile: employer_profile_cafe, years: employer_profile_cafe.plan_years, include_enrollment_counts: true, include_details_url: true})
+      summary = employer.send(:_summary_details, {employer_profile: employer_profile_cafe, years: employer_profile_cafe.plan_years, include_enrollment_counts: true, include_details_url: true})
       expect(summary).to include(:employer_name, :binder_payment_due, :employees_total, :plan_years,
                                  :employer_details_url, :employee_roster_url)
       expect(summary[:plan_years].first).to include(:minimum_participation_required,
@@ -89,7 +89,7 @@ RSpec.describe Api::V1::Mobile::Util::EmployerUtil, dbclean: :after_each do
       expect(summary[:employee_roster_url]).to match(/\/api\/v1\/mobile\/employers\/[0-9a-f]{24}\/employees/)
       confirm_expected_plan_year_summary_fields_for_cafe summary[:plan_years].first
 
-      summary = employer.send(:summary_details, {employer_profile: employer_profile_cafe,
+      summary = employer.send(:_summary_details, {employer_profile: employer_profile_cafe,
                                                  years: employer_profile_cafe.plan_years,
                                                  staff: [FactoryGirl.create(:person)], offices: [FactoryGirl.build(:office_location)]})
       expect(summary).to include(:contact_info)
@@ -131,17 +131,17 @@ RSpec.describe Api::V1::Mobile::Util::EmployerUtil, dbclean: :after_each do
 
     it 'counts by enrollment status' do
       mobile_plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year
-      result = @employer.send(:count_by_enrollment_status, mobile_plan_year)
+      result = @employer.send(:_count_by_enrollment_status, mobile_plan_year)
       expect(result).to eq [2, 0, 0]
 
       mobile_plan_year = Util::PlanYearUtil.new plan_year: employer_profile_salon.show_plan_year
-      result = @employer.send(:count_by_enrollment_status, mobile_plan_year)
+      result = @employer.send(:_count_by_enrollment_status, mobile_plan_year)
       expect(result).to eq [1, 0, 0]
     end
 
     it 'should return employer summaries' do
       employer = Util::EmployerUtil.new(employer_profiles: [employer_profile_cafe])
-      summaries = employer.send(:marshall_employer_summaries)
+      summaries = employer.send(:_marshall_employer_summaries)
       expect(summaries).to be_a_kind_of Array
       expect(summaries.size).to eq 1
 
@@ -218,14 +218,14 @@ RSpec.describe Api::V1::Mobile::Util::EmployerUtil, dbclean: :after_each do
 
     it 'returns benefit group assignments for plan year' do
       e = Util::EmployeeUtil.new benefit_group: Util::BenefitGroupUtil.new(plan_year: employer_profile_salon.show_plan_year)
-      expect(e.send(:benefit_group_assignments)).to be_a_kind_of Array
-      expect(e.send(:benefit_group_assignments).size).to eq 1
-      expect(e.send(:benefit_group_assignments)).to eq [benefit_group_assignment_hairdresser]
+      expect(e.send(:_benefit_group_assignments)).to be_a_kind_of Array
+      expect(e.send(:_benefit_group_assignments).size).to eq 1
+      expect(e.send(:_benefit_group_assignments)).to eq [benefit_group_assignment_hairdresser]
 
       e = Util::EmployeeUtil.new benefit_group: Util::BenefitGroupUtil.new(plan_year: employer_profile_cafe.show_plan_year)
-      expect(e.send(:benefit_group_assignments)).to be_a_kind_of Array
-      expect(e.send(:benefit_group_assignments).size).to eq 3
-      expect(e.send(:benefit_group_assignments)).to eq [benefit_group_assignment_barista, benefit_group_assignment_manager, benefit_group_assignment_janitor]
+      expect(e.send(:_benefit_group_assignments)).to be_a_kind_of Array
+      expect(e.send(:_benefit_group_assignments).size).to eq 3
+      expect(e.send(:_benefit_group_assignments)).to eq [benefit_group_assignment_barista, benefit_group_assignment_manager, benefit_group_assignment_janitor]
     end
 
   end

@@ -1,6 +1,7 @@
 module MobileIndividualData
   shared_context 'individual_data' do
     let(:user) { FactoryGirl.create(:user) }
+    let(:user2) { FactoryGirl.create(:user) }
     let(:employer_profile) { FactoryGirl.create(:employer_profile) }
     let(:employee_role) { FactoryGirl.create(:employee_role, census_employee_id: census_employee.id,
                                              employer_profile_id: employer_profile.id) }
@@ -28,7 +29,7 @@ module MobileIndividualData
     }
     let(:person) { FactoryGirl.create(:person_with_employee_role, ssn: 123456789, user: user, employer_profile_id: employer_profile.id,
                                       hired_on: census_employee.hired_on, census_employee_id: census_employee.id) }
-    let(:another_person) { FactoryGirl.create(:person_with_employee_role, ssn: 223456789, employer_profile_id: employer_profile.id,
+    let(:another_person) { FactoryGirl.create(:person_with_employee_role, :with_family, ssn: 223456789, user: user2, employer_profile_id: employer_profile.id,
                                               hired_on: census_employee.hired_on, census_employee_id: census_employee.id) }
   end
 end
