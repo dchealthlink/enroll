@@ -10,19 +10,14 @@ module Api
         end
 
         #
-        # Private
+        # Protected
         #
-        private
+        protected
 
-        def _enrollment_details coverage_kind, enrollment
+        def __specific_enrollment_fields enrollment
           {
-              hbx_enrollment_id: enrollment.id,
-              status: __status_label_for(enrollment.aasm_state),
-              total_premium: enrollment.total_premium,
-              plan_name: enrollment.plan.try(:name),
-              plan_type: enrollment.plan.try(:plan_type),
-              metal_level: enrollment.plan.try(coverage_kind == :health ? :metal_level : :dental_level),
-              benefit_group_name: enrollment.try(:benefit_group).try(:title)
+              elected_aptc_pct: enrollment.elected_aptc_pct,
+              applied_aptc_amount_in_cents: enrollment.applied_aptc_amount.cents,
           }
         end
 

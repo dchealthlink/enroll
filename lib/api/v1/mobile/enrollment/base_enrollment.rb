@@ -36,6 +36,18 @@ module Api
           %w{health dental}.each { |coverage| result[coverage] = __initialize_enrollment enrollments, coverage }
         end
 
+        def _enrollment_details coverage_kind, enrollment
+          {
+              hbx_enrollment_id: enrollment.id,
+              status: __status_label_for(enrollment.aasm_state),
+              plan_name: enrollment.plan.try(:name),
+              plan_type: enrollment.plan.try(:plan_type),
+              metal_level: enrollment.plan.try(coverage_kind == :health ? :metal_level : :dental_level),
+              benefit_group_name: enrollment.try(:benefit_group).try(:title),
+              total_premium: enrollment.total_premium
+          }.merge __specific_enrollment_fields(enrollment)
+        end
+
         #
         # Private
         #
@@ -55,7 +67,7 @@ module Api
           carrier_name = enrollment.plan.carrier_profile.legal_name
           {
               name: carrier_name,
-              terms_and_conditions_url: _terms_and_conditions(enrollment)
+              summary_of_benefits_url: _summary_of_benefits(enrollment)
           }
         end
 
@@ -71,7 +83,7 @@ module Api
           rendered_enrollment[:waiver_reason] = enrollment.waiver_reason
         end
 
-        def _terms_and_conditions enrollment
+        def _summary_of_benefits enrollment
           document = enrollment.plan.sbc_document
           document_download_path(*get_key_and_bucket(document.identifier).reverse)
               .concat("?content_type=application/pdf&filename=#{enrollment.plan.name.gsub(/[^0-9a-z]/i, '')}.pdf&disposition=inline") if document

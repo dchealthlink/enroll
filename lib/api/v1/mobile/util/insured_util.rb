@@ -18,8 +18,22 @@ module Api
 
         def _all_enrollments
           Jbuilder.encode do |json|
-            json.enrollments (_insured_individual.ins_enrollments + _insured_employee.ins_enrollments).flatten
+            _filter_duplicates _insured_individual.ins_enrollments.flatten do |ivl_enrollments, ee_enrollments|
+              json.enrollments ivl_enrollments + ee_enrollments
+            end
           end
+        end
+
+        def _filter_duplicates ivl_enrollments
+          ee_enrollments = _insured_employee.ins_enrollments.flatten
+          ee_enrollment_ids = ee_enrollments.map {
+              |e| e['health'][:hbx_enrollment_id] || e['dental'][:hbx_enrollment_id] }.compact
+          ivl_enrollments.map { |enr|
+            %w{health dental}.each { |kind|
+              enr.delete(kind) if ee_enrollment_ids.include? enr[kind][:hbx_enrollment_id]
+            }
+          }
+          yield ivl_enrollments, ee_enrollments
         end
 
         def _merge_these hash, *details

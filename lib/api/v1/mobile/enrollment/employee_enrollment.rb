@@ -19,23 +19,21 @@ module Api
         end
 
         #
+        # Protected
+        #
+        protected
+
+        def __specific_enrollment_fields enrollment
+          {
+              employer_contribution: enrollment.total_employer_contribution,
+              employee_cost: enrollment.total_employee_cost,
+          }
+        end
+
+        #
         # Private
         #
         private
-
-        def _enrollment_details coverage_kind, enrollment
-          {
-              hbx_enrollment_id: enrollment.id,
-              status: __status_label_for(enrollment.aasm_state),
-              employer_contribution: enrollment.total_employer_contribution,
-              employee_cost: enrollment.total_employee_cost,
-              total_premium: enrollment.total_premium,
-              plan_name: enrollment.plan.try(:name),
-              plan_type: enrollment.plan.try(:plan_type),
-              metal_level: enrollment.plan.try(coverage_kind == :health ? :metal_level : :dental_level),
-              benefit_group_name: enrollment.try(:benefit_group).try(:title)
-          }
-        end
 
         def _current_or_upcoming_assignments
           @benefit_group_assignments.select { |a| Util::PlanYearUtil.new(plan_year: a.plan_year).is_current_or_upcoming? }
