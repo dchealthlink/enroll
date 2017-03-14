@@ -432,6 +432,7 @@ Rails.application.routes.draw do
         get :insured
         get 'insured/:person_id', action: :insured_person
         get :services_rates
+        get :plans
       end
     end
   end

@@ -417,4 +417,13 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
 
   end
 
+  describe "GET plans" do
+    it 'should return all the plans' do
+      get :plans
+      output = JSON.parse response.body
+      expect(response).to have_http_status(200)
+      expect(output).to be_a_kind_of Array
+    end
+  end
+
 end

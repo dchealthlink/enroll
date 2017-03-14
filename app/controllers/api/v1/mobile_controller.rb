@@ -1,7 +1,8 @@
 module Api
   module V1
     class MobileController < ApplicationController
-      include Api::V1::Mobile::Renderer::ServicesRenderer
+      include Api::V1::Mobile::Renderer::ServiceRenderer
+      include Api::V1::Mobile::Renderer::PlanRenderer
       include Api::V1::Mobile::Renderer::IndividualRenderer
       include Api::V1::Mobile::Renderer::EmployeeRenderer
       include Api::V1::Mobile::Renderer::EmployerRenderer
@@ -67,8 +68,12 @@ module Api
       def services_rates
         _execute {
           hios_id, active_year, coverage_kind = params.values_at :hios_id, :active_year, :coverage_kind
-          Mobile::Renderer::ServicesRenderer::render_details hios_id, active_year, coverage_kind, self
+          Mobile::Renderer::ServiceRenderer::render_details hios_id, active_year, coverage_kind, self
         }
+      end
+
+      def plans
+        _execute { Mobile::Renderer::PlanRenderer::render_details params, self }
       end
 
       #
