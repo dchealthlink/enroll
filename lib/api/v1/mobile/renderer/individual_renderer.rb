@@ -5,14 +5,18 @@ module Api
         include BaseRenderer
         NO_INDIVIDUAL_DETAILS_FOUND = 'no individual details found'
 
-        def render_insured_details person
-          render json: Api::V1::Mobile::Util::InsuredUtil.new(person: person).build_insured_json
+        def render_details person, controller
+          controller.render json: Api::V1::Mobile::Util::InsuredUtil.new(person: person).build_insured_json
         end
 
-        def report_insured_error
-          report_error NO_INDIVIDUAL_DETAILS_FOUND
+        def report_error controller
+          BaseRenderer::report_error NO_INDIVIDUAL_DETAILS_FOUND, controller
         end
+      end
 
+      IndividualRenderer.module_eval do
+        module_function :render_details
+        module_function :report_error
       end
     end
   end

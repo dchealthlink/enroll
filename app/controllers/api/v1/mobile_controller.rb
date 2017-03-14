@@ -13,9 +13,9 @@ module Api
           authorized = Mobile::Util::SecurityUtil.new(user: current_user, params: params).authorize_employer_list
           if authorized[:status] == 200
             employer = Mobile::Util::EmployerUtil.new authorized: authorized, user: current_user
-            render_broker employer.employers_and_broker_agency
+            Mobile::Renderer::BrokerRenderer::render_details employer.employers_and_broker_agency, self
           else
-            report_broker_error authorized[:status]
+            Mobile::Renderer::BrokerRenderer::report_error authorized[:status], self
           end
         }
       end
@@ -26,7 +26,7 @@ module Api
           if @security.employer_profile
             _render_employer @security.can_view_employer_details?, @security.employer_profile
           else
-            report_employer_error
+            Mobile::Renderer::EmployerRenderer::report_error self
           end
         }
       end
@@ -41,11 +41,8 @@ module Api
       def employee_roster
         _execute {
           @security = Mobile::Util::SecurityUtil.new user: current_user, params: params
-          if @security.employer_profile
-            _render_employees @security.can_view_employee_roster?, @security.employer_profile
-          else
-            report_employee_error
-          end
+          @security.employer_profile ? _render_employees(@security.can_view_employee_roster?, @security.employer_profile) :
+              Mobile::Renderer::EmployeeRenderer::report_error(self)
         }
       end
 
@@ -68,7 +65,10 @@ module Api
       end
 
       def services_rates
-        _execute { _render_services_rates }
+        _execute {
+          hios_id, active_year, coverage_kind = params.values_at :hios_id, :active_year, :coverage_kind
+          Mobile::Renderer::ServicesRenderer::render_details hios_id, active_year, coverage_kind, self
+        }
       end
 
       #
@@ -76,21 +76,17 @@ module Api
       #
       private
 
-      def _render_services_rates
-        hios_id, active_year, coverage_kind = params.values_at :hios_id, :active_year, :coverage_kind
-        render_services_rates_details hios_id, active_year, coverage_kind
-      end
-
       def _render_insured can_view, person
-        can_view ? render_insured_details(person) : report_insured_error
+        can_view ? Mobile::Renderer::IndividualRenderer::render_details(person, self) :
+            Mobile::Renderer::IndividualRenderer::report_error(self)
       end
 
       def _render_employer can_view, employer_profile
         if can_view
           employer = Mobile::Util::EmployerUtil.new employer_profile: employer_profile, report_date: params[:report_date]
-          render_employer_details employer.employer_details
+          Mobile::Renderer::EmployerRenderer::render_details employer.employer_details, self
         else
-          report_employer_error
+          Mobile::Renderer::EmployerRenderer::report_error self
         end
       end
 
@@ -99,9 +95,10 @@ module Api
           employees = Mobile::Util::EmployeeUtil.new(employer_profile: employer_profile,
                                                      employee_name: params[:employee_name],
                                                      status: params[:status]).employees_sorted_by
-          employees ? render_employee_roster(employer_profile, employees) : report_employee_error
+          employees ? Mobile::Renderer::EmployeeRenderer::render_details(employer_profile, employees, self) :
+              Mobile::Renderer::EmployeeRenderer::report_error(self)
         else
-          report_employee_error
+          Mobile::Renderer::EmployeeRenderer::report_error self
         end
       end
 

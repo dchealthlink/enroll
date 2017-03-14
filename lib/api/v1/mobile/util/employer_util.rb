@@ -91,7 +91,7 @@ module Api
         def _plan_year_summary include_enrollment_counts, include_plan_offerings, years
           years.map do |year|
             mobile_plan_year = PlanYearUtil.new plan_year: year, as_of: TimeKeeper.date_of_record
-            plan_year = include_plan_offerings ? mobile_plan_year.render_details : mobile_plan_year.render_summary
+            plan_year = include_plan_offerings ? mobile_plan_year.plan_year_details : mobile_plan_year.plan_year_summary
             _add_count_to_plan_year_summary! include_enrollment_counts, mobile_plan_year, plan_year
             plan_year
           end

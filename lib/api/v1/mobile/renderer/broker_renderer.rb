@@ -4,14 +4,18 @@ module Api
       module BrokerRenderer
         NO_BROKER_AGENCY_PROFILE_FOUND = 'no broker agency profile or broker role found'
 
-        def render_broker response
-          render json: response
+        def render_details response, controller
+          controller.render json: response
         end
 
-        def report_broker_error status='not_found'
-          render json: {error: NO_BROKER_AGENCY_PROFILE_FOUND}, status: status
+        def report_error status, controller
+          BaseRenderer::report_error NO_BROKER_AGENCY_PROFILE_FOUND, controller, status
         end
+      end
 
+      BrokerRenderer.module_eval do
+        module_function :render_details
+        module_function :report_error
       end
     end
   end

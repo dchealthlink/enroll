@@ -30,9 +30,14 @@ module Api
           end
         end
 
-        def render_summary
-          renewals_offset_in_months = Settings.aca.shop_market.renewal_application.earliest_start_prior_to_effective_on.months
+        def plan_year_details
+          summary = plan_year_summary
+          summary[:plan_offerings] = plan_offerings
+          summary
+        end
 
+        def plan_year_summary
+          renewals_offset_in_months = Settings.aca.shop_market.renewal_application.earliest_start_prior_to_effective_on.months
           {
               open_enrollment_begins: @plan_year.open_enrollment_start_on,
               open_enrollment_ends: @plan_year.open_enrollment_end_on,
@@ -43,12 +48,6 @@ module Api
               state: @plan_year.aasm_state.to_s.humanize.titleize,
               minimum_participation_required: @plan_year.minimum_enrolled_count
           }
-        end
-
-        def render_details
-          summary = render_summary
-          summary[:plan_offerings] = plan_offerings
-          summary
         end
 
         #

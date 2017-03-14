@@ -3,10 +3,14 @@ module Api
     module Mobile::Renderer
       module BaseRenderer
 
-        def report_error message
-          render json: {error: message}, status: :not_found
+        def report_error message, controller, status=:not_found
+          controller.render json: {error: message}, status: status
         end
 
+      end
+
+      BaseRenderer.module_eval do
+        module_function :report_error
       end
     end
   end
