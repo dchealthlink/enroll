@@ -47,6 +47,13 @@ module Api
         end
 
         #
+        # get :services_rates
+        #
+        def services_rates_path hios_id, active_year, coverage_kind
+          "#{BASE}/services_rates?hios_id=#{hios_id}&active_year=#{active_year}&coverage_kind=#{coverage_kind}"
+        end
+
+        #
         # get 'document/download/:bucket/:key'
         #
         def document_download_path bucket, key

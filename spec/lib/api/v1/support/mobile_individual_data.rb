@@ -8,6 +8,7 @@ module MobileIndividualData
     let(:broker_agency_profile) { FactoryGirl.create(:broker_agency_profile) }
     let(:broker_agency_staff_role) { FactoryGirl.create(:broker_agency_staff_role) }
     let(:census_employee) { FactoryGirl.create(:census_employee, employer_profile: employer_profile) }
+    let(:census_employee2) { FactoryGirl.create(:census_employee, employer_profile: employer_profile) }
     let(:benefit_group_assignment) { FactoryGirl.create(:benefit_group_assignment, census_employee: census_employee) }
     let(:census_dependent) { FactoryGirl.create(:census_dependent, census_employee: census_employee) }
     let!(:shop_family) { FactoryGirl.create(:family, :with_primary_family_member) }
@@ -29,8 +30,6 @@ module MobileIndividualData
     }
     let!(:person) { FactoryGirl.create(:person_with_employee_role, ssn: 123456789, user: user, employer_profile_id: employer_profile.id,
                                       hired_on: census_employee.hired_on, census_employee_id: census_employee.id) }
-    let(:another_person) { FactoryGirl.create(:person_with_employee_role, :with_family, ssn: 223456789, user: user2, employer_profile_id: employer_profile.id,
-                                              hired_on: census_employee.hired_on, census_employee_id: census_employee.id) }
     let!(:non_employee_individual_person) { FactoryGirl.create(:person, :with_consumer_role, ssn: 243456789, user: user2) }
     let!(:family) { FactoryGirl.create(:family, :with_primary_family_member, person: non_employee_individual_person) }
     let!(:family_member) {FactoryGirl.create(:family_member, family: family)}

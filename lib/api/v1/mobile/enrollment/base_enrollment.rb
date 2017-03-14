@@ -7,6 +7,10 @@ module Api
         Util = Api::V1::Mobile::Util
         ENROLLMENT_PLAN_FIELDS = [:plan_type, :deductible, :family_deductible, :provider_directory_url, :rx_formulary_url]
 
+        def services_rates hios_id, active_year, coverage_kind
+          hios_id && active_year && coverage_kind ? _services_rates_details(active_year, coverage_kind, hios_id) : {}
+        end
+
         #
         # Protected
         #
@@ -14,11 +18,12 @@ module Api
 
         def __initialize_enrollment hbx_enrollments, coverage_kind
           enrollment = hbx_enrollments.flatten.detect { |e| e.coverage_kind == coverage_kind } unless !hbx_enrollments || hbx_enrollments.empty?
-          rendered_enrollment = enrollment ? _enrollment_details(coverage_kind, enrollment) : {status: 'Not Enrolled'}
-          _other_enrollment_fields enrollment, rendered_enrollment
-          _enrollment_termination! enrollment, rendered_enrollment
-          _enrollment_waived! enrollment, rendered_enrollment
-          rendered_enrollment
+          result = enrollment ? _enrollment_details(coverage_kind, enrollment) : {status: 'Not Enrolled'}
+          _other_enrollment_fields enrollment, result
+          _enrollment_termination! enrollment, result
+          _enrollment_waived! enrollment, result
+          _services_rates_url! enrollment, coverage_kind, result
+          result
         end
 
         def __status_label_for enrollment_status
@@ -53,14 +58,32 @@ module Api
         #
         private
 
-        def _other_enrollment_fields enrollment, rendered_enrollment
-          if enrollment && enrollment.plan
-            ENROLLMENT_PLAN_FIELDS.each do |field|
-              value = enrollment.plan.try(field)
-              rendered_enrollment[field] = value if value
+        def _services_rates_url! enrollment, coverage_kind, result
+          return unless enrollment && enrollment.plan
+          result[:services_rates_url] = services_rates_path enrollment.plan.hios_id, enrollment.plan.active_year, coverage_kind
+        end
+
+        def _services_rates_details active_year, coverage_kind, hios_id
+          qhps = Products::QhpCostShareVariance.find_qhp_cost_share_variances [hios_id], active_year, coverage_kind
+          return {} if qhps.empty?
+          qhps.first.qhp_service_visits.map do |service_visit|
+            if service_visit.present?
+              {
+                  service: service_visit.visit_type,
+                  copay: service_visit.copay_in_network_tier_1,
+                  coinsurance: service_visit.co_insurance_in_network_tier_1.present? ? service_visit.co_insurance_in_network_tier_1 : 'N/A'
+              }
             end
-            rendered_enrollment[:carrier] = _carrier enrollment
           end
+        end
+
+        def _other_enrollment_fields enrollment, result
+          return unless enrollment && enrollment.plan
+          ENROLLMENT_PLAN_FIELDS.each do |field|
+            value = enrollment.plan.try(field)
+            result[field] = value if value
+          end
+          result[:carrier] = _carrier enrollment
         end
 
         def _carrier enrollment
@@ -71,16 +94,16 @@ module Api
           }
         end
 
-        def _enrollment_termination! enrollment, rendered_enrollment
-          return unless rendered_enrollment[:status] == EnrollmentConstants::TERMINATED
-          rendered_enrollment[:terminated_on] = format_date enrollment.terminated_on
-          rendered_enrollment[:terminate_reason] = enrollment.terminate_reason
+        def _enrollment_termination! enrollment, result
+          return unless result[:status] == EnrollmentConstants::TERMINATED
+          result[:terminated_on] = format_date enrollment.terminated_on
+          result[:terminate_reason] = enrollment.terminate_reason
         end
 
-        def _enrollment_waived! enrollment, rendered_enrollment
-          return unless rendered_enrollment[:status] == EnrollmentConstants::WAIVED
-          rendered_enrollment[:waived_on] = format_date(enrollment.submitted_at || enrollment.created_at)
-          rendered_enrollment[:waiver_reason] = enrollment.waiver_reason
+        def _enrollment_waived! enrollment, result
+          return unless result[:status] == EnrollmentConstants::WAIVED
+          result[:waived_on] = format_date(enrollment.submitted_at || enrollment.created_at)
+          result[:waiver_reason] = enrollment.waiver_reason
         end
 
         def _summary_of_benefits enrollment

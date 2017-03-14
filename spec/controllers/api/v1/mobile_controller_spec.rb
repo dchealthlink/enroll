@@ -340,10 +340,6 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       include_context 'broker_data'
       include_context 'individual_data'
 
-      # before :each do
-      #   sign_in hbx_user
-      # end
-
       let!(:person_with_family) { FactoryGirl.create(:person, :with_family) }
 
       it 'should return individual details of user (/individuals/:person_id)' do
@@ -355,10 +351,9 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       end
 
       it 'should return individual details of user (/individual)' do
-        sign_in another_person.user
+        sign_in non_employee_individual_person.user
         get :insured, format: :json
         output = JSON.parse response.body
-        p output
         expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                   'gender', 'id', 'employments')
       end
@@ -378,6 +373,46 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
         expect(response).to have_http_status(404)
         expect(output['error']).to eq 'no individual details found'
       end
+    end
+
+  end
+
+  describe "GET services_rates" do
+
+    let(:qhp1) { Products::QhpCostShareVariance.new(hios_plan_and_variant_id: '11111100001111-01') }
+    let(:qhp2) { Products::QhpCostShareVariance.new(hios_plan_and_variant_id: '11111100001111-02') }
+    let(:service_type) { 'Primary Care Visit to Treat an Injury or Illness' }
+    let(:copay) { '$20.00' }
+    let(:coinsurance) { 'Not Applicable' }
+    let(:service_visits) { [
+        Products::QhpServiceVisit.new(
+            visit_type: service_type,
+            copay_in_network_tier_1: copay,
+            co_insurance_in_network_tier_1: coinsurance)
+    ] }
+
+    it 'should return an empty hash when all params are not passed' do
+      get :services_rates, format: :json
+      output = JSON.parse response.body
+      expect(response).to have_http_status(200)
+      expect(output).to be_a_kind_of Hash
+    end
+
+    it 'should return the services rates' do
+      allow(Products::QhpCostShareVariance).to receive(:find_qhp_cost_share_variances).and_return([qhp1, qhp2])
+      allow(qhp1).to receive(:qhp_service_visits).and_return(service_visits)
+      allow(qhp2).to receive(:qhp_service_visits).and_return(service_visits)
+
+      get :services_rates, hios_id: '11111100001111-01', active_year: '2015', coverage_kind: 'health', format: :json
+      output = JSON.parse response.body
+      expect(response).to have_http_status(200)
+      expect(output).to be_a_kind_of Array
+      service_rate = output.first
+      expect(service_rate).to be_a_kind_of Hash
+      expect(service_rate).to include('service', 'copay', 'coinsurance')
+      expect(service_rate['service']).to eq service_type
+      expect(service_rate['copay']).to eq copay
+      expect(service_rate['coinsurance']).to eq coinsurance
     end
 
   end

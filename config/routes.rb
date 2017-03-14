@@ -431,6 +431,7 @@ Rails.application.routes.draw do
         get 'employer/employees', action: :my_employee_roster
         get :insured
         get 'insured/:person_id', action: :insured_person
+        get :services_rates
       end
     end
   end
