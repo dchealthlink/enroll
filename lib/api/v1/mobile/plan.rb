@@ -20,7 +20,10 @@ module Api
 
         def _benefit_packages
           ivl_bgs = []
-          HbxProfile.current_hbx.benefit_sponsorship.current_benefit_period.benefit_packages.each { |bg| ivl_bgs << bg }
+          HbxProfile.current_hbx.benefit_sponsorship.current_benefit_period.benefit_packages.each { |bg|
+            # TODO: Does any type of filtering need to happen here?
+            ivl_bgs << bg
+          }
           ivl_bgs.uniq
         end
 
