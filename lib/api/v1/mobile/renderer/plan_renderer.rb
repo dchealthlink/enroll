@@ -4,7 +4,7 @@ module Api
       module PlanRenderer
 
         def render_details params, controller
-          controller.render json: Mobile::Plan.new.all_plans(params)
+          controller.render json: Mobile::Plan.new.all_plans(params[:coverage_kind], params[:active_year])
         end
 
       end
