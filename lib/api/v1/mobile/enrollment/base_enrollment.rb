@@ -41,6 +41,11 @@ module Api
           %w{health dental}.each { |coverage| result[coverage] = __initialize_enrollment enrollments, coverage }
         end
 
+        #
+        # Private
+        #
+        private
+
         def _enrollment_details coverage_kind, enrollment
           {
               hbx_enrollment_id: enrollment.id,
@@ -52,11 +57,6 @@ module Api
               total_premium: enrollment.total_premium
           }.merge __specific_enrollment_fields(enrollment)
         end
-
-        #
-        # Private
-        #
-        private
 
         def _services_rates_url! enrollment, coverage_kind, result
           return unless enrollment && enrollment.plan
