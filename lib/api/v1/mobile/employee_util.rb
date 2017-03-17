@@ -65,12 +65,22 @@ module Api
 
         def benefit_group_assignments
           @benefit_group_assignments ||= @benefit_group.employees.map do |ee|
-            ee.benefit_group_assignments.select do |bga|
+            bgas_for_ee = ee.benefit_group_assignments.select do |bga|
               @benefit_group.ids.include?(bga.benefit_group_id) &&
                   (::PlanYear::RENEWING_PUBLISHED_STATE.include?(@benefit_group.plan_year.aasm_state) || bga.is_active)
             end
+            uniq_benefit_group_assignments bgas_for_ee
           end.flatten
         end
+
+        def uniq_benefit_group_assignments benefit_group_assignments
+            bgas_by_year = benefit_group_assignments.group_by(&:start_on) 
+            bgas_by_year.map { |start, bgas_for_year|
+              substantive_bgas = bgas_for_year.select {|bga| bga.aasm_state != "initialized"} 
+              substantive_bgas.present? ? substantive_bgas.first : bgas_for_year.first
+            }
+        end
+
 
         def roster_employee employee, benefit_group_assignments, grouped_bga_enrollments=nil
           result = employee_hash employee
@@ -89,7 +99,9 @@ module Api
         end
 
         def current_or_upcoming_assignments benefit_group_assignments
-          benefit_group_assignments.select { |a| PlanYearUtil.new(plan_year: a.plan_year).is_current_or_upcoming? }
+          uniq_benefit_group_assignments(benefit_group_assignments.select do |a| 
+            PlanYearUtil.new(plan_year: a.plan_year).is_current_or_upcoming? 
+          end)
         end
 
         def employee_hash employee
