@@ -78,7 +78,7 @@ RSpec.describe Api::V1::Mobile::EnrollmentUtil, dbclean: :after_each do
     it 'should return the status label for enrollment status' do
       enrollment = Api::V1::Mobile::EnrollmentUtil.new
       expect(enrollment.send(:status_label_for, 'coverage_terminated')).to eq 'Terminated'
-      expect(enrollment.send(:status_label_for, 'auto_renewing')).to eq 'Renewing'
+      expect(enrollment.send(:status_label_for, 'auto_renewing')).to eq 'Enrolled'
       expect(enrollment.send(:status_label_for, 'inactive')).to eq 'Waived'
       expect(enrollment.send(:status_label_for, 'coverage_selected')).to eq 'Enrolled'
     end
