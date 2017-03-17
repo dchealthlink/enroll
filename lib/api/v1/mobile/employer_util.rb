@@ -59,7 +59,8 @@ module Api
                             years: select_current_and_upcoming(er.plan_years),
                             staff: staff_by_employer_id[er.id],
                             offices: er.organization.office_locations.select { |loc| loc.primary_or_branch? },
-                            include_details_url: true
+                            include_details_url: true,
+                            include_enrollment_counts: true
           end
         end
 
