@@ -30,8 +30,7 @@ module Api
           {
               EnrollmentConstants::WAIVED => HbxEnrollment::WAIVED_STATUSES,
               EnrollmentConstants::ENROLLED => HbxEnrollment::ENROLLED_STATUSES,
-              EnrollmentConstants::TERMINATED => HbxEnrollment::TERMINATED_STATUSES,
-              EnrollmentConstants::RENEWING => HbxEnrollment::RENEWAL_STATUSES
+              EnrollmentConstants::TERMINATED => HbxEnrollment::TERMINATED_STATUSES
           }.inject(nil) do |result, (label, enrollment_statuses)|
             enrollment_statuses.include?(enrollment_status.to_s) ? label : result
           end
@@ -117,7 +116,6 @@ module Api
         WAIVED = 'Waived'
         TERMINATED = 'Terminated'
         ENROLLED = 'Enrolled'
-        RENEWING = 'Renewing'
       end
 
     end

@@ -48,7 +48,7 @@ module Api
         def _select_current_and_upcoming years
           years.select { |y| PlanYearUtil.new(plan_year: y).is_current_or_upcoming? }
         end
-        
+
         def _organizations
           @organizations ||= @authorized.has_key?(:broker_role) ? Organization.by_broker_role(@authorized[:broker_role].id) :
               Organization.by_broker_agency_profile(@authorized[:broker_agency_profile]._id)
@@ -59,10 +59,11 @@ module Api
           staff_by_employer_id = StaffUtil.new(employer_profiles: @employer_profiles).keyed_by_employer_id
           @employer_profiles.map do |er|
             _summary_details employer_profile: er,
-                            years: _select_current_and_upcoming(er.plan_years),
-                            staff: staff_by_employer_id[er.id],
-                            offices: er.organization.office_locations.select { |loc| loc.primary_or_branch? },
-                            include_details_url: true
+                             years: _select_current_and_upcoming(er.plan_years),
+                             staff: staff_by_employer_id[er.id],
+                             offices: er.organization.office_locations.select { |loc| loc.primary_or_branch? },
+                             include_details_url: true,
+                             include_enrollment_counts: true
           end
         end
 
@@ -103,7 +104,7 @@ module Api
         # if the employer is currently in OE
         #
         def _add_count_to_plan_year_summary! include_enrollment_counts, mobile_plan_year, plan_year_summary
-          # return unless include_enrollment_counts && mobile_plan_year.open_enrollment?
+          return unless include_enrollment_counts && mobile_plan_year.open_enrollment?
           enrolled, waived, terminated = _count_by_enrollment_status mobile_plan_year
           plan_year_summary[:employees_enrolled] = enrolled
           plan_year_summary[:employees_waived] = waived
