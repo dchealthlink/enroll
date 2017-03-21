@@ -67,16 +67,6 @@ module Api
           end
         end
 
-        #
-        # Alternative, faster way to calculate total_enrolled_count
-        # Returns a list of number enrolled (actually enrolled, not waived) and waived
-        # Check if the plan year is in renewal without triggering an additional query
-        #
-        def _count_by_enrollment_status mobile_plan_year
-          employee = EmployeeUtil.new benefit_group: BenefitGroupUtil.new(plan_year: mobile_plan_year.plan_year)
-          employee.count_by_enrollment_status
-        end
-
         def _summary_details employer_profile:, years: [], staff: nil, offices: nil, include_details_url: false, include_enrollment_counts: false, include_plan_offerings: false
           summary = {
               employer_name: employer_profile.legal_name,
@@ -109,6 +99,16 @@ module Api
           plan_year_summary[:employees_enrolled] = enrolled
           plan_year_summary[:employees_waived] = waived
           plan_year_summary[:employees_terminated] = terminated
+        end
+
+        #
+        # Alternative, faster way to calculate total_enrolled_count
+        # Returns a list of number enrolled (actually enrolled, not waived) and waived
+        # Check if the plan year is in renewal without triggering an additional query
+        #
+        def _count_by_enrollment_status mobile_plan_year
+          employee = EmployeeUtil.new benefit_group: BenefitGroupUtil.new(plan_year: mobile_plan_year.plan_year)
+          employee.count_by_enrollment_status
         end
 
         def _add_urls! employer_profile, summary

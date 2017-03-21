@@ -5,7 +5,9 @@ module Api
 
         def populate_enrollments
           result = {}
-          __health_and_dental! result, @person.primary_family.households.map(&:hbx_enrollments).flatten
+          _primary_family { |family|
+            __health_and_dental! result, family.households.map(&:hbx_enrollments).flatten if family
+          }
           result
         end
 
@@ -19,6 +21,15 @@ module Api
               elected_aptc_pct: enrollment.elected_aptc_pct,
               applied_aptc_amount_in_cents: enrollment.applied_aptc_amount.cents,
           }
+        end
+
+        #
+        # Private
+        #
+        private
+
+        def _primary_family
+          yield @person.primary_family
         end
 
       end

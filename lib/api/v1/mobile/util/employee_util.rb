@@ -2,33 +2,15 @@ module Api
   module V1
     module Mobile::Util
       class EmployeeUtil < Api::V1::Mobile::Base
-        include Api::V1::Mobile::Cache::PlanCache
-
-        def initialize args={}
-          super args
-        end
 
         def employees_sorted_by
-          census_employees = case @status
-                               when 'terminated'
-                                 @employer_profile.census_employees.terminated
-                               when 'all'
-                                 @employer_profile.census_employees
-                               else
-                                 @employer_profile.census_employees.active
-                             end.sorted
-          @employee_name ? census_employees.employee_name(@employee_name) : census_employees
+          @employee_name ? _census_employees_by_status.employee_name(@employee_name) : _census_employees_by_status
         end
 
         def roster_employees
-          cache = plan_and_benefit_group @employees, @employer_profile
           @employees.compact.map { |ee|
-            if cache
-              benefit_group_assignments = cache[:employees_benefits].detect { |b| b.keys.include? ee.id.to_s }.try(:[], :benefit_group_assignments) || []
-              _roster_employee ee, benefit_group_assignments, cache[:grouped_bga_enrollments]
-            else
-              _roster_employee ee, ee.benefit_group_assignments
-            end
+            _cache_result.empty? ? _roster_employee(ee, ee.benefit_group_assignments) :
+                _roster_employee(ee, _cached_benefit_group_assignments(ee), _cache_result[:grouped_bga_enrollments])
           }
         end
 
@@ -46,14 +28,13 @@ module Api
           waived = HbxEnrollment::WAIVED_STATUSES
           terminated = HbxEnrollment::TERMINATED_STATUSES
 
-          id_list = @benefit_group_assignments.map(&:id)
-          all_enrollments = FamilyUtil.new(benefit_group_assignment_ids: id_list, aasm_states: enrolled_or_renewal + waived + terminated).family_hbx_enrollments
+          bga_ids = @benefit_group_assignments.map(&:id)
+          all_enrollments = FamilyUtil.new(benefit_group_assignment_ids: bga_ids, aasm_states: enrolled_or_renewal + waived + terminated).family_hbx_enrollments
           benefit_group = BenefitGroupUtil.new all_enrollments: all_enrollments
 
-          # return count of enrolled, count of waived, count of terminated
-          # only including those originally asked for
+          # Return count of enrolled, count of waived, count of terminated - only including those originally asked for
           benefit_group.benefit_group_assignment_ids enrolled_or_renewal, waived, terminated do |enrolled_ids, waived_ids, terminated_ids|
-            [enrolled_ids, waived_ids, terminated_ids].map { |found_ids| (found_ids & id_list).count }
+            [enrolled_ids, waived_ids, terminated_ids].map { |found_ids| (found_ids & bga_ids).count }
           end
         end
 
@@ -62,13 +43,32 @@ module Api
         #
         private
 
+        def _cached_benefit_group_assignments employee
+          _cache_result[:employees_benefits].detect { |b| b.keys.include? employee.id.to_s }.try(:[], :benefit_group_assignments) || []
+        end
+
+        def _cache_result
+          @cache_result ||= Api::V1::Mobile::Cache::PlanCache.new(employees: @employees, employer_profile: @employer_profile).plan_and_benefit_group
+        end
+
         def _benefit_group_assignments
           @benefit_group_assignments ||= @benefit_group.census_members.map do |ee|
             ee.benefit_group_assignments.select do |bga|
               @benefit_group.ids.include?(bga.benefit_group_id) &&
                   (::PlanYear::RENEWING_PUBLISHED_STATE.include?(@benefit_group.plan_year.aasm_state) || bga.is_active)
-            end
+            end.tap { |bgas_for_ee| BenefitGroupAssignmentsUtil.new(assignments: bgas_for_ee).unique_by_year }
           end.flatten
+        end
+
+        def _census_employees_by_status
+          @census_employees ||= case @status
+                                  when :terminated.to_s
+                                    @employer_profile.census_employees.terminated
+                                  when :all.to_s
+                                    @employer_profile.census_employees
+                                  else
+                                    @employer_profile.census_employees.active
+                                end.sorted
         end
 
         def _roster_employee employee, benefit_group_assignments, grouped_bga_enrollments=nil

@@ -7,7 +7,7 @@ module Api
 
         def initialize args={}
           super args
-          @assignments = _current_or_upcoming_assignments if @benefit_group_assignments
+          @assignments = _unique_assignments if @benefit_group_assignments
         end
 
         def populate_enrollments insured_employee=nil
@@ -35,8 +35,12 @@ module Api
         #
         private
 
+        def _unique_assignments
+          _current_or_upcoming_assignments { |bga| Util::BenefitGroupAssignmentsUtil.new(assignments: bga).unique_by_year }
+        end
+
         def _current_or_upcoming_assignments
-          @benefit_group_assignments.select { |a| Util::PlanYearUtil.new(plan_year: a.plan_year).is_current_or_upcoming? }
+          yield @benefit_group_assignments.select { |a| Util::PlanYearUtil.new(plan_year: a.plan_year).is_current_or_upcoming? }
         end
 
         def _enrollment_hash insured_employee, assignment

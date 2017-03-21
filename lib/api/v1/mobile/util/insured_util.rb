@@ -30,6 +30,7 @@ module Api
               |e| e['health'][:hbx_enrollment_id] || e['dental'][:hbx_enrollment_id] }.compact
           ivl_enrollments.map { |enr|
             %w{health dental}.each { |kind|
+              next unless enr[kind]
               enr.delete(kind) if ee_enrollment_ids.include? enr[kind][:hbx_enrollment_id]
             }
           }
