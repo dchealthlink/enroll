@@ -53,10 +53,6 @@ module Api
           plan.family_deductible
         end
 
-        def _family?
-          @ages.size > 1
-        end
-
         def _total_premium plan
           UnassistedPlanCostDecorator.new(plan, _create_hbx_enrollment).total_employee_cost
         end
