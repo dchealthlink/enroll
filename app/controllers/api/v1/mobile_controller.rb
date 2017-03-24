@@ -9,6 +9,9 @@ module Api
       include Api::V1::Mobile::Renderer::BrokerRenderer
       Mobile = Api::V1::Mobile
 
+      #
+      # /broker
+      #
       def broker
         _execute {
           authorized = Mobile::Util::SecurityUtil.new(user: current_user, params: params).authorize_employer_list
@@ -21,6 +24,9 @@ module Api
         }
       end
 
+      #
+      # /employers/:employer_profile_id/details
+      #
       def employer_details
         _execute {
           @security = Mobile::Util::SecurityUtil.new user: current_user, params: params
@@ -32,6 +38,9 @@ module Api
         }
       end
 
+      #
+      # /employer/details
+      #
       def my_employer_details
         _execute {
           @employer_profile ||= Mobile::Util::EmployerUtil.employer_profile_for_user current_user
@@ -39,6 +48,9 @@ module Api
         }
       end
 
+      #
+      # /employers/:employer_profile_id/employees
+      #
       def employee_roster
         _execute {
           @security = Mobile::Util::SecurityUtil.new user: current_user, params: params
@@ -47,6 +59,9 @@ module Api
         }
       end
 
+      #
+      # /employer/employees
+      #
       def my_employee_roster
         _execute {
           @employer_profile ||= Mobile::Util::EmployerUtil.employer_profile_for_user current_user
@@ -54,6 +69,9 @@ module Api
         }
       end
 
+      #
+      # /insured/:person_id
+      #
       def insured_person
         _execute {
           @security = Mobile::Util::SecurityUtil.new(user: current_user, params: params)
@@ -61,10 +79,16 @@ module Api
         }
       end
 
+      #
+      # /insured
+      #
       def insured
         _execute { _render_insured true, current_user.person }
       end
 
+      #
+      # /services_rates
+      #
       def services_rates
         _execute {
           hios_id, active_year, coverage_kind = params.values_at :hios_id, :active_year, :coverage_kind
@@ -72,6 +96,9 @@ module Api
         }
       end
 
+      #
+      # /plans
+      #
       def plans
         _execute { Mobile::Renderer::PlanRenderer::render_details params, self }
       end

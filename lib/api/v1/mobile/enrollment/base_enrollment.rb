@@ -89,7 +89,7 @@ module Api
           carrier_name = enrollment.plan.carrier_profile.legal_name
           {
               name: carrier_name,
-              summary_of_benefits_url: _summary_of_benefits(enrollment)
+              summary_of_benefits_url: __summary_of_benefits_url(enrollment.plan)
           }
         end
 
@@ -103,12 +103,6 @@ module Api
           return unless result[:status] == EnrollmentConstants::WAIVED
           result[:waived_on] = format_date(enrollment.submitted_at || enrollment.created_at)
           result[:waiver_reason] = enrollment.waiver_reason
-        end
-
-        def _summary_of_benefits enrollment
-          document = enrollment.plan.sbc_document
-          document_download_path(*get_key_and_bucket(document.identifier).reverse)
-              .concat("?content_type=application/pdf&filename=#{enrollment.plan.name.gsub(/[^0-9a-z]/i, '')}.pdf&disposition=inline") if document
         end
       end
 

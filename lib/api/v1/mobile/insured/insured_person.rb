@@ -10,7 +10,7 @@ module Api
             json.last_name @person.last_name
             json.name_suffix @person.name_sfx
             json.date_of_birth @person.dob
-            json.ssn_masked ssn_masked @person
+            json.ssn_masked __ssn_masked @person
             json.gender @person.gender
             json.id @person.id
           end
