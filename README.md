@@ -10,6 +10,7 @@ This fork of Enroll App exists to provide a specialized API for mobile clients.
 The software is available as open source under the terms of the MIT License (MIT)
 
 Enroll Copyright (c) 2016 IdeaCrew, Inc.
+
 Enroll Mobile API Copyright (c) 2017 DC Health Benefits Exchange.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
