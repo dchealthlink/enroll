@@ -8,64 +8,63 @@ module Api
         # testing when you make any changes to it.
         #
         def plan_and_benefit_group
-          _execute {
-            _grouped_hbx_enrollments
-            _populate_cache
-            _cache_result
-          }
-        end
-
-        #
-        # Private
-        #
-        private
-
-        def _execute
           begin
-            yield
-          rescue Exception => e
-            Rails.logger.error "Exception caught in plan_and_benefit_group: #{e.message}"
-            e.backtrace.each { |line| Rails.logger.error line }
-            {}
+            execute = ->(&block) {
+              begin
+                block.call
+              rescue StandardError => e
+                Rails.logger.error "Exception caught in plan_and_benefit_group: #{e.message}"
+                e.backtrace.each { |line| Rails.logger.error line }
+                {}
+              end
+            }
           end
-        end
 
-        def _grouped_hbx_enrollments
-          @benefit_group_assignment_ids = _employees_benefits.map { |x| x[:benefit_group_assignments] }.flatten.map(&:id)
-          @grouped_bga_enrollments ||= _hbx_enrollments.group_by { |x| x.benefit_group_assignment_id.to_s }
-        end
+          execute.call {
+            begin
+              hbx_enrollments = ->() {
+                @enrollments_for_benefit_groups ||= Family.where(:'households.hbx_enrollments'.elem_match => {
+                  :'benefit_group_assignment_id'.in => @benefit_group_assignment_ids
+                }).map { |f| f.households.map { |h| h.hbx_enrollments.show_enrollments_sans_canceled } }.flatten.compact
+              }
 
-        def _populate_cache
-          _hbx_enrollments.map { |e|
-            e.plan = _indexed_plans[e.plan_id] if e.plan_id
-            e.benefit_group = _benefit_groups[e.benefit_group_id] if e.benefit_group_id
+              employees_benefits = ->() {
+                @employees_benefits ||= @employees.map do |e|
+                  {"#{e.id}" => e, benefit_group_assignments: e.benefit_group_assignments.select do |bga|
+                    bga.is_active? || TimeKeeper.date_of_record < bga.start_on
+                  end}
+                end.flatten
+              }
+
+              grouped_hbx_enrollments = ->() {
+                @benefit_group_assignment_ids = employees_benefits.call.map { |x| x[:benefit_group_assignments] }.flatten.map(&:id)
+                @grouped_bga_enrollments ||= hbx_enrollments.call.group_by { |x| x.benefit_group_assignment_id.to_s }
+              }
+
+              cache_result = ->() {
+                {employees_benefits: employees_benefits.call, grouped_bga_enrollments: grouped_hbx_enrollments.call}
+              }
+
+              benefit_groups = ->() {
+                @benefit_groups ||= @employer_profile.plan_years.map { |p| p.benefit_groups }.flatten.compact.index_by(&:id)
+              }
+
+              indexed_plans = ->() {
+                @indexed_plans ||= ::Plan.where(:'id'.in => hbx_enrollments.call.map { |x| x.plan_id }.flatten).index_by(&:id)
+              }
+
+              populate_cache = ->() {
+                hbx_enrollments.call.map { |e|
+                  e.plan = indexed_plans.call()[e.plan_id] if e.plan_id
+                  e.benefit_group = benefit_groups.call()[e.benefit_group_id] if e.benefit_group_id
+                }
+              }
+            end
+
+            grouped_hbx_enrollments.call
+            populate_cache.call
+            cache_result.call
           }
-        end
-
-        def _cache_result
-          {employees_benefits: _employees_benefits, grouped_bga_enrollments: _grouped_hbx_enrollments}
-        end
-
-        def _benefit_groups
-          @benefit_groups ||= @employer_profile.plan_years.map { |p| p.benefit_groups }.flatten.compact.index_by(&:id)
-        end
-
-        def _indexed_plans
-          @indexed_plans ||= ::Plan.where(:'id'.in => _hbx_enrollments.map { |x| x.plan_id }.flatten).index_by(&:id)
-        end
-
-        def _employees_benefits
-          @employees_benefits ||= @employees.map do |e|
-            {"#{e.id}" => e, benefit_group_assignments: e.benefit_group_assignments.select do |bga|
-              bga.is_active? || TimeKeeper.date_of_record < bga.start_on
-            end}
-          end.flatten
-        end
-
-        def _hbx_enrollments
-          @enrollments_for_benefit_groups ||= Family.where(:'households.hbx_enrollments'.elem_match => {
-              :'benefit_group_assignment_id'.in => @benefit_group_assignment_ids
-          }).map { |f| f.households.map { |h| h.hbx_enrollments.show_enrollments_sans_canceled } }.flatten.compact
         end
 
       end
