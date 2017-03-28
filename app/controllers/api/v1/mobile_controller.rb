@@ -55,7 +55,7 @@ module Api
         _execute {
           @security = Mobile::Util::SecurityUtil.new user: current_user, params: params
           @security.employer_profile ? _render_employees(@security.can_view_employee_roster?, @security.employer_profile) :
-              Mobile::Renderer::EmployeeRenderer::report_error(self)
+            Mobile::Renderer::EmployeeRenderer::report_error(self)
         }
       end
 
@@ -92,7 +92,12 @@ module Api
       def services_rates
         _execute {
           hios_id, active_year, coverage_kind = params.values_at :hios_id, :active_year, :coverage_kind
-          Mobile::Renderer::ServiceRenderer::render_details hios_id, active_year, coverage_kind, self
+
+          if hios_id && active_year && coverage_kind
+            Mobile::Renderer::ServiceRenderer::render_details hios_id, active_year, coverage_kind, self
+          else
+            Mobile::Renderer::ServiceRenderer::report_error self
+          end
         }
       end
 
@@ -110,7 +115,7 @@ module Api
 
       def _render_insured can_view, person
         can_view ? Mobile::Renderer::IndividualRenderer::render_details(person, self) :
-            Mobile::Renderer::IndividualRenderer::report_error(self)
+          Mobile::Renderer::IndividualRenderer::report_error(self)
       end
 
       def _render_employer can_view, employer_profile
@@ -128,7 +133,7 @@ module Api
                                                      employee_name: params[:employee_name],
                                                      status: params[:status]).employees_sorted_by
           employees ? Mobile::Renderer::EmployeeRenderer::render_details(employer_profile, employees, self) :
-              Mobile::Renderer::EmployeeRenderer::report_error(self)
+            Mobile::Renderer::EmployeeRenderer::report_error(self)
         else
           Mobile::Renderer::EmployeeRenderer::report_error self
         end

@@ -378,7 +378,6 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
   end
 
   describe "GET services_rates" do
-
     let(:qhp1) { Products::QhpCostShareVariance.new(hios_plan_and_variant_id: '11111100001111-01') }
     let(:qhp2) { Products::QhpCostShareVariance.new(hios_plan_and_variant_id: '11111100001111-02') }
     let(:service_type) { 'Primary Care Visit to Treat an Injury or Illness' }
@@ -394,8 +393,9 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
     it 'should return an empty hash when all params are not passed' do
       get :services_rates, format: :json
       output = JSON.parse response.body
-      expect(response).to have_http_status(200)
+      expect(response).to have_http_status(422)
       expect(output).to be_a_kind_of Hash
+      expect(output['error']).to eq Api::V1::Mobile::Renderer::ServiceRenderer::PARAMETERS_MISSING
     end
 
     it 'should return the services rates' do

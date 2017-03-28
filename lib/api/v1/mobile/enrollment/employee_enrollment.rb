@@ -25,8 +25,8 @@ module Api
 
         def __specific_enrollment_fields enrollment
           {
-              employer_contribution: enrollment.total_employer_contribution,
-              employee_cost: enrollment.total_employee_cost,
+            employer_contribution: enrollment.total_employer_contribution,
+            employee_cost: enrollment.total_employee_cost,
           }
         end
 
@@ -36,7 +36,7 @@ module Api
         private
 
         def _unique_assignments
-          _current_or_upcoming_assignments { |bga| Util::BenefitGroupAssignmentsUtil.new(assignments: bga).unique_by_year }
+          _current_or_upcoming_assignments { |bgas| Util::BenefitGroupAssignmentsUtil.new(assignments: bgas).unique_by_year }
         end
 
         def _current_or_upcoming_assignments

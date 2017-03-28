@@ -4,13 +4,55 @@ module Api
       class EmployeeUtil < Api::V1::Mobile::Base
 
         def employees_sorted_by
-          @employee_name ? _census_employees_by_status.employee_name(@employee_name) : _census_employees_by_status
+          begin
+            census_employees_by_status = ->() {
+              @census_employees ||= case @status
+                                      when :terminated.to_s
+                                        @employer_profile.census_employees.terminated
+                                      when :all.to_s
+                                        @employer_profile.census_employees
+                                      else
+                                        @employer_profile.census_employees.active
+                                    end.sorted
+            }
+          end
+
+          @employee_name ? census_employees_by_status.call.employee_name(@employee_name) : census_employees_by_status.call
         end
 
         def roster_employees
+          begin
+            roster_employee = ->(employee, benefit_group_assignments, grouped_bga_enrollments=nil) {
+              begin
+                enrollment_instance = ->() {
+                  enrollment = Api::V1::Mobile::Enrollment::EmployeeEnrollment.new benefit_group_assignments: benefit_group_assignments
+                  enrollment.grouped_bga_enrollments = grouped_bga_enrollments if grouped_bga_enrollments
+                  enrollment
+                }
+
+                employee_hash = ->() {
+                  result = JSON.parse Api::V1::Mobile::Insured::InsuredPerson.new(person: employee).basic_person
+                  result[:id] = employee.id
+                  result[:hired_on] = employee.hired_on
+                  result[:is_business_owner] = employee.is_business_owner
+                  result
+                }
+              end
+
+              result = employee_hash.call
+              result[:enrollments] = enrollment_instance.call.populate_enrollments
+              result[:dependents] = DependentUtil.new(employee: employee).include_dependents
+              result
+            }
+
+            cached_benefit_group_assignments = ->(employee) {
+              _cache_result[:employees_benefits].detect { |b| b.keys.include? employee.id.to_s }.try(:[], :benefit_group_assignments) || []
+            }
+          end
+
           @employees.compact.map { |ee|
-            _cache_result.empty? ? _roster_employee(ee, ee.benefit_group_assignments) :
-                _roster_employee(ee, _cached_benefit_group_assignments(ee), _cache_result[:grouped_bga_enrollments])
+            _cache_result.empty? ? roster_employee[ee, ee.benefit_group_assignments] :
+              roster_employee[ee, cached_benefit_group_assignments[ee], _cache_result[:grouped_bga_enrollments]]
           }
         end
 
@@ -22,7 +64,18 @@ module Api
         # This avoids undercounting, e.g. two family members working for the same employer.
         #
         def count_by_enrollment_status
-          return [0, 0, 0] if _benefit_group_assignments.blank?
+          begin
+            benefit_group_assignments = ->() {
+              @benefit_group_assignments ||= @benefit_group.census_members.map do |ee|
+                ee.benefit_group_assignments.select do |bga|
+                  @benefit_group.ids.include?(bga.benefit_group_id) &&
+                    (::PlanYear::RENEWING_PUBLISHED_STATE.include?(@benefit_group.plan_year.aasm_state) || bga.is_active)
+                end.tap { |bgas_for_ee| BenefitGroupAssignmentsUtil.new(assignments: bgas_for_ee).unique_by_year }
+              end.flatten
+            }
+          end
+
+          return [0, 0, 0] if benefit_group_assignments.call.blank?
 
           enrolled_or_renewal = HbxEnrollment::ENROLLED_STATUSES + HbxEnrollment::RENEWAL_STATUSES
           waived = HbxEnrollment::WAIVED_STATUSES
@@ -43,53 +96,8 @@ module Api
         #
         private
 
-        def _cached_benefit_group_assignments employee
-          _cache_result[:employees_benefits].detect { |b| b.keys.include? employee.id.to_s }.try(:[], :benefit_group_assignments) || []
-        end
-
         def _cache_result
           @cache_result ||= Api::V1::Mobile::Cache::PlanCache.new(employees: @employees, employer_profile: @employer_profile).plan_and_benefit_group
-        end
-
-        def _benefit_group_assignments
-          @benefit_group_assignments ||= @benefit_group.census_members.map do |ee|
-            ee.benefit_group_assignments.select do |bga|
-              @benefit_group.ids.include?(bga.benefit_group_id) &&
-                  (::PlanYear::RENEWING_PUBLISHED_STATE.include?(@benefit_group.plan_year.aasm_state) || bga.is_active)
-            end.tap { |bgas_for_ee| BenefitGroupAssignmentsUtil.new(assignments: bgas_for_ee).unique_by_year }
-          end.flatten
-        end
-
-        def _census_employees_by_status
-          @census_employees ||= case @status
-                                  when :terminated.to_s
-                                    @employer_profile.census_employees.terminated
-                                  when :all.to_s
-                                    @employer_profile.census_employees
-                                  else
-                                    @employer_profile.census_employees.active
-                                end.sorted
-        end
-
-        def _roster_employee employee, benefit_group_assignments, grouped_bga_enrollments=nil
-          result = _employee_hash employee
-          result[:enrollments] = _enrollment_instance(benefit_group_assignments, grouped_bga_enrollments).populate_enrollments
-          result[:dependents] = DependentUtil.new(employee: employee).include_dependents
-          result
-        end
-
-        def _employee_hash employee
-          result = JSON.parse Api::V1::Mobile::Insured::InsuredPerson.new(person: employee).basic_person
-          result[:id] = employee.id
-          result[:hired_on] = employee.hired_on
-          result[:is_business_owner] = employee.is_business_owner
-          result
-        end
-
-        def _enrollment_instance benefit_group_assignments, grouped_bga_enrollments
-          enrollment = Api::V1::Mobile::Enrollment::EmployeeEnrollment.new benefit_group_assignments: benefit_group_assignments
-          enrollment.grouped_bga_enrollments = grouped_bga_enrollments if grouped_bga_enrollments
-          enrollment
         end
 
       end

@@ -61,18 +61,6 @@ RSpec.describe Api::V1::Mobile::Util::EmployeeUtil, dbclean: :after_each do
       expect(sby.options[:sort]).to include('last_name', 'first_name', 'census_employee.last_name', 'census_employee.first_name')
     end
 
-    it 'should return the benefit group assignments' do
-      mobile_plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year
-      benefit_group = Util::BenefitGroupUtil.new plan_year: mobile_plan_year.plan_year
-      employee = Util::EmployeeUtil.new benefit_group: benefit_group
-      bgas = employee.send(:_benefit_group_assignments)
-      expect(bgas).to be_a_kind_of Array
-      expect(bgas.size).to eq 3
-      expect(bgas.pop).to be_a_kind_of BenefitGroupAssignment
-      expect(bgas.map(&:aasm_state).uniq.pop).to eq 'initialized'
-      expect(bgas.map(&:start_on).uniq.pop).to eq Date.parse('2017-01-01')
-    end
-
     it 'should return the count by enrollment status' do
       mobile_plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year
       benefit_group = Util::BenefitGroupUtil.new plan_year: mobile_plan_year.plan_year

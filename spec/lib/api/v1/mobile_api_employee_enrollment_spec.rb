@@ -50,6 +50,7 @@ RSpec.describe Api::V1::Mobile::Enrollment::EmployeeEnrollment, dbclean: :after_
       enrollment = Api::V1::Mobile::Enrollment::BaseEnrollment.new
       expect(enrollment.send(:__status_label_for, 'coverage_terminated')).to eq 'Terminated'
       expect(enrollment.send(:__status_label_for, 'inactive')).to eq 'Waived'
+      expect(enrollment.send(:__status_label_for, 'auto_renewing')).to eq 'Enrolled'
       expect(enrollment.send(:__status_label_for, 'coverage_selected')).to eq 'Enrolled'
     end
 

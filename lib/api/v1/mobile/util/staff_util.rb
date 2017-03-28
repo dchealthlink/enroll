@@ -5,28 +5,25 @@ module Api
 
         # Returns a hash of arrays of staff members, keyed by employer id
         def keyed_by_employer_id
+          begin
+            people = ->() {
+              Person.where(:employer_staff_roles => {
+                  '$elemMatch' => {
+                      employer_profile_id: {'$in': @employer_profiles.map(&:id)},
+                      :aasm_state.ne => :is_closed
+                  }
+              })
+            }
+          end
+
           result = {}
-          _people.each { |staff|
+          people.call.each { |staff|
             staff.employer_staff_roles.each { |role|
               result[role.employer_profile_id].nil? ? result[role.employer_profile_id] = [staff] :
                   result[role.employer_profile_id] <<= staff
             }
           }
           result.compact
-        end
-
-        #
-        # Private
-        #
-        private
-
-        def _people
-          Person.where(:employer_staff_roles => {
-              '$elemMatch' => {
-                  employer_profile_id: {"$in": @employer_profiles.map(&:id)},
-                  :aasm_state.ne => :is_closed
-              }
-          })
         end
 
       end

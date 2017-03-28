@@ -19,7 +19,7 @@ module Api
         def __initialize_enrollment hbx_enrollments, coverage_kind
           enrollment = hbx_enrollments.flatten.detect { |e| e.coverage_kind == coverage_kind } unless !hbx_enrollments || hbx_enrollments.empty?
           result = enrollment ? _enrollment_details(coverage_kind, enrollment) : {status: 'Not Enrolled'}
-          _other_enrollment_fields enrollment, result
+          _other_enrollment_fields! enrollment, result
           _enrollment_termination! enrollment, result
           _enrollment_waived! enrollment, result
           _services_rates_url! enrollment, coverage_kind, result
@@ -28,9 +28,9 @@ module Api
 
         def __status_label_for enrollment_status
           {
-              EnrollmentConstants::WAIVED => HbxEnrollment::WAIVED_STATUSES,
-              EnrollmentConstants::ENROLLED => HbxEnrollment::ENROLLED_STATUSES,
-              EnrollmentConstants::TERMINATED => HbxEnrollment::TERMINATED_STATUSES
+            EnrollmentConstants::WAIVED => HbxEnrollment::WAIVED_STATUSES,
+            EnrollmentConstants::ENROLLED => HbxEnrollment::ENROLLED_AND_RENEWAL_STATUSES,
+            EnrollmentConstants::TERMINATED => HbxEnrollment::TERMINATED_STATUSES
           }.inject(nil) do |result, (label, enrollment_statuses)|
             enrollment_statuses.include?(enrollment_status.to_s) ? label : result
           end
@@ -47,13 +47,13 @@ module Api
 
         def _enrollment_details coverage_kind, enrollment
           {
-              hbx_enrollment_id: enrollment.id,
-              status: __status_label_for(enrollment.aasm_state),
-              plan_name: enrollment.plan.try(:name),
-              plan_type: enrollment.plan.try(:plan_type),
-              metal_level: enrollment.plan.try(coverage_kind == :health ? :metal_level : :dental_level),
-              benefit_group_name: enrollment.try(:benefit_group).try(:title),
-              total_premium: enrollment.total_premium
+            hbx_enrollment_id: enrollment.id,
+            status: __status_label_for(enrollment.aasm_state),
+            plan_name: enrollment.plan.try(:name),
+            plan_type: enrollment.plan.try(:plan_type),
+            metal_level: enrollment.plan.try(coverage_kind == :health ? :metal_level : :dental_level),
+            benefit_group_name: enrollment.try(:benefit_group).try(:title),
+            total_premium: enrollment.total_premium
           }.merge __specific_enrollment_fields(enrollment)
         end
 
@@ -68,15 +68,15 @@ module Api
           qhps.first.qhp_service_visits.map do |service_visit|
             if service_visit.present?
               {
-                  service: service_visit.visit_type,
-                  copay: service_visit.copay_in_network_tier_1,
-                  coinsurance: service_visit.co_insurance_in_network_tier_1.present? ? service_visit.co_insurance_in_network_tier_1 : 'N/A'
+                service: service_visit.visit_type,
+                copay: service_visit.copay_in_network_tier_1,
+                coinsurance: service_visit.co_insurance_in_network_tier_1.present? ? service_visit.co_insurance_in_network_tier_1 : 'N/A'
               }
             end
           end
         end
 
-        def _other_enrollment_fields enrollment, result
+        def _other_enrollment_fields! enrollment, result
           return unless enrollment && enrollment.plan
           ENROLLMENT_PLAN_FIELDS.each do |field|
             value = enrollment.plan.try(field)
@@ -88,8 +88,8 @@ module Api
         def _carrier enrollment
           carrier_name = enrollment.plan.carrier_profile.legal_name
           {
-              name: carrier_name,
-              summary_of_benefits_url: __summary_of_benefits_url(enrollment.plan)
+            name: carrier_name,
+            summary_of_benefits_url: __summary_of_benefits_url(enrollment.plan)
           }
         end
 

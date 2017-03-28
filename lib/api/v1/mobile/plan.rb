@@ -31,15 +31,17 @@ module Api
         private
 
         def _individual_plans
-          ::Plan.individual_plans coverage_kind: @coverage_kind, active_year: @active_year, tax_household: _tax_household
+          begin
+            tax_household = ->() {
+              TaxHousehold.new eligibility_determinations: [EligibilityDetermination.new(csr_eligibility_kind: @csr_kind)]
+            }
+          end
+
+          ::Plan.individual_plans coverage_kind: @coverage_kind, active_year: @active_year, tax_household: tax_household.call
         end
 
         def _services_rates plan
           services_rates_path plan.hios_id, plan.active_year, @coverage_kind
-        end
-
-        def _tax_household
-          TaxHousehold.new eligibility_determinations: [EligibilityDetermination.new(csr_eligibility_kind: @csr_kind)]
         end
 
         def _deductible plan
@@ -54,59 +56,65 @@ module Api
         end
 
         def _total_premium plan
-          UnassistedPlanCostDecorator.new(plan, _create_hbx_enrollment).total_employee_cost
-        end
+          begin
+            create_hbx_enrollment = ->() {
+              begin
+                add_members = ->() {
+                  begin
+                    add_family_member = ->(family_members) {
+                      family_member = FamilyMember.new
+                      family_member.person = Person.new
+                      family_members << family_member
+                      family_member
+                    }
 
-        def _create_hbx_enrollment
-          family_members, hbx_enrollment_members = _add_members
-          family = _family_instance family_members
-          hbx_enrollment = _hbx_enrollment_instance hbx_enrollment_members
-          hbx_enrollment.household = _household_instance family
-          hbx_enrollment
-        end
+                    add_hbx_enrollment_member = ->(age, family_member, hbx_enrollment_members) {
+                      hbx_enrollment_member = HbxEnrollmentMember.new
+                      hbx_enrollment_member.instance_variable_set :@age_on_effective_date, age
+                      hbx_enrollment_member.applicant_id = family_member.id
+                      hbx_enrollment_members << hbx_enrollment_member
+                    }
+                  end
 
-        def _add_members
-          hbx_enrollment_members = []
-          family_members = []
-          @ages.each { |age|
-            _add_family_member!(family_members) { |family_member|
-              _add_hbx_enrollment_member! age, family_member, hbx_enrollment_members
+                  hbx_enrollment_members = []
+                  family_members = []
+                  @ages.each { |age|
+                    add_family_member.call(family_members).tap { |family_member|
+                      add_hbx_enrollment_member.call age, family_member, hbx_enrollment_members
+                    }
+                  }
+                  return family_members, hbx_enrollment_members
+                }
+
+                family_instance = ->(family_members) {
+                  family = Family.new
+                  family.family_members = family_members
+                  family
+                }
+
+                hbx_enrollment_instance = ->(hbx_enrollment_members) {
+                  hbx_enrollment = HbxEnrollment.new
+                  hbx_enrollment.hbx_enrollment_members = hbx_enrollment_members
+                  hbx_enrollment.effective_on = Time.now
+                  hbx_enrollment
+                }
+
+                household_instance = ->(family) {
+                  household = Household.new
+                  household.family = family
+                  household
+                }
+              end
+
+              family_members, hbx_enrollment_members = add_members.call
+              family = family_instance.call family_members
+              hbx_enrollment = hbx_enrollment_instance.call hbx_enrollment_members
+              hbx_enrollment.household = household_instance.call family
+              hbx_enrollment
             }
-          }
-          return family_members, hbx_enrollment_members
-        end
+          end
 
-        def _hbx_enrollment_instance hbx_enrollment_members
-          hbx_enrollment = HbxEnrollment.new
-          hbx_enrollment.hbx_enrollment_members = hbx_enrollment_members
-          hbx_enrollment.effective_on = Time.now
-          hbx_enrollment
-        end
-
-        def _family_instance family_members
-          family = Family.new
-          family.family_members = family_members
-          family
-        end
-
-        def _household_instance family
-          household = Household.new
-          household.family = family
-          household
-        end
-
-        def _add_hbx_enrollment_member! age, family_member, hbx_enrollment_members
-          hbx_enrollment_member = HbxEnrollmentMember.new
-          hbx_enrollment_member.instance_variable_set :@age_on_effective_date, age
-          hbx_enrollment_member.applicant_id = family_member.id
-          hbx_enrollment_members << hbx_enrollment_member
-        end
-
-        def _add_family_member! family_members
-          family_member = FamilyMember.new
-          family_member.person = Person.new
-          family_members << family_member
-          yield family_member
+          UnassistedPlanCostDecorator.new(plan, create_hbx_enrollment.call).total_employee_cost
         end
 
       end
