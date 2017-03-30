@@ -384,13 +384,13 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
     let(:copay) { '$20.00' }
     let(:coinsurance) { 'Not Applicable' }
     let(:service_visits) { [
-        Products::QhpServiceVisit.new(
-            visit_type: service_type,
-            copay_in_network_tier_1: copay,
-            co_insurance_in_network_tier_1: coinsurance)
+      Products::QhpServiceVisit.new(
+        visit_type: service_type,
+        copay_in_network_tier_1: copay,
+        co_insurance_in_network_tier_1: coinsurance)
     ] }
 
-    it 'should return an empty hash when all params are not passed' do
+    it 'should return an Unprocessable Entity error when all params are not passed' do
       get :services_rates, format: :json
       output = JSON.parse response.body
       expect(response).to have_http_status(422)

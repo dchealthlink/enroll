@@ -9,6 +9,9 @@ module Api
           @ids = @plan_year.benefit_groups.map(&:id) if @plan_year
         end
 
+        #
+        # Expects the object to be initialized with @all_enrollments instance variable.
+        #
         def benefit_group_assignment_ids enrolled, waived, terminated
           begin
             bg_assignment_ids = ->(statuses) {
@@ -23,12 +26,12 @@ module Api
                   end.uniq do |e|
                     e.benefit_group_assignment_id # only the most recent per employee
                   end
-                }.call
+                }
               end
 
-              @active_employer_sponsored_health_enrollments.select do |enrollment|
-                statuses.include? (enrollment.aasm_state)
-              end.map(&:benefit_group_assignment_id)
+              active_enrollments = active_employer_sponsored_health_enrollments.call
+              active_enrollments.select { |enrollment|
+                statuses.include? (enrollment.aasm_state) }.map(&:benefit_group_assignment_id)
             }
           end
 

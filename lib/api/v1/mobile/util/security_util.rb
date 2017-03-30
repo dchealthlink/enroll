@@ -19,7 +19,7 @@ module Api
 
             admin_or_staff = ->() {
               _is_hbx_staff? || _broker_agency_staff_roles.include?(@params[:broker_agency_profile_id]) ?
-                  {broker_agency_profile: @broker_agency_profile, status: 200} : {status: 404}
+                {broker_agency_profile: @broker_agency_profile, status: 200} : {status: 404}
             }
           end
 
@@ -35,16 +35,13 @@ module Api
         def can_view_employee_roster?
           begin
             is_employers_broker_staff = ->() {
-              _broker_agency_staff_roles.include?(@employer_profile.try(:active_broker_agency_account).try(:broker_agency_profile_id))
+              _broker_agency_staff_roles.include?(_broker_agency_profile_id(@employer_profile))
             }
 
-            is_employers_staff = ->() {
-              _active_employer_staff_roles.include? @employer_profile.id
-            }
+            is_employers_staff = ->() { _active_employer_staff_roles.include? @employer_profile.id }
 
             is_employers_broker = ->() {
-              @user.person.broker_role &&
-                  @user.person.broker_role == @employer_profile.try(:active_broker_agency_account).try(:writing_agent)
+              @user.person.broker_role && @user.person.broker_role == _writing_agent(@employer_profile)
             }
           end
 
@@ -54,13 +51,10 @@ module Api
         def can_view_insured?
           begin
             is_persons_broker = ->() {
-              @user.person.broker_role &&
-                  @user.person.broker_role == @employer_profile.try(:active_broker_agency_account).try(:writing_agent)
+              @user.person.broker_role && @user.person.broker_role == _writing_agent(@employer_profile)
             }
 
-            is_the_person = ->() {
-              @user.person == @person
-            }
+            is_the_person = ->() { @user.person == @person }
 
             employer_profiles = ->() {
               @employer_profiles ||= @person.active_employee_roles.map { |r| r.employer_profile }
@@ -68,7 +62,7 @@ module Api
 
             one_of_persons_brokers_staff = ->() {
               !(_broker_agency_staff_roles &
-                  employer_profiles.call.map { |ep| ep.try(:active_broker_agency_account).try(:broker_agency_profile_id) }).empty?
+                employer_profiles.call.map { |ep| _broker_agency_profile_id(ep) }).empty?
             }
 
             one_of_persons_employers_staff = ->() {
@@ -77,13 +71,21 @@ module Api
           end
 
           _is_hbx_staff? || is_the_person.call || one_of_persons_brokers_staff.call ||
-              one_of_persons_employers_staff.call || is_persons_broker.call
+            one_of_persons_employers_staff.call || is_persons_broker.call
         end
 
         #
         # Private
         #
         private
+
+        def _broker_agency_profile_id employer_profile
+          employer_profile.try(:active_broker_agency_account).try(:broker_agency_profile_id)
+        end
+
+        def _writing_agent employer_profile
+          employer_profile.try(:active_broker_agency_account).try(:writing_agent)
+        end
 
         def _is_hbx_staff?
           @user.has_hbx_staff_role?
