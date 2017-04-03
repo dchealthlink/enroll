@@ -49,6 +49,8 @@ module IdentityVerification
 
     def invoke_request(key, payload, timeout)
       begin
+        Rails.logger.error "payload2: #{payload}"
+        Rails.logger.error "requestor: #{self.class.requestor}"
         r = self.class.requestor.request(key, {:body => payload}, 7)
         return ["503", nil] if r.nil?
         result_hash = r.stringify_keys

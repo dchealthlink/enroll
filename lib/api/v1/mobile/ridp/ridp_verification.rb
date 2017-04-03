@@ -12,12 +12,15 @@ module Api
             }
 
             questions_response = ->(payload) {
+              Rails.logger.error "payload: #{payload}"
               service = ::IdentityVerification::InteractiveVerificationService.new
               service.initiate_session payload
             }
           end
 
-          questions_response[create_request_payload.call]
+          response questions_response[create_request_payload.call]
+          Rails.logger.error "response: #{response}"
+          response
         end
 
       end
