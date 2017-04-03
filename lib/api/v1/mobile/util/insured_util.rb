@@ -3,7 +3,7 @@ module Api
     module Mobile::Util
       class InsuredUtil < Api::V1::Mobile::Base
 
-        def build_insured_json
+        def build_response
           begin
             insured_employee = ->() {
               @insured_employee ||= Api::V1::Mobile::Insured::InsuredEmployee.new person: @person

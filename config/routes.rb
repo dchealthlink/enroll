@@ -433,6 +433,7 @@ Rails.application.routes.draw do
         get 'insured/:person_id', action: :insured_person
         get :services_rates
         get :plans
+        post :verify_identity
       end
     end
   end

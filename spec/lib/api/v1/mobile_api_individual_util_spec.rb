@@ -14,7 +14,7 @@ RSpec.describe Api::V1::Mobile::Util::InsuredUtil, dbclean: :after_each do
       allow(insured_employee).to receive(:ins_enrollments).and_return([hbx_enrollment])
 
       individual = Util::InsuredUtil.new person: person
-      output = individual.build_insured_json
+      output = individual.build_response
       expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                 'gender', 'id', 'employments', 'addresses')
 
@@ -41,7 +41,7 @@ RSpec.describe Api::V1::Mobile::Util::InsuredUtil, dbclean: :after_each do
 
     it 'should return the individual non-employee details' do
       individual = Util::InsuredUtil.new person: non_employee_individual_person
-      output = individual.build_insured_json
+      output = individual.build_response
       expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                 'gender', 'id', 'employments', 'addresses')
 
