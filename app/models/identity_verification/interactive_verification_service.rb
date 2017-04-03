@@ -52,6 +52,7 @@ module IdentityVerification
         Rails.logger.error "payload2: #{payload}"
         Rails.logger.error "requestor: #{self.class.requestor}"
         r = self.class.requestor.request(key, {:body => payload}, 7)
+        Rails.logger.error "response: #{r}"
         return ["503", nil] if r.nil?
         result_hash = r.stringify_keys
         result_code = result_hash["return_status"]
