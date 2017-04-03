@@ -1,7 +1,7 @@
 module Api
   module V1
     class MobileController < ActionController::Base
-      include Api::V1::Mobile::Renderer::IdentityVerificationRenderer
+      include Api::V1::Mobile::Renderer::RidpRenderer
       include Api::V1::Mobile::Renderer::ServiceRenderer
       include Api::V1::Mobile::Renderer::PlanRenderer
       include Api::V1::Mobile::Renderer::IndividualRenderer
@@ -77,7 +77,7 @@ module Api
       # /verify_identity
       #
       def verify_identity
-        _execute { Mobile::Renderer::IdentityVerificationRenderer::render_details params, self }
+        _execute { Mobile::Renderer::RidpRenderer::render_details request, self }
       end
 
       #

@@ -1,14 +1,14 @@
 module Api
   module V1
     module Mobile::Renderer
-      module IdentityVerificationRenderer
+      module RidpRenderer
         include BaseRenderer
         IDENTITY_VERIFICATION_QUESTIONS_ERROR = 'identity verification questions were not received'
 
-        def render_details params, controller
+        def render_details request, controller
           begin
             render_response = ->() {
-              controller.render json: Mobile::Ridp::IdentityVerification.new(params: params).build_response
+              controller.render json: Mobile::Ridp::RidpVerification.new(request: request).build_response
             }
           end
 
@@ -16,7 +16,7 @@ module Api
         end
       end
 
-      IdentityVerificationRenderer.module_eval do
+      RidpRenderer.module_eval do
         module_function :render_details
       end
     end
