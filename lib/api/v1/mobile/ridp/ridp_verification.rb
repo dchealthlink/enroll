@@ -18,7 +18,7 @@ module Api
             }
           end
 
-          response questions_response[create_request_payload.call]
+          response = questions_response[create_request_payload.call]
           Rails.logger.error "response: #{response}"
           response
         end

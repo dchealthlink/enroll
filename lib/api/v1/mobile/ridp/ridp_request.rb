@@ -30,13 +30,13 @@ module Api
 
             create_id = ->(xml) {
               xml.id do
-                xml.id '' #TODO(Krish): Add support for ID
+                xml.id Person.first.id.to_s #TODO(Krish): Add support for ID
               end
             }
 
             create_person_id = ->(xml) {
               xml.id do
-                xml.id "urn:openhbx:hbx:dc0:resources:v1:person:hbx_id#" #TODO(Krish): Add support for Person ID
+                xml.id "urn:openhbx:hbx:dc0:resources:v1:person:hbx_id##{Person.first.hbx_id}" #TODO(Krish): Add support for Person ID
               end
             }
 
