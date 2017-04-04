@@ -102,7 +102,7 @@ module Api
           #
           # Build the XML request
           #
-          xml = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+          xml = Nokogiri::XML::Builder.new do |xml|
             xml.interactive_verification_start '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
               xml.individual do
                 create_id[xml]
