@@ -91,7 +91,7 @@ module Api
             create_person_demographics = ->(xml) {
               xml.person_demographics do
                 xml.ssn ssn.call
-                xml.sex sex.call
+                xml.sex "urn:openhbx:terms:v1:gender##{sex.call}"
                 xml.birth_date birth_date.call
                 xml.is_incarcerated is_incarcerated.call
                 create_timestamps[xml]

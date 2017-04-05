@@ -8,7 +8,7 @@ module Api
         def render_details request, controller
           begin
             render_response = ->() {
-              controller.render json: Mobile::Ridp::RidpVerification.new(request: request).build_response
+              controller.render json: Mobile::Ridp::RidpVerification.new(body: request.body.read).build_response
             }
           end
 

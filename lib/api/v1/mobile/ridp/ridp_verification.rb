@@ -6,9 +6,8 @@ module Api
         def build_response
           begin
             create_request_payload = ->() {
-              ridp_request = RidpRequest.new body: JSON.parse(@request.body.read)
-              payload = ridp_request.create_request
-              payload.to_xml(:save_with => Nokogiri::XML::Node::SaveOptions::AS_XML).strip
+              ridp_request = RidpRequest.new body: JSON.parse(@body)
+              ridp_request.create_request.to_xml
             }
 
             questions_response = ->(payload) {
