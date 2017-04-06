@@ -77,7 +77,14 @@ module Api
       # /verify_identity
       #
       def verify_identity
-        _execute { Mobile::Renderer::RidpRenderer::render_details request, self }
+        _execute { Mobile::Renderer::RidpRenderer::render_questions request, self }
+      end
+
+      #
+      # /verify_identity/answers
+      #
+      def verify_identity_answers
+        _execute { Mobile::Renderer::RidpRenderer::render_answers request, self }
       end
 
       #

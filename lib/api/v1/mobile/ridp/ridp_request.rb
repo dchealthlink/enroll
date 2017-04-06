@@ -3,7 +3,7 @@ module Api
     module Mobile::Ridp
       class RidpRequest < Api::V1::Mobile::Base
 
-        def create_request
+        def create_question_request
           begin
             #
             # Extract attributes from the request body.
@@ -109,6 +109,45 @@ module Api
                 create_person[xml]
                 create_person_demographics[xml]
               end
+            end
+          end
+        end
+
+        def create_answer_request
+          #
+          # Extract attributes from the request body.
+          #
+          session_id = ->() { @body['session_id'] }
+          transaction_id = ->() { @body['transaction_id'] }
+          question_responses = ->() { @body['question_response'] }
+          question_id = ->(response) { response['question_id'] }
+          response_id = ->(response) { response['answer']['response_id'] }
+          response_text = ->(response) { response['answer']['response_text'] }
+
+          create_session_and_transaction_ids = ->(xml) {
+            xml.session_id session_id.call
+            xml.transaction_id transaction_id.call
+          }
+
+          create_answers = ->(xml) {
+            question_responses.call.each do |response|
+              xml.question_response do
+                xml.question_id question_id[response]
+                xml.answer do
+                  xml.response_id response_id[response]
+                  xml.response_text response_text[response]
+                end
+              end
+            end
+          }
+
+          #
+          # Build the XML request
+          #
+          xml = Nokogiri::XML::Builder.new do |xml|
+            xml.interactive_verification_question_response '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
+              create_session_and_transaction_ids[xml]
+              create_answers[xml]
             end
           end
         end

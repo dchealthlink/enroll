@@ -8,8 +8,8 @@ RSpec.describe Api::V1::Mobile::Ridp::RidpVerification, dbclean: :after_each do
   context 'Identity Verification Questions' do
 
     it 'should return the identity verification questions' do
-      ridp = Mobile::Ridp::RidpVerification.new body: request_json
-      response = JSON.parse ridp.build_response.to_json
+      ridp = Mobile::Ridp::RidpVerification.new body: question_request_json
+      response = JSON.parse ridp.build_question_response.to_json
       expect(response).to be_a_kind_of Hash
       expect(response).to include('verification_result', 'session')
 
@@ -27,6 +27,16 @@ RSpec.describe Api::V1::Mobile::Ridp::RidpVerification, dbclean: :after_each do
 
       option = options.first
       expect(option).to include('response_id', 'response_text')
+    end
+
+    it 'should return the identity verification final response' do
+      ridp = Mobile::Ridp::RidpVerification.new body: answer_request_json
+      response = JSON.parse ridp.build_answer_response.to_json
+      expect(response).to be_a_kind_of Hash
+      expect(response).to include('verification_result', 'session')
+
+      verification_result = response['verification_result']
+      expect(verification_result).to include('response_code', 'response_text', 'transaction_id')
     end
 
   end

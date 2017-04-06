@@ -434,6 +434,7 @@ Rails.application.routes.draw do
         get :services_rates
         get :plans
         post :verify_identity
+        post 'verify_identity/answers', action: :verify_identity_answers
       end
     end
   end

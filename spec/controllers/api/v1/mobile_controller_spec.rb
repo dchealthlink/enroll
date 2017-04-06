@@ -427,18 +427,24 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
     end
   end
 
-  context 'Route: /verify_identity' do
+  context 'Routes: /verify_identity & /verify_identity/answers' do
     include_context 'ridp_data'
 
     describe 'POST verify_identity' do
       it 'should return the identity verification questions' do
-        post :verify_identity, request_json
+        post :verify_identity, question_request_json
         output = JSON.parse response.body
         expect(response).to have_http_status(200)
         expect(output).to be_a_kind_of Hash
       end
     end
 
+    it 'should return the identity verification questions' do
+      post :verify_identity_answers, answer_request_json
+      output = JSON.parse response.body
+      expect(response).to have_http_status(200)
+      expect(output).to be_a_kind_of Hash
+    end
   end
 
 end

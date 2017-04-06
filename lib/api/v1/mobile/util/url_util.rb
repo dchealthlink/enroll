@@ -60,6 +60,20 @@ module Api
           Rails.application.routes.url_helpers.document_download_path bucket, key
         end
 
+        #
+        # post :verify_identity
+        #
+        def verify_identity_path
+          "#{BASE}/verify_identity"
+        end
+
+        #
+        # post :verify_identity/answers
+        #
+        def verify_identity_answers_path
+          verify_identity_path.concat '/answers'
+        end
+
       end
     end
   end
