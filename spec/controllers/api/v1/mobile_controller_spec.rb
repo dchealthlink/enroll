@@ -21,9 +21,9 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       expect(detail[:employer_name]).to eq employer_profile.legal_name
       contacts = detail[:contact_info]
 
-      seymour = contacts.detect { |c| c[:first] == 'Seymour' }
-      beatrice = contacts.detect { |c| c[:first] == 'Beatrice' }
-      office = contacts.detect { |c| c[:first] == 'Primary' }
+      seymour = contacts.detect {|c| c[:first] == 'Seymour'}
+      beatrice = contacts.detect {|c| c[:first] == 'Beatrice'}
+      office = contacts.detect {|c| c[:first] == 'Primary'}
       expect(seymour[:mobile]).to eq '(202) 555-0000'
       expect(seymour[:phone]).to eq ''
       expect(beatrice[:phone]).to eq '(202) 555-0001'
@@ -49,14 +49,14 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
   end
 
   describe "GET employer_details" do
-    let(:user) { double("user", :person => person) }
-    let(:person) { double("person", :employer_staff_roles => [employer_staff_role]) }
-    let(:employer_staff_role) { double(:employer_profile_id => employer_profile.id) }
-    let!(:plan_year) { FactoryGirl.create(:plan_year, aasm_state: "published") }
-    let!(:benefit_group) { FactoryGirl.create(:benefit_group, :with_valid_dental, plan_year: plan_year, title: "Test Benefit Group") }
-    let!(:employer_profile) { plan_year.employer_profile }
-    let!(:employee1) { FactoryGirl.create(:census_employee, employer_profile_id: employer_profile.id) }
-    let!(:employee2) { FactoryGirl.create(:census_employee, :with_enrolled_census_employee, employer_profile_id: employer_profile.id) }
+    let(:user) {double("user", :person => person)}
+    let(:person) {double("person", :employer_staff_roles => [employer_staff_role])}
+    let(:employer_staff_role) {double(:employer_profile_id => employer_profile.id)}
+    let!(:plan_year) {FactoryGirl.create(:plan_year, aasm_state: "published")}
+    let!(:benefit_group) {FactoryGirl.create(:benefit_group, :with_valid_dental, plan_year: plan_year, title: "Test Benefit Group")}
+    let!(:employer_profile) {plan_year.employer_profile}
+    let!(:employee1) {FactoryGirl.create(:census_employee, employer_profile_id: employer_profile.id)}
+    let!(:employee2) {FactoryGirl.create(:census_employee, :with_enrolled_census_employee, employer_profile_id: employer_profile.id)}
 
     before(:each) do
       allow(user).to receive(:has_hbx_staff_role?).and_return(true)
@@ -341,7 +341,7 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       include_context 'broker_data'
       include_context 'individual_data'
 
-      let!(:person_with_family) { FactoryGirl.create(:person, :with_family) }
+      let!(:person_with_family) {FactoryGirl.create(:person, :with_family)}
 
       it 'should return individual details of user (/individuals/:person_id)' do
         sign_in hbx_user
@@ -379,17 +379,17 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
   end
 
   describe "GET services_rates" do
-    let(:qhp1) { Products::QhpCostShareVariance.new(hios_plan_and_variant_id: '11111100001111-01') }
-    let(:qhp2) { Products::QhpCostShareVariance.new(hios_plan_and_variant_id: '11111100001111-02') }
-    let(:service_type) { 'Primary Care Visit to Treat an Injury or Illness' }
-    let(:copay) { '$20.00' }
-    let(:coinsurance) { 'Not Applicable' }
-    let(:service_visits) { [
+    let(:qhp1) {Products::QhpCostShareVariance.new(hios_plan_and_variant_id: '11111100001111-01')}
+    let(:qhp2) {Products::QhpCostShareVariance.new(hios_plan_and_variant_id: '11111100001111-02')}
+    let(:service_type) {'Primary Care Visit to Treat an Injury or Illness'}
+    let(:copay) {'$20.00'}
+    let(:coinsurance) {'Not Applicable'}
+    let(:service_visits) {[
       Products::QhpServiceVisit.new(
         visit_type: service_type,
         copay_in_network_tier_1: copay,
         co_insurance_in_network_tier_1: coinsurance)
-    ] }
+    ]}
 
     it 'should return an Unprocessable Entity error when all params are not passed' do
       get :services_rates, format: :json
@@ -445,20 +445,6 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       expect(response).to have_http_status(200)
       expect(output).to be_a_kind_of Hash
     end
-  end
-
-  context 'Route: /check_user_existence' do
-    include_context 'ridp_data'
-
-    describe 'POST check_user_existence' do
-      it 'should return primary application information' do
-        post :check_user_existence, question_request_json
-        output = JSON.parse response.body
-        expect(response).to have_http_status(200)
-        expect(output).to be_a_kind_of Hash
-      end
-    end
-
   end
 
 end
