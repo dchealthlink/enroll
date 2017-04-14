@@ -48,21 +48,18 @@ module Api
               result[:terminate_reason] = enrollment.terminate_reason
             }
 
-            carrier = ->(enrollment) {
-              carrier_name = enrollment.plan.carrier_profile.legal_name
-              {
-                name: carrier_name,
-                summary_of_benefits_url: __summary_of_benefits_url(enrollment.plan)
-              }
-            }
-
-            other_enrollment_fields = ->(enrollment, result) {
-              return unless enrollment && enrollment.plan
+            enrollment_plan_fields = ->(enrollment, result) {
               ENROLLMENT_PLAN_FIELDS.each do |field|
                 value = enrollment.plan.try(field)
                 result[field] = value if value
               end
-              result[:carrier] = carrier[enrollment]
+            }
+
+            other_enrollment_fields = ->(enrollment, result) {
+              return unless enrollment && enrollment.plan
+              result[:carrier_name] = enrollment.plan.carrier_profile.legal_name
+              result[:summary_of_benefits_url] = __summary_of_benefits_url enrollment.plan
+              enrollment_plan_fields[enrollment, result]
             }
 
             services_rates_url = ->(enrollment, coverage_kind, result) {

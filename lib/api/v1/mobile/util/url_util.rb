@@ -60,6 +60,27 @@ module Api
           Rails.application.routes.url_helpers.document_download_path bucket, key
         end
 
+        #
+        # post :verify_identity
+        #
+        def verify_identity_path
+          "#{BASE}/verify_identity"
+        end
+
+        #
+        # post :verify_identity/answers
+        #
+        def verify_identity_answers_path
+          verify_identity_path.concat '/answers'
+        end
+
+        #
+        # get :check_user_existence
+        #
+        def check_user_existence
+          "#{BASE}/check_user_existence"
+        end
+
       end
     end
   end

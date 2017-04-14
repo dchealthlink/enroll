@@ -5,7 +5,7 @@ module Api
         include ApplicationHelper
         include Api::V1::Mobile::Util::UrlUtil
 
-        def _response plans
+        def response plans
           Jbuilder.encode do |json|
             json.array! plans do |plan|
               _render_plan_details! json, plan
@@ -23,7 +23,7 @@ module Api
 
         def _render_total_premium! json, plan
           json.cost do
-            json.total_premium _total_premium plan
+            json.monthly_premium _total_premium plan
             json.deductible _deductible plan
             json.deductible_text _deductible_text plan
           end

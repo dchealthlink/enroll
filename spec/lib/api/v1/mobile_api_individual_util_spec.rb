@@ -14,7 +14,7 @@ RSpec.describe Api::V1::Mobile::Util::InsuredUtil, dbclean: :after_each do
       allow(insured_employee).to receive(:ins_enrollments).and_return([hbx_enrollment])
 
       individual = Util::InsuredUtil.new person: person
-      output = individual.build_insured_json
+      output = individual.build_response
       expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                 'gender', 'id', 'employments', 'addresses')
 
@@ -29,10 +29,7 @@ RSpec.describe Api::V1::Mobile::Util::InsuredUtil, dbclean: :after_each do
 
       health = enrollment['health']
       expect(health).to include('status', 'employer_contribution', 'employee_cost', 'total_premium', 'plan_name',
-                                'plan_type', 'metal_level', 'benefit_group_name', 'carrier')
-
-      carrier = health['carrier']
-      expect(carrier).to include('name', 'summary_of_benefits_url')
+                                'plan_type', 'metal_level', 'benefit_group_name', 'carrier_name', 'summary_of_benefits_url')
 
       dependent = output['dependents'].first
       expect(dependent).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
@@ -41,7 +38,7 @@ RSpec.describe Api::V1::Mobile::Util::InsuredUtil, dbclean: :after_each do
 
     it 'should return the individual non-employee details' do
       individual = Util::InsuredUtil.new person: non_employee_individual_person
-      output = individual.build_insured_json
+      output = individual.build_response
       expect(output).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',
                                 'gender', 'id', 'employments', 'addresses')
 
@@ -56,10 +53,8 @@ RSpec.describe Api::V1::Mobile::Util::InsuredUtil, dbclean: :after_each do
       expect(addresses).to include('kind', 'address_1', 'address_2', 'city', 'county', 'state', 'location_state_code', 'zip', 'country_name')
 
       health = enrollment['health']
-      expect(health).to include('status', 'total_premium', 'plan_name', 'plan_type', 'metal_level', 'benefit_group_name', 'carrier', 'elected_aptc_pct', 'applied_aptc_amount_in_cents')
-
-      carrier = health['carrier']
-      expect(carrier).to include('name', 'summary_of_benefits_url')
+      expect(health).to include('status', 'total_premium', 'plan_name', 'plan_type', 'metal_level', 'benefit_group_name',
+                                'elected_aptc_pct', 'applied_aptc_amount_in_cents', 'carrier_name', 'summary_of_benefits_url')
 
       dependent = output['dependents'].first
       expect(dependent).to include('first_name', 'middle_name', 'last_name', 'name_suffix', 'date_of_birth', 'ssn_masked',

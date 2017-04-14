@@ -3,6 +3,7 @@ require 'support/brady_bunch'
 require 'lib/api/v1/support/mobile_broker_data'
 require 'lib/api/v1/support/mobile_broker_agency_data'
 require 'lib/api/v1/support/mobile_individual_data'
+require 'lib/api/v1/support/mobile_ridp_data'
 
 RSpec.describe Api::V1::MobileController, dbclean: :after_each do
   include_context 'broker_agency_data'
@@ -424,6 +425,40 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
       expect(response).to have_http_status(200)
       expect(output).to be_a_kind_of Array
     end
+  end
+
+  context 'Routes: /verify_identity & /verify_identity/answers' do
+    include_context 'ridp_data'
+
+    describe 'POST verify_identity' do
+      it 'should return the identity verification questions' do
+        post :verify_identity, question_request_json
+        output = JSON.parse response.body
+        expect(response).to have_http_status(200)
+        expect(output).to be_a_kind_of Hash
+      end
+    end
+
+    it 'should return the identity verification questions' do
+      post :verify_identity_answers, answer_request_json
+      output = JSON.parse response.body
+      expect(response).to have_http_status(200)
+      expect(output).to be_a_kind_of Hash
+    end
+  end
+
+  context 'Route: /check_user_existence' do
+    include_context 'ridp_data'
+
+    describe 'POST check_user_existence' do
+      it 'should return primary application information' do
+        post :check_user_existence, question_request_json
+        output = JSON.parse response.body
+        expect(response).to have_http_status(200)
+        expect(output).to be_a_kind_of Hash
+      end
+    end
+
   end
 
 end

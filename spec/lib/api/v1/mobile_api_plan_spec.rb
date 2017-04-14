@@ -32,7 +32,7 @@ RSpec.describe Api::V1::Mobile::Plan, dbclean: :after_each do
                               'market', 'is_standard_plan', 'metal_level', 'maximum_age', 'minimum_age', 'name',
                               'nationwide', 'plan_type', 'provider', 'cost', 'hios', 'links')
       expect(plan['hios']).to include('id', 'base_id')
-      expect(plan['cost']).to include('deductible', 'deductible_text', 'total_premium')
+      expect(plan['cost']).to include('deductible', 'deductible_text', 'monthly_premium')
       expect(plan['links']).to include('summary_of_benefits', 'provider_directory', 'rx_formulary',
                                        'carrier_logo', 'services_rates')
       expect(plan['coverage_kind']).to eq 'health'
@@ -65,22 +65,22 @@ RSpec.describe Api::V1::Mobile::Plan, dbclean: :after_each do
       expect(plan['cost']['deductible_text']).to eq '$5000 per person | $10000 per group'
     end
 
-    it 'should return the total premium for 1 person' do
+    it 'should return the monthly premium for 1 person' do
       Caches::PlanDetails.load_record_cache!
       plan = Mobile::Plan.new coverage_kind: 'health', active_year: '2017', ages: '21', csr_kind: 'csr_100'
       allow(Plan).to receive(:individual_plans).and_return(Plan.where(market: 'individual'))
       plans = JSON.parse plan.all_available_plans
       plan = plans.last
-      expect(plan['cost']['total_premium']).to eq 210.21
+      expect(plan['cost']['monthly_premium']).to eq 210.21
     end
 
-    it 'should return the total premium for 2 people' do
+    it 'should return the monthly premium for 2 people' do
       Caches::PlanDetails.load_record_cache!
       plan = Mobile::Plan.new coverage_kind: 'health', active_year: '2017', ages: '21,22', csr_kind: 'csr_100'
       allow(Plan).to receive(:individual_plans).and_return(Plan.where(market: 'individual'))
       plans = JSON.parse plan.all_available_plans
       plan = plans.last
-      expect(plan['cost']['total_premium']).to eq 430.43
+      expect(plan['cost']['monthly_premium']).to eq 430.43
     end
 
   end

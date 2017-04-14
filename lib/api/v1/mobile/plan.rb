@@ -14,11 +14,21 @@ module Api
         # Returns all the available plans that match the requested criteria.
         #
         def all_available_plans
-          _response _individual_plans
+          begin
+            tax_household = ->() {
+              TaxHousehold.new eligibility_determinations: [EligibilityDetermination.new(csr_eligibility_kind: @csr_kind)]
+            }
+
+            individual_plans = ->() {
+              ::Plan.individual_plans coverage_kind: @coverage_kind, active_year: @active_year, tax_household: tax_household.call
+            }
+          end
+
+          response individual_plans.call
         end
 
         #
-        # Called by ApplicationHelper.display_carrier_logo via PlanResponse::_basic_plan_details
+        # Called by ApplicationHelper.display_carrier_logo via PlanResponse::_render_links!
         #
         def image_tag source, options
           nok = Nokogiri::HTML ActionController::Base.helpers.image_tag source, options
@@ -29,16 +39,6 @@ module Api
         # Private
         #
         private
-
-        def _individual_plans
-          begin
-            tax_household = ->() {
-              TaxHousehold.new eligibility_determinations: [EligibilityDetermination.new(csr_eligibility_kind: @csr_kind)]
-            }
-          end
-
-          ::Plan.individual_plans coverage_kind: @coverage_kind, active_year: @active_year, tax_household: tax_household.call
-        end
 
         def _services_rates plan
           services_rates_path plan.hios_id, plan.active_year, @coverage_kind
