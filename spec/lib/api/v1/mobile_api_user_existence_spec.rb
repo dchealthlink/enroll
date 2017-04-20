@@ -12,7 +12,8 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
       user_existence = Mobile::UserExistence.new ssn: '111222333'
       response = JSON.parse user_existence.check_user_existence
       expect(response).to be_a_kind_of Hash
-      expect(response).to include('error')
+      expect(response).to include('ridp_verified', 'error')
+      expect(response['ridp_verified']).to eq true
       expect(response['error']).to eq Api::V1::Mobile::UserExistence::USER_DOES_NOT_EXIST
     end
 
@@ -20,7 +21,8 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
       user_existence = Mobile::UserExistence.new ssn: ''
       response = JSON.parse user_existence.check_user_existence
       expect(response).to be_a_kind_of Hash
-      expect(response).to include('error')
+      expect(response).to include('ridp_verified', 'error')
+      expect(response['ridp_verified']).to eq true
       expect(response['error']).to eq Api::V1::Mobile::UserExistence::SSN_EMPTY
     end
 
@@ -28,7 +30,8 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
       user = FactoryGirl.create :user, :with_consumer_role
       user_existence = Mobile::UserExistence.new ssn: user.person.ssn
       response = JSON.parse user_existence.check_user_existence
-      expect(response).to include('error')
+      expect(response).to include('ridp_verified', 'error')
+      expect(response['ridp_verified']).to eq true
       expect(response['error']).to eq 'The social security number you entered is affiliated with another account.'
     end
 
@@ -48,7 +51,7 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
       expect(employer).to be_a_kind_of Hash
       expect(employer).to include('employer', 'broker')
       expect(employer['employer']).to include('id', 'legal_name', 'phone')
-      expect(employer['broker']).to include('id', 'legal_name', 'phone')
+      expect(employer['broker']).to include('id', 'organization_legal_name', 'legal_name', 'phone')
     end
 
   end
