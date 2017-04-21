@@ -10,8 +10,6 @@ module Api
 
         def check_user_existence
           begin
-            ssn = ->() { JSON.parse(@body)['person_demographics']['ssn'] }
-
             staff = ->(employer_profiles) {
               Api::V1::Mobile::Util::StaffUtil.new(employer_profiles: employer_profiles).keyed_by_employer_id
             }
@@ -23,12 +21,12 @@ module Api
             }
 
             check_roster = ->() {
-              person = Person.where(encrypted_ssn: Person.encrypt_ssn(ssn.call)).first
+              person = Person.where(encrypted_ssn: Person.encrypt_ssn(@ssn)).first
               person ? create_response[person] : ue_error_response(USER_DOES_NOT_EXIST)
             }
 
             validate_and_respond = ->() {
-              errors = Forms::ConsumerCandidate.new(ssn: ssn.call).uniq_ssn
+              errors = Forms::ConsumerCandidate.new(ssn: @ssn).uniq_ssn
               if errors.present? # Either there is a user already with this SSN or the SSN is empty.
                 errors == true ? ue_error_response(SSN_EMPTY) : ue_error_response(errors.first)
               else

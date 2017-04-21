@@ -33,7 +33,7 @@ RSpec.describe Api::V1::Mobile::Ridp::RidpVerification, dbclean: :after_each do
       ridp = Mobile::Ridp::RidpVerification.new body: answer_request_json
       response = JSON.parse ridp.build_answer_response.to_json
       expect(response).to be_a_kind_of Hash
-      expect(response).to include('verification_result', 'session')
+      expect(response).to include('verification_result', 'session', 'ridp_verified')
 
       verification_result = response['verification_result']
       expect(verification_result).to include('response_code', 'response_text', 'transaction_id')

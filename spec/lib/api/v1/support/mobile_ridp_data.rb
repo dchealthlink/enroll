@@ -45,6 +45,7 @@ module MobileRidpData
 
     let(:answer_request_json) {
       {
+        ssn: '111222333',
         session_id: 'AB783917E63E4CA345448C600928D632.pidd1v-1304180857460210166972210',
         transaction_id: 'c5f1-52-3a57',
         question_response: [

@@ -12,6 +12,7 @@ module Api
 
         def ue_error_response error_message
           Jbuilder.encode do |json|
+            json.ridp_verified true
             json.error error_message
           end
         end
@@ -41,10 +42,11 @@ module Api
 
         def _add_broker_profile employer_profile, json
           json.broker do
-            employer_profile.broker_agency_profile.tap { |bap|
+            employer_profile.broker_agency_profile.tap {|bap|
               if bap
                 json.id bap.id
-                json.legal_name bap.legal_name
+                json.organization_legal_name bap.legal_name
+                json.legal_name employer_profile.try(:active_broker).try(:full_name)
                 json.phone bap.phone
               end
             }
