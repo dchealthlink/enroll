@@ -22,7 +22,7 @@ module Api
             }
           end
 
-          response.call.successful? ? check_user_existence[_ridp_request_instance.ssn] : response.call
+          response.call.successful? ? check_user_existence[_ridp_request_instance.ssn] : _error_response(response)
         end
 
         #
@@ -36,6 +36,10 @@ module Api
 
         def _verification_service_instance
           ::IdentityVerification::InteractiveVerificationService.new
+        end
+
+        def _error_response response
+          JSON.parse(response.call.to_json).merge ridp_verified: false
         end
 
       end
