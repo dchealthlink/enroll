@@ -4,19 +4,22 @@ module Api
       class IndividualEnrollment < BaseEnrollment
 
         def populate_enrollments
-          result = {}
+          final = []
           @person.primary_family.tap { |family|
             # __health_and_dental! result, family.households.map(&:hbx_enrollments).flatten if family
             if family
               family.households.each{|h|
                 h.hbx_enrollments.show_enrollments_sans_canceled.each{|x|
+                  result = {}
                   result[:start_on] = x.effective_on
                   __health_and_dental! result, [x]
+                  final << result
                 }
               }
             end
           }
-          result
+          # result
+          final
         end
 
         #

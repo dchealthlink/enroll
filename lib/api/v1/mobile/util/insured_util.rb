@@ -13,10 +13,17 @@ module Api
               ee_enrollments = insured_employee.call.ins_enrollments.flatten
               ee_enrollment_ids = ee_enrollments.map {
                 |e| e['health'][:hbx_enrollment_id] || e['dental'][:hbx_enrollment_id] }.compact
-              ivl_enrollments.map { |enr|
-                %w{health dental}.each { |kind|
+              # ivl_enrollments.map { |enr|
+              #   %w{health dental}.each { |kind|
+              #     next unless enr[kind]
+              #     enr.delete(kind) if ee_enrollment_ids.include? enr[kind][:hbx_enrollment_id]
+              #   }
+              # }
+
+              %w{health dental}.each { |kind|
+                ivl_enrollments.delete_if { |enr|
                   next unless enr[kind]
-                  enr.delete(kind) if ee_enrollment_ids.include? enr[kind][:hbx_enrollment_id]
+                  ee_enrollment_ids.include? enr[kind][:hbx_enrollment_id]
                 }
               }
               return ivl_enrollments, ee_enrollments
