@@ -74,7 +74,6 @@ module Api
                 plan_name: enrollment.plan.try(:name),
                 plan_type: enrollment.plan.try(:plan_type),
                 metal_level: enrollment.plan.try(coverage_kind == :health ? :metal_level : :dental_level),
-                benefit_group_name: enrollment.try(:benefit_group).try(:title),
                 total_premium: enrollment.total_premium
               }.merge __specific_enrollment_fields(enrollment)
             }

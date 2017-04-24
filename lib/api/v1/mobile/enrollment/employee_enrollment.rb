@@ -53,6 +53,7 @@ module Api
 
         def __specific_enrollment_fields enrollment
           {
+            benefit_group_name: enrollment.try(:benefit_group).try(:title),
             employer_contribution: enrollment.total_employer_contribution,
             employee_cost: enrollment.total_employee_cost,
           }
