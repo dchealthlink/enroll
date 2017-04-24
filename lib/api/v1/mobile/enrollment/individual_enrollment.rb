@@ -6,7 +6,15 @@ module Api
         def populate_enrollments
           result = {}
           @person.primary_family.tap { |family|
-            __health_and_dental! result, family.households.map(&:hbx_enrollments).flatten if family
+            # __health_and_dental! result, family.households.map(&:hbx_enrollments).flatten if family
+            if family
+              family.households.each{|h|
+                h.hbx_enrollments.each{|x|
+                  result[:start_on]  = x.effective_on
+                  __health_and_dental! result, [x]
+                }
+              }
+            end
           }
           result
         end
