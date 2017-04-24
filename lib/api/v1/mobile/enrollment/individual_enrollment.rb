@@ -9,8 +9,8 @@ module Api
             # __health_and_dental! result, family.households.map(&:hbx_enrollments).flatten if family
             if family
               family.households.each{|h|
-                h.hbx_enrollments.each{|x|
-                  result[:start_on]  = x.effective_on
+                h.hbx_enrollments.show_enrollments_sans_canceled.each{|x|
+                  result[:start_on] = x.effective_on
                   __health_and_dental! result, [x]
                 }
               }
