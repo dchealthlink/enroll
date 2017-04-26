@@ -9,38 +9,44 @@ module Api
               @insured_employee ||= Api::V1::Mobile::Insured::InsuredEmployee.new person: @person
             }
 
-            filter_duplicates = ->(ivl_enrollments) {
-              ee_enrollments = insured_employee.call.ins_enrollments.flatten
-              ee_enrollment_ids = ee_enrollments.map {
-                |e| e['health'][:hbx_enrollment_id] || e['dental'][:hbx_enrollment_id] }.compact
-              ivl_enrollments.map { |enr|
-                %w{health dental}.each { |kind|
-                  next unless enr[kind]
-                  enr.delete(kind) if ee_enrollment_ids.include? enr[kind][:hbx_enrollment_id]
-                }
-              }
-              return ivl_enrollments, ee_enrollments
-            }
-
             ins_individual = ->() {
               @insured_individual ||= Api::V1::Mobile::Insured::InsuredIndividual.new person: @person
             }
 
-            all_enrollments = ->() {
-              Jbuilder.encode do |json|
-                filter_duplicates[ins_individual.call.ins_enrollments.flatten].tap { |ivl_enrollments, ee_enrollments|
-                  json.enrollments ivl_enrollments + ee_enrollments
+            # Returns the HBX enrollment IDs for the given array of enrollments.
+            employee_enrollment_ids = ->(ee_enrollments) {
+              ee_enrollments.map {|x|
+                [x[:health][:hbx_enrollment_id], x[:dental][:hbx_enrollment_id]]
+              }.flatten.compact
+            }
+
+            # We don't want to duplicate the employee related enrollments with the IVL enrollments.
+            filter_duplicates = ->(ivl_enrollments, ee_enrollments) {
+              %i{health dental}.each {|kind|
+                ivl_enrollments.delete_if {|enr|
+                  next unless enr[kind]
+                  employee_enrollment_ids[ee_enrollments].include? enr[kind][:hbx_enrollment_id]
                 }
+              }
+            }
+
+            # Returns a combination of IVL (individual) and EE (employee) enrollments.
+            all_enrollments = ->() {
+              ee_enrollments = insured_employee.call.ins_enrollments.flatten
+              ivl_enrollments = ins_individual.call.ins_enrollments.flatten
+              filter_duplicates[ivl_enrollments, ee_enrollments]
+
+              Jbuilder.encode do |json|
+                json.enrollments ivl_enrollments + ee_enrollments
               end
             }
 
-            merge_these = ->(hash, *details) { details.each { |m| hash.merge! JSON.parse(m) } }
+            merge_these = ->(hash, *details) {details.each {|m| hash.merge! JSON.parse(m)}}
           end
 
           result = {}
-          merge_these.call result, ins_individual.call.basic_person, ins_individual.call.addresses, ins_individual.call.ins_dependents
-          merge_these.call result, all_enrollments.call
-          merge_these.call result, insured_employee.call.ins_employments
+          merge_these[result, ins_individual.call.basic_person, ins_individual.call.addresses,
+                      ins_individual.call.ins_dependents, all_enrollments.call, insured_employee.call.ins_employments]
           result
         end
 
