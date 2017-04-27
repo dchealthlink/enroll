@@ -8,13 +8,11 @@ module Api
         def initialize args={}
           begin
             current_or_upcoming_assignments = ->(&block) {
-              block.call @benefit_group_assignments.select { |a|
-                Util::PlanYearUtil.new(plan_year: a.plan_year).is_current_or_upcoming?
-              }
+              block.call @benefit_group_assignments.select {|a| __is_current_or_upcoming? a.plan_year.start_on}
             }
 
             unique_assignments = ->() {
-              current_or_upcoming_assignments.call { |bgas|
+              current_or_upcoming_assignments.call {|bgas|
                 Util::BenefitGroupAssignmentsUtil.new(assignments: bgas).unique_by_year
               }
             }
@@ -26,24 +24,29 @@ module Api
 
         def populate_enrollments insured_employee=nil
           begin
-            hbx_enrollment = ->(assignment) {
-              hbx_enrollments = @grouped_bga_enrollments[assignment.id.to_s] if @grouped_bga_enrollments && !@grouped_bga_enrollments.empty?
-              hbx_enrollments ? hbx_enrollments : assignment.hbx_enrollments
+            hbx_enrollments = ->(assignment) {
+              enrollments = @grouped_bga_enrollments[assignment.id.to_s] if @grouped_bga_enrollments && !@grouped_bga_enrollments.empty?
+              enrollments ? enrollments : assignment.hbx_enrollments
             }
 
-            enrollment_hash = ->(insured_employee, assignment) {
-              enrollment = {}
-              enrollment[:employer_profile_id] = insured_employee.employer_profile_id if insured_employee
-              enrollment[:start_on] = assignment.plan_year.start_on
-              enrollment
+            add_base_fields = ->(insured_employee, assignment, response) {
+              response[:employer_profile_id] = insured_employee.employer_profile_id if insured_employee
+              __add_default_fields! assignment.plan_year.start_on, response
+            }
+
+            add_enrollments = ->() {
+              response = {}
+              @assignments.map {|assignment|
+                add_base_fields[insured_employee, assignment, response]
+                hbx_enrollments[assignment].map {|e| __health_and_dental!(response, e)}
+              }
+              response
             }
           end
 
-          @assignments.map do |assignment|
-            result = enrollment_hash[insured_employee, assignment]
-            __health_and_dental! result, hbx_enrollment[assignment]
-            result
-          end
+          enrollments = []
+          enrollments << add_enrollments.call
+          enrollments
         end
 
         #

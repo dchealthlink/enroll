@@ -7,8 +7,6 @@ module Api
         def initialize args={}
           super args
           @plan_years = _select_current_and_upcoming (@employer_profile.try(:plan_years) || [])
-          all_years = @employer_profile.try(:plan_years) || []
-          @plan_years = all_years.select { |y| PlanYearUtil.new(plan_year: y).is_current_or_upcoming? }
         end
 
         def employers_and_broker_agency
@@ -25,7 +23,7 @@ module Api
                 _summary_details employer_profile: er,
                                  years: _select_current_and_upcoming(er.plan_years),
                                  staff: staff_by_employer_id[er.id],
-                                 offices: er.organization.office_locations.select { |loc| loc.primary_or_branch? },
+                                 offices: er.organization.office_locations.select {|loc| loc.primary_or_branch?},
                                  include_details_url: true,
                                  include_enrollment_counts: true
               end
@@ -42,7 +40,7 @@ module Api
           end
 
           return if organizations.call.empty?
-          @employer_profiles = organizations.call.map { |o| o.employer_profile }
+          @employer_profiles = organizations.call.map {|o| o.employer_profile}
           broker_name = @user.person.first_name if @user.person.broker_role
           broker_response[broker_name] if @authorized[:broker_agency_profile]
         end
@@ -58,7 +56,7 @@ module Api
           def employer_profile_for_user user
             employer_staff_roles = user.person.try(:employer_staff_roles)
             unless employer_staff_roles.nil? || employer_staff_roles.empty?
-              employer_profile_id = employer_staff_roles.detect { |x| x.is_active }.try(:employer_profile_id)
+              employer_profile_id = employer_staff_roles.detect {|x| x.is_active}.try(:employer_profile_id)
               EmployerProfile.find(employer_profile_id) if employer_profile_id
             end
           end
@@ -71,7 +69,7 @@ module Api
         private
 
         def _select_current_and_upcoming years
-          years.select { |y| PlanYearUtil.new(plan_year: y).is_current_or_upcoming? }
+          years.select {|y| __is_current_or_upcoming? y.start_on}
         end
 
         def _summary_details employer_profile:, years: [], staff: nil, offices: nil, include_details_url: false, include_enrollment_counts: false, include_plan_offerings: false
@@ -141,7 +139,7 @@ module Api
             }
 
             add_contact_info = ->(staff, offices) {
-              staff.map { |s| staff_response[s] } + offices.map { |loc| office_response[loc] }
+              staff.map {|s| staff_response[s]} + offices.map {|loc| office_response[loc]}
             }
 
             add_url = ->(summary) {

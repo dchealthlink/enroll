@@ -18,7 +18,7 @@ module Api
           document = plan.sbc_document
           return unless document
           document_download_path(*get_key_and_bucket(document.identifier).reverse)
-              .concat("?content_type=application/pdf&filename=#{plan.name.gsub(/[^0-9a-z]/i, '')}.pdf&disposition=inline")
+            .concat("?content_type=application/pdf&filename=#{plan.name.gsub(/[^0-9a-z]/i, '')}.pdf&disposition=inline")
         end
 
         def __format_date date
@@ -27,6 +27,10 @@ module Api
 
         def __ssn_masked person
           "***-**-#{person.ssn[5..9]}" if person.ssn
+        end
+
+        def __is_current_or_upcoming? start_on
+          TimeKeeper.date_of_record.tap {|now| (now - 1.year..now + 1.year).include? start_on}
         end
 
       end
