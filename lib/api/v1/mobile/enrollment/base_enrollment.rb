@@ -75,6 +75,7 @@ module Api
 
             enrollment_details = ->(coverage_kind, enrollment) {
               {
+                health_link_id: enrollment.hbx_id,
                 hbx_enrollment_id: enrollment.id,
                 status: __status_label_for(enrollment.aasm_state),
                 plan_name: enrollment.plan.try(:name),
