@@ -19,7 +19,7 @@ RSpec.describe Api::V1::Mobile::Enrollment::EmployeeEnrollment, dbclean: :after_
 
       active_health = active[:health]
       active_dental = active[:dental]
-      expect(active_health).to include(:status, :employer_contribution, :employee_cost,
+      expect(active_health).to include(:health_link_id, :hbx_enrollment_id, :status, :employer_contribution, :employee_cost,
                                        :total_premium, :plan_name, :plan_type, :metal_level,
                                        :benefit_group_name)
       expect(active_dental).to include(:status)
@@ -31,8 +31,8 @@ RSpec.describe Api::V1::Mobile::Enrollment::EmployeeEnrollment, dbclean: :after_
       enrollment = Api::V1::Mobile::Enrollment::EmployeeEnrollment.new
       enrollments = enrollment.send(:__initialize_enrollment, hbx_enrollment, 'health')
       expect(enrollments).to be_a_kind_of Hash
-      expect(enrollments).to include(:status, :employer_contribution, :employee_cost, :total_premium, :plan_name,
-                                     :plan_type, :metal_level, :benefit_group_name)
+      expect(enrollments).to include(:health_link_id, :hbx_enrollment_id, :status, :employer_contribution, :employee_cost,
+                                     :total_premium, :plan_name, :plan_type, :metal_level, :benefit_group_name)
       enrollments = enrollment.send(:__initialize_enrollment, hbx_enrollment, 'dental')
       expect(enrollments).to be_a_kind_of Hash
       expect(enrollments).to include(:status)

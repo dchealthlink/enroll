@@ -53,7 +53,7 @@ RSpec.describe Api::V1::Mobile::Util::InsuredUtil, dbclean: :after_each do
       expect(addresses).to include('kind', 'address_1', 'address_2', 'city', 'county', 'state', 'location_state_code', 'zip', 'country_name')
 
       health = enrollment['health']
-      expect(health).to include('status', 'total_premium', 'plan_name', 'plan_type', 'metal_level', 'benefit_group_name',
+      expect(health).to include('status', 'total_premium', 'plan_name', 'plan_type', 'metal_level',
                                 'elected_aptc_pct', 'applied_aptc_amount_in_cents', 'carrier_name', 'summary_of_benefits_url')
 
       dependent = output['dependents'].first
