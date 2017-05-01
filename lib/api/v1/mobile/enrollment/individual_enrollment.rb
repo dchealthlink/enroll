@@ -5,11 +5,6 @@ module Api
 
         def populate_enrollments
           begin
-            has_enrolled = ->(response, enrollment) {
-              response[enrollment.coverage_kind.to_sym] &&
-                response[enrollment.coverage_kind.to_sym][:status] == EnrollmentConstants::ENROLLED
-            }
-
             #
             # Add the health and dental enrollments but do not override the enrollment if we already have one
             # in the 'Enrolled' status.
@@ -17,11 +12,12 @@ module Api
             add_health_and_dental = ->(start_on, enrollments) {
               response = {}
               __add_default_fields! start_on, response
-              enrollments.each {|y| __health_and_dental! response, y unless has_enrolled[response, y]}
+              enrollments.each {|y| __health_and_dental! response, y unless __has_enrolled? response, y}
               response
             }
 
-            add_enrollments = ->(enrollments) {
+            add_enrollments = ->() {
+              enrollments = []
               @person.primary_family.tap {|family|
                 family && family.households.each {|h|
                   h.hbx_enrollments.show_enrollments_sans_canceled.group_by {|x| x.effective_on}.each {|x|
@@ -30,12 +26,11 @@ module Api
                   }
                 }
               }
+              enrollments
             }
           end
 
-          enrollments = []
-          add_enrollments[enrollments]
-          enrollments
+          [add_enrollments.call]
         end
 
         #

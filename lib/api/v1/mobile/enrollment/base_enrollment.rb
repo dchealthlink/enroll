@@ -108,6 +108,11 @@ module Api
           result[enrollment.coverage_kind.to_sym] = __initialize_enrollment enrollment, enrollment.coverage_kind
           result
         end
+
+        def __has_enrolled? response, enrollment
+          response[enrollment.coverage_kind.to_sym] &&
+            response[enrollment.coverage_kind.to_sym][:status] == EnrollmentConstants::ENROLLED
+        end
       end
 
       module EnrollmentConstants

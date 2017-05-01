@@ -35,18 +35,18 @@ module Api
             }
 
             add_enrollments = ->() {
-              response = {}
               @assignments.map {|assignment|
+                response = {}
                 add_base_fields[insured_employee, assignment, response]
-                hbx_enrollments[assignment].map {|e| __health_and_dental!(response, e)}
+                hbx_enrollments[assignment].map {|e|
+                  __health_and_dental! response, e unless __has_enrolled? response, e
+                }
+                response
               }
-              response
             }
           end
 
-          enrollments = []
-          enrollments << add_enrollments.call
-          enrollments
+          add_enrollments.call
         end
 
         #
