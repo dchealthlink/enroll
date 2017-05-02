@@ -4,6 +4,8 @@ module Api
       include Api::V1::Mobile::Renderer::BaseRenderer
       Mobile = Api::V1::Mobile
 
+      before_filter :_require_login, except: [:services_rates, :plans]
+
       #
       # /broker
       #
@@ -94,6 +96,10 @@ module Api
           e.backtrace.each {|line| logger.error line}
           render json: {error: env_specific_error(e)}, :status => :internal_server_error
         end
+      end
+
+      def _require_login
+        render json: {error: 'user not authenticated'} unless current_user
       end
 
     end
