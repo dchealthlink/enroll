@@ -29,14 +29,14 @@ RSpec.describe Api::V1::Mobile::Util::EmployeeUtil, dbclean: :after_each do
 
       expect(emp[:enrollments]).to be_a_kind_of Array
       expect(emp[:enrollments].size).to eq 1
-      expect(emp[:enrollments][0]).to include('health', 'dental', :start_on)
-      health = emp[:enrollments][0]["health"]
+      expect(emp[:enrollments][0]).to include(:health, :dental, :start_on)
+      health = emp[:enrollments][0][:health]
       expect(health).to_not be nil
       expect(health).to include(:status, :employer_contribution, :employee_cost, :total_premium,
                                 :plan_name, :plan_type, :metal_level, :benefit_group_name)
       expect(health[:status]).to eq "Enrolled"
 
-      dental = emp[:enrollments][0]["dental"]
+      dental = emp[:enrollments][0][:dental]
       expect(dental).to include(:status, :employer_contribution, :employee_cost, :total_premium,
                                 :plan_name, :plan_type, :metal_level, :benefit_group_name)
     end
@@ -49,7 +49,7 @@ RSpec.describe Api::V1::Mobile::Util::EmployeeUtil, dbclean: :after_each do
       let!(:emp) {
         employee = Util::EmployeeUtil.new employees: [ce_employee], employer_profile: employer_profile_salon
         ee = employee.roster_employees.pop
-        ee.inject({}) { |memo, (k, v)| memo[k.to_sym] = v; memo }
+        ee.inject({}) {|memo, (k, v)| memo[k.to_sym] = v; memo}
       }
     end
 
@@ -70,8 +70,8 @@ RSpec.describe Api::V1::Mobile::Util::EmployeeUtil, dbclean: :after_each do
 
     it 'should return the basic individual' do
       individual_util = Api::V1::Mobile::Insured::InsuredPerson.new person: ce_employee
-      individual = JSON.parse individual_util.basic_person 
-      individual = individual.inject({}) { |memo, (k, v)| memo[k.to_sym] = v; memo }
+      individual = JSON.parse individual_util.basic_person
+      individual = individual.inject({}) {|memo, (k, v)| memo[k.to_sym] = v; memo}
       expect(individual).to include(:first_name, :middle_name, :last_name, :name_suffix, :date_of_birth, :ssn_masked,
                                     :gender)
       expect(individual[:date_of_birth]).to eq '1907-07-07'

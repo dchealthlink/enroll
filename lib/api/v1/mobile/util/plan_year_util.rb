@@ -5,11 +5,6 @@ module Api
         MAX_DENTAL_PLANS = 13
         attr_accessor :plan_year
 
-        def is_current_or_upcoming?
-          now = TimeKeeper.date_of_record
-          (now - 1.year..now + 1.year).include? @plan_year.try(:start_on)
-        end
-
         def open_enrollment?
           employee_max? && @as_of &&
             @plan_year.open_enrollment_start_on &&
@@ -67,7 +62,7 @@ module Api
           if benefit_group.is_offering_dental? && benefit_group.dental_reference_plan
             begin
               elected_dental_plans = ->(benefit_group) {
-                benefit_group.elected_dental_plans.map { |p|
+                benefit_group.elected_dental_plans.map {|p|
                   {carrier_name: p.carrier_profile.legal_name, plan_name: p.name}
                 } if benefit_group.elected_dental_plan_ids.count < MAX_DENTAL_PLANS
               }

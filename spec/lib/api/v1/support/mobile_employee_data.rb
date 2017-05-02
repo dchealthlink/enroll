@@ -1,10 +1,10 @@
 module MobileEmployeeData
   shared_context 'employee_data' do
 
-    let!(:calendar_year) { TimeKeeper.date_of_record.year }
-    let!(:effective_date) { Date.new(calendar_year, 1, 1) }
-    let (:benefit_group) { FactoryGirl.create(:benefit_group, title: "Everyone") }
-    let!(:shop_family) { FactoryGirl.create(:family, :with_primary_family_member) }
+    let!(:calendar_year) {TimeKeeper.date_of_record.year}
+    let!(:effective_date) {Date.new(calendar_year, 1, 1)}
+    let (:benefit_group) {FactoryGirl.create(:benefit_group, title: "Everyone")}
+    let!(:shop_family) {FactoryGirl.create(:family, :with_primary_family_member)}
 
     [{id: :employee, text: "Robert Anson Heinlein Esq.", dob: "1907-07-07", ssn: "444556666", gender: "male", hired_on: "2008-12-08"},
      {id: :owner, text: "Virginia Doris Heinlein", dob: "1916-04-22", ssn: "111223333", gender: "female", hired_on: "2006-11-11"}
@@ -34,18 +34,18 @@ module MobileEmployeeData
 
       let!(employee_role_id) {
         send(record[:id]).employee_roles.create(
-            employer_profile: FactoryGirl.create(:employer_profile),
-            hired_on: hired_on,
-            census_employee_id: send(census_employee_id).id
+          employer_profile: FactoryGirl.create(:employer_profile),
+          hired_on: hired_on,
+          census_employee_id: send(census_employee_id).id
         )
       }
 
       let!(benefit_group_assignment_id) {
-        BenefitGroupAssignment.create({
-                                          census_employee: send(census_employee_id),
-                                          benefit_group: benefit_group,
-                                          start_on: Date.parse("2014-01-01")
-                                      })
+        BenefitGroupAssignment.create(
+          census_employee: send(census_employee_id),
+          benefit_group: benefit_group,
+          start_on: Date.parse("2014-01-01")
+        )
       }
 
       enrollments_by_kind = Hash[[:health, :dental].map do |coverage_kind|
