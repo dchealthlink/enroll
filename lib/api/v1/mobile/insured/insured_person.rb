@@ -5,9 +5,9 @@ module Api
 
         def basic_person
           Jbuilder.encode do |json|
-            json.first_name @person.first_name
-            json.middle_name @person.middle_name
-            json.last_name @person.last_name
+            json.first_name @person.first_name.try(:titleize)
+            json.middle_name @person.middle_name.try(:titleize)
+            json.last_name @person.last_name.try(:titleize)
             json.name_suffix @person.name_sfx
             json.date_of_birth @person.dob
             json.ssn_masked __ssn_masked @person
