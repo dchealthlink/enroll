@@ -5,7 +5,6 @@ module Api
         include ActionView::Helpers::NumberHelper
         include Api::V1::Mobile::Response::UserExistenceResponse
 
-        USER_DOES_NOT_EXIST = 'user does not exist'
         SSN_EMPTY = 'ssn is empty'
 
         def check_user_existence
@@ -20,22 +19,34 @@ module Api
               ue_response primary_applicant, employer_profiles, staff[employer_profiles]
             }
 
-            check_roster = ->() {
-              person = Person.where(encrypted_ssn: Person.encrypt_ssn(@ssn)).first
-              person ? create_response[person] : ue_error_response(USER_DOES_NOT_EXIST)
+            encrypt_ssn_with_date = ->(pem_file) {
+              Base64.encode64 OpenSSL::PKey::RSA.new(File.read(pem_file)).public_encrypt(
+                token_contents_response(@ssn, Time.now.strftime('%m-%d-%Y %H:%M:%S')))
             }
 
-            validate_and_respond = ->() {
-              errors = Forms::ConsumerCandidate.new(ssn: @ssn).uniq_ssn
-              if errors.present? # Either there is a user already with this SSN or the SSN is empty.
-                errors == true ? ue_error_response(SSN_EMPTY) : ue_error_response(errors.first)
+            encrypted_token = ->() {
+              pem_file = "#{Rails.root}/#{ENV['MOBILE_PEM_FILE']}"
+              File.file?(pem_file) ? token_response(encrypt_ssn_with_date[pem_file]) : token_reponse('')
+            }
+
+            check_roster = ->() {
+              person = Person.where(encrypted_ssn: Person.encrypt_ssn(@ssn)).first
+              if person
+                create_response[person]
               else
-                check_roster.call # No corresponding user for this SSN, so check the roster.
+                response = {}
+                __merge_these response, ue_found_response(false), encrypted_token.call
+                response
               end
             }
           end
 
-          validate_and_respond.call
+          errors = Forms::ConsumerCandidate.new(ssn: @ssn).uniq_ssn
+          if errors.present? # Either there is a user already with this SSN or the SSN is empty.
+            errors == true ? ue_error_response(SSN_EMPTY) : ue_found_response(true)
+          else
+            check_roster.call # No corresponding user for this SSN, so check the roster.
+          end
         end
 
         #

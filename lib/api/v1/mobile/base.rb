@@ -14,6 +14,10 @@ module Api
         #
         protected
 
+        def __merge_these (hash, *details)
+          details.each {|m| hash.merge! JSON.parse(m)}
+        end
+
         def __summary_of_benefits_url plan
           document = plan.sbc_document
           return unless document
