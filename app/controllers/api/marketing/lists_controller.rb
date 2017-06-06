@@ -17,17 +17,10 @@
 # to make an api key, 'rails r mk_api_key.rb' (random key), or 'rails r mk_api_key.rb my_plain_text' 
 # 
 
-# 
-# FIXME:
-# - test carrier name lookup failures
-# - verify that @plan_year will always work
-# 
-
-
 class Api::Marketing::ListsController < ActionController::Base # instead of < ApplicationController to skip devise auth
 
     # 
-    # list(): the controller action method for api/marketing/lists
+    # list(): the controller method for api/marketing/lists
     #   
     def get_list
         @app_config = YAML.load_file(Rails.root.to_s + '/config/marketing.yml')[Rails.env]
@@ -44,9 +37,6 @@ class Api::Marketing::ListsController < ActionController::Base # instead of < Ap
         @plan_id_to_carrier = {}
         @plan_year = Time.now.year
         @plan_year_fwd = Time.now.month == 11 || Time.now.month == 12 ? Time.now.year + 1 : Time.now.year
-        # Time.now.year == 2017
-        # Time.now.month == 5
-        # Time.now.month.to_s.rjust(1, '0') == 05
         bugger_add('@plan_year: ' + @plan_year.to_s) # bugger
         bugger_add('@plan_year_fwd: ' + @plan_year_fwd.to_s) # bugger
 
@@ -157,8 +147,6 @@ class Api::Marketing::ListsController < ActionController::Base # instead of < Ap
                     }
                     mlist.push(tmp)
                 end
-
-# FIXME: why do we include these, maybe overlaps the all brokers query?...
             elsif r[:broker_role][:aasm_state] == 'active' || r[:broker_role][:aasm_state] == 'decertified' then
                 em = r[:emails].shift
                 tmp = {
