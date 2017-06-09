@@ -6,6 +6,7 @@ module Api
         include Api::V1::Mobile::Response::UserExistenceResponse
 
         SSN_EMPTY = 'ssn is empty'
+        TOKEN_EXPIRES_IN_SECONDS = 30
 
         def check_user_existence
           begin
@@ -20,8 +21,8 @@ module Api
             }
 
             encrypt_ssn_with_date = ->(pem_file) {
-              Base64.encode64 OpenSSL::PKey::RSA.new(File.read(pem_file)).public_encrypt(
-                token_contents_response(@ssn, Time.now.strftime('%m-%d-%Y %H:%M:%S')))
+              CGI.escape Base64.encode64 OpenSSL::PKey::RSA.new(File.read(pem_file)).public_encrypt(
+                token_contents_response(@ssn, (Time.now+TOKEN_EXPIRES_IN_SECONDS).strftime('%m-%d-%Y %H:%M:%S')))
             }
 
             encrypted_token = ->() {
