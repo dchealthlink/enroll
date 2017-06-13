@@ -71,6 +71,7 @@ module Api
         # 2) we ship to production, in which case we can remove this and it will work on prod
         # and fail gracefully on preprod.
         #
+        # TODO Kanban card 8448 tracks this temporary fix's pending removal
         def temporary_fix_use_prod_enroll_logo carrier_logo
           "https://enroll.dchealthlink.com" + carrier_logo
         end
