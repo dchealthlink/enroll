@@ -73,7 +73,7 @@ module Api
         #
         # TODO Kanban card 8448 tracks this temporary fix's pending removal
         def temporary_fix_use_prod_enroll_logo carrier_logo
-          "https://enroll.dchealthlink.com" + carrier_logo
+          "https://enroll.dchealthlink.com#{carrier_logo}"
         end
 
       end
