@@ -72,11 +72,7 @@ module Api
         # and fail gracefully on preprod.
         #
         def temporary_fix_use_prod_enroll_logo carrier_logo
-          if carrier_logo.start_with? "/" 
-            "https://enroll.dchealthlink.com" + carrier_logo
-          else
-            carrier_logo
-          end
+          "https://enroll.dchealthlink.com" + carrier_logo
         end
 
       end
