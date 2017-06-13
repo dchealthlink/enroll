@@ -587,9 +587,7 @@ class Api::V1::Marketing::Lists
         bugger_add('found key: allowed_ips') if @app_config['allowed_ips'] # bugger
         bugger_add({'@app_config' => @app_config}) # bugger
 
-        if ! @app_config['allowed_ips'] 
-            ip_ok = true
-        elsif @app_config['allowed_ips'].include? @caller.request.remote_ip
+        if @app_config['allowed_ips'].include? @caller.request.remote_ip
             ip_ok = true
         end
 
