@@ -84,6 +84,13 @@ module Api
       end
 
       #
+      # /check_user_existence
+      #
+      def check_user_existence
+        _execute {Mobile::Renderer::UserExistenceRenderer::render_details request, self}
+      end
+
+      #
       # Private
       #
       private
