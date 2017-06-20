@@ -36,7 +36,7 @@ module Api
 
         class << self
           def _ridp_verification_instance request
-            Mobile::Ridp::RidpVerification.new body: request.body.read
+            Mobile::Ridp::RidpVerification.new body: BaseRenderer::payload_body(request)
           end
         end
       end

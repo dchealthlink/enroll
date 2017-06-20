@@ -25,9 +25,12 @@ module Api
           end
         end
 
-        def token_contents_response ssn, expires_at
+        def token_contents_response first_name, last_name, dob, expires_at, ssn
           Jbuilder.encode do |json|
             json.ssn ssn
+            json.first_name first_name
+            json.last_name last_name
+            json.dob dob
             json.expires_at expires_at
           end
         end

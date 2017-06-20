@@ -7,9 +7,14 @@ module Api
         # This request is honored only if the user making the request is the predefined HAVEN user driven by the
         # environment variable.
         #
-        def render_details params, controller
-          if controller.current_user.email == ENV['HAVEN_USER']
-            controller.render json: Mobile::UserExistence.new(ssn: params[:ssn]).check_user_existence
+        def render_details request, controller
+          begin
+            # Returns the SSN from the request body.
+            person_request = ->() {BaseRenderer::payload_body(request)[:person]}
+          end
+
+          if controller.current_user.oim_id == ENV['HAVEN_USER_OIM_ID']
+            controller.render json: Mobile::UserExistence.new(person_request: person_request.call).check_user_existence
           else
             BaseRenderer::report_error 'You are not authorized to make this request', controller, 401
           end

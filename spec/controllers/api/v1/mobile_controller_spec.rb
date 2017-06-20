@@ -453,15 +453,15 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
     describe 'GET check_user_existence' do
       it 'should return an unauthorized error' do
         sign_in user
-        get :check_user_existence
+        post :check_user_existence
         output = JSON.parse response.body
         expect(response).to have_http_status(401)
       end
 
       it 'should return the user details' do
-        ENV['HAVEN_USER'] = user.email
+        ENV['HAVEN_USER_OIM_ID'] = user.oim_id
         sign_in user
-        get :check_user_existence
+        post :check_user_existence, {ssn: '111222333'}.to_json
         output = JSON.parse response.body
         expect(response).to have_http_status(200)
         expect(output).to be_a_kind_of Hash
