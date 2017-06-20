@@ -41,10 +41,17 @@ module Api
               end
             }
 
-            create_person_names = ->(xml) {
+            create_person_names = ->(xml, session_pii_data) {
               xml.person_name do
-                xml.person_surname person_surname.call
-                xml.person_given_name person_given_name.call
+                person_surname.call.tap{|last_name|
+                  xml.person_surname last_name
+                  session_pii_data[:last_name] = last_name
+                }
+
+                person_given_name.call.tap{|first_name|
+                  xml.person_given_name first_name
+                  session_pii_data[:first_name] = first_name
+                }
               end
             }
 
@@ -73,10 +80,10 @@ module Api
               end
             }
 
-            create_person = ->(xml) {
+            create_person = ->(xml, session_pii_data) {
               xml.person do
                 create_person_id[xml]
-                create_person_names[xml]
+                create_person_names[xml, session_pii_data]
                 create_addresses[xml]
                 create_emails[xml]
               end
@@ -89,11 +96,20 @@ module Api
               }
             }
 
-            create_person_demographics = ->(xml) {
+            create_person_demographics = ->(xml, session_pii_data) {
               xml.person_demographics do
-                xml.ssn ssn.call
+                ssn.call.tap{|ssn|
+                  xml.ssn ssn
+                  session_pii_data[:ssn] = ssn
+                }
+
                 xml.sex "urn:openhbx:terms:v1:gender##{sex.call}"
-                xml.birth_date birth_date.call
+
+                birth_date.call.tap{|birth_date|
+                  xml.birth_date birth_date
+                  session_pii_data[:birth_date] = birth_date
+                }
+
                 xml.is_incarcerated is_incarcerated.call
                 create_timestamps[xml]
               end
@@ -103,15 +119,17 @@ module Api
           #
           # Build the XML request
           #
+          session_pii_data = {}
           xml = Nokogiri::XML::Builder.new do |xml|
             xml.interactive_verification_start '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
               xml.individual do
                 create_id[xml]
-                create_person[xml]
-                create_person_demographics[xml]
+                create_person[xml, session_pii_data]
+                create_person_demographics[xml, session_pii_data]
               end
             end
           end
+          {xml: xml, session_pii_data: session_pii_data}
         end
 
         def create_answer_request

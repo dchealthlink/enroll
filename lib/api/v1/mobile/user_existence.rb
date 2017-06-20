@@ -30,7 +30,7 @@ module Api
 
                   pem_file = "#{Rails.root}/#{ENV['MOBILE_PEM_FILE']}"
                   File.file?(pem_file) ? token_response(encrypt_token_with_date[pem_file]) : token_response('')
-                } #encrypted_token
+                } #encrypt_token
 
                 # Returns a response if the person were to have been found in the roster.
                 create_response = ->(person) {
@@ -55,7 +55,7 @@ module Api
                     } #token_expiration
                   end #lambda
 
-                  token_contents_response @person_request[:first_name], @person_request[:last_name], @person_request[:birth_date], token_expiration.call, @person_request[:ssn]
+                  token_contents_response @session_pii_data[:first_name], @session_pii_data[:last_name], @session_pii_data[:birth_date], token_expiration.call, @session_pii_data[:ssn]
                 } #token_contents
               end
 
@@ -67,9 +67,9 @@ module Api
 
             # Returns a person for the given DOB, First Name and Last Name.
             find_by_dob_and_names = ->() {
-              pers = Person.match_by_id_info dob: @person_request[:birth_date],
-                                             last_name: @person_request[:last_name],
-                                             first_name: @person_request[:first_name]
+              pers = Person.match_by_id_info dob: @session_pii_data[:birth_date],
+                                             last_name: @session_pii_data[:last_name],
+                                             first_name: @session_pii_data[:first_name]
               pers.first if pers.present?
             }
 
@@ -77,8 +77,10 @@ module Api
             user = ->(person) {person.user if person.present?}
           end #lambda
 
+          raise 'Invalid Request' unless @session_pii_data
+
           # If there is NO person found for either the given SSN or a combination of DOB/FirstName/LastName, check the roster.
-          person = @person_request[:ssn].present? ? Person.find_by_ssn(@person_request[:ssn]) : find_by_dob_and_names.call
+          person = @session_pii_data[:ssn].present? ? Person.find_by_ssn(@session_pii_data[:ssn]) : find_by_dob_and_names.call
           user[person].present? ? ue_found_response(true) : check_roster[person]
         end
 
