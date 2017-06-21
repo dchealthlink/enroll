@@ -21,13 +21,17 @@ class Api::V1::Marketing::Lists
 
     def initialize (a)
         @caller = a
+        require 'pp'
     end
 
     # 
     # get_list()
     #   
     def get_list
-        @app_config = YAML.load_file(Rails.root.to_s + '/config/marketing.yml')[Rails.env]
+        @app_config = {}
+        if File.exists? (Rails.root.to_s + '/config/marketing.yml')
+            @app_config = YAML.load_file(Rails.root.to_s + '/config/marketing.yml')[Rails.env]
+        end
         @bugger = @app_config['allow_bugger'] && @caller.params['bugger'] != nil ? true : false
         @bugger_out = []
 
@@ -52,20 +56,30 @@ class Api::V1::Marketing::Lists
         method_ok = false
 
         bugger_add('ip: ' + @caller.request.remote_ip) # bugger
-        bugger_add({'args' => @caller.params}) # bugger
+        bugger_add({'args' => @caller.params.except(:key)}) # bugger
+        bugger_add({'key' => @caller.params[:key].length}) if @caller.params[:key] # bugger
         bugger_add({'form method' => @caller.request.method}) # bugger
         ck_stopwatch('start') # bugger
+        config_ok = true
 
-        if @caller.request.get? && @bugger
-            method_ok = true 
-        elsif @caller.request.post?
-            method_ok = true 
-        else
-            out[:code] = 1
-            out[:message] = 'method not allowed'
+        if ! ck_config
+            config_ok = false
+            out[:code] = 4
+            out[:message] = 'configuration error'
         end
 
-        if method_ok
+        if config_ok
+            if @caller.request.get? && @bugger
+                method_ok = true 
+            elsif @caller.request.post?
+                method_ok = true 
+            else
+                out[:code] = 1
+                out[:message] = 'method not allowed'
+            end
+        end
+
+        if method_ok && config_ok
             if auth
                 out[:data] = case @caller.params[:q]
                     when 'employers' then q_employers
@@ -76,7 +90,8 @@ class Api::V1::Marketing::Lists
                     when 'brokers_pending' then q_brokers_pending
                     else 
                         out[:code] = 3
-                        out[:message] = 'no query parameter provided'
+                        out[:message] = 'missing or unknown query parameter'
+                        out[:data] = []
                 end
             else
                 out[:code] = 2
@@ -87,6 +102,24 @@ class Api::V1::Marketing::Lists
         ck_stopwatch('end') # bugger
         bugger_add({'stopwatch' => @stopwatch}) # bugger
         @caller.render json: out
+    end
+
+    # 
+    # ck_config()
+    #   
+    # see if config is there and has all required settings
+    #   
+    def ck_config
+        ok = false
+        if @app_config['allow_bugger'] != nil &&
+           @app_config['allowed_ips'] != nil && @app_config['allowed_ips'].length > 0 &&
+           @app_config['api_user'] != nil &&
+           @app_config['api_key'] != nil &&
+           @app_config['key_type'] != nil then
+            ok = true
+        end
+
+        return ok
     end
 
     # 
@@ -587,6 +620,9 @@ class Api::V1::Marketing::Lists
         bugger_add('found key: allowed_ips') if @app_config['allowed_ips'] # bugger
         bugger_add({'@app_config' => @app_config}) # bugger
 
+        # if ! @app_config['allowed_ips'] 
+        #     ip_ok = true
+        # elsif @app_config['allowed_ips'].include? @caller.request.remote_ip
         if @app_config['allowed_ips'].include? @caller.request.remote_ip
             ip_ok = true
         end
@@ -596,7 +632,7 @@ class Api::V1::Marketing::Lists
                 @caller.logger.info @caller.params['controller'] + ' auth ok ' + @caller.request.remote_ip
                 ok = true
             else
-                @caller.loger.warn @caller.params['controller'] + ' api key fail ' + @caller.request.remote_ip
+                @caller.logger.warn @caller.params['controller'] + ' api key fail ' + @caller.request.remote_ip
                 bugger_add('api key fail') # bugger
             end
         else
