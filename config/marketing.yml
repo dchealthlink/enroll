@@ -4,9 +4,8 @@ development:
     #           addition to POST, should always be set to false for production
     allow_bugger: true
     
-    # optional: an array, if defined only the listed ip's are allowed to use
-    #           web service comment out to disable this check, wild cards and 
-    #           sub net notation are not supported
+    # required: an array, only the listed ip's are allowed to use the
+    #           web service
     allowed_ips: 
         - 192.168.1.10
         
@@ -21,15 +20,15 @@ development:
     key_type: hashed
     
 test:
-    allow_bugger: true
+    allow_bugger: 
     allowed_ips: 
     api_user: 
     api_key: 
     key_type: 
     
 production:
-    allow_bugger: false
+    allow_bugger: 
     allowed_ips: 
     api_user: 
     api_key: 
-    key_type: hashed
+    key_type: 
