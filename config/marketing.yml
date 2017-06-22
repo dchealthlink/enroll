@@ -1,0 +1,35 @@
+development:
+
+    # required: allow the debug flag to be executed, also allows use of GET in 
+    #           addition to POST, should always be set to false for production
+    allow_bugger: true
+    
+    # optional: an array, if defined only the listed ip's are allowed to use
+    #           web service comment out to disable this check, wild cards and 
+    #           sub net notation are not supported
+    allowed_ips: 
+        - 192.168.1.10
+        
+    # required: the user name...
+    api_user: emma
+    
+    # required: the api key...    
+    # plain text = 2b0fde9309034dc07de88a6a52be1bb81a5501a4bb329f3ada929296971b72d5
+    api_key: $2a$10$dAPlk2t1TpdEMd/UDj/m6.jHgRifse4m9qN/Sx8z7pNq7WNq0kgNO
+    
+    # required: types [hashed, plain], use hashed for production
+    key_type: hashed
+    
+test:
+    allow_bugger: true
+    allowed_ips: 
+    api_user: 
+    api_key: 
+    key_type: 
+    
+production:
+    allow_bugger: false
+    allowed_ips: 
+    api_user: 
+    api_key: 
+    key_type: hashed
