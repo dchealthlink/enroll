@@ -409,8 +409,6 @@ Rails.application.routes.draw do
     end
   end
 
-  match 'api/marketing/lists', to: 'api/v1/marketing/lists#get_list', via: [:get, :post]
-
   ############################# TO DELETE BELOW ##############################
 
   # FIXME: Do this properly later
