@@ -64,6 +64,7 @@ module Api
             other_enrollment_fields = ->(enrollment, result) {
               return unless enrollment.plan
               result[:carrier_name] = enrollment.plan.carrier_profile.legal_name
+              result[:carrier_logo] = display_carrier_logo Maybe.new enrollment.plan
               result[:summary_of_benefits_url] = __summary_of_benefits_url enrollment.plan
               enrollment_plan_fields[enrollment, result]
             }

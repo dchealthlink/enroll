@@ -40,13 +40,11 @@ module Api
                 json.enrollments ivl_enrollments + ee_enrollments
               end
             }
-
-            merge_these = ->(hash, *details) {details.each {|m| hash.merge! JSON.parse(m)}}
           end
 
           result = {}
-          merge_these[result, ins_individual.call.basic_person, ins_individual.call.addresses,
-                      ins_individual.call.ins_dependents, all_enrollments.call, insured_employee.call.ins_employments]
+          __merge_these result, ins_individual.call.basic_person, ins_individual.call.addresses,
+                        ins_individual.call.ins_dependents, all_enrollments.call, insured_employee.call.ins_employments
           result
         end
 

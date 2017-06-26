@@ -4,10 +4,9 @@ module Api
       class InsuredPerson < Api::V1::Mobile::Base
 
         def basic_person
-
-          format_name = ->(name) {
-            name.try(:titleize)
-          }
+          begin
+            format_name = ->(name) {name.try(:titleize)}
+          end #lambda
 
           Jbuilder.encode do |json|
             json.first_name format_name[@person.first_name]

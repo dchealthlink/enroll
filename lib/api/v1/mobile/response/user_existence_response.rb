@@ -5,6 +5,7 @@ module Api
 
         def ue_response person, employer_profiles, staff
           Jbuilder.encode do |json|
+            _ridp_verified json, true
             _add_primary_applicant json, person
             _add_employers employer_profiles, json, staff
           end
@@ -12,8 +13,31 @@ module Api
 
         def ue_error_response error_message
           Jbuilder.encode do |json|
-            json.ridp_verified true
+            _ridp_verified json, true
             json.error error_message
+          end
+        end
+
+        def ue_found_response flag
+          Jbuilder.encode do |json|
+            _ridp_verified json, true
+            json.user_found_in_enroll flag
+          end
+        end
+
+        def token_contents_response first_name, last_name, dob, expires_at, ssn
+          Jbuilder.encode do |json|
+            json.ssn ssn
+            json.first_name first_name
+            json.last_name last_name
+            json.dob dob
+            json.expires_at expires_at
+          end
+        end
+
+        def token_response token
+          Jbuilder.encode do |json|
+            json.token token
           end
         end
 
@@ -21,6 +45,10 @@ module Api
         # Private
         #
         private
+
+        def _ridp_verified json, flag
+          json.ridp_verified flag
+        end
 
         def _add_primary_applicant json, person
           json.primary_applicant do

@@ -2,32 +2,32 @@ module Api
   module V1
     module Mobile::Ridp
       class RidpRequest < Api::V1::Mobile::Base
-        attr_accessor :ssn
+        attr_accessor :body
 
         def create_question_request
           begin
             #
             # Extract attributes from the request body.
             #
-            person_name = ->() {@body['person']['person_name']}
-            person_surname = ->() {person_name.call['person_surname']}
-            person_given_name = ->() {person_name.call['person_given_name']}
-            addresses = ->() {@body['person']['addresses']}
-            single_address = ->(address) {address['address']}
-            address_type = ->(address) {single_address[address]['type']}
-            address_line1 = ->(address) {single_address[address]['address_line_1']}
-            location_city_name = ->(address) {single_address[address]['location_city_name']}
-            location_state_code = ->(address) {single_address[address]['location_state_code']}
-            postal_code = ->(address) {single_address[address]['postal_code']}
-            emails = ->() {@body['person']['emails']}
-            single_email = ->(email) {email['email']}
-            email_type = ->(email) {single_email[email]['type']}
-            email_address = ->(email) {single_email[email]['email_address']}
-            person_demographics = ->() {@body['person_demographics']}
-            ssn = ->() {person_demographics.call['ssn']}
-            sex = ->() {person_demographics.call['sex']}
-            birth_date = ->() {person_demographics.call['birth_date']}
-            is_incarcerated = ->() {person_demographics.call['is_incarcerated']}
+            person_name = ->() {@body[:person][:person_name]}
+            person_surname = ->() {person_name.call[:person_surname]}
+            person_given_name = ->() {person_name.call[:person_given_name]}
+            addresses = ->() {@body[:person][:addresses]}
+            single_address = ->(address) {address[:address]}
+            address_type = ->(address) {single_address[address][:type]}
+            address_line1 = ->(address) {single_address[address][:address_line_1]}
+            location_city_name = ->(address) {single_address[address][:location_city_name]}
+            location_state_code = ->(address) {single_address[address][:location_state_code]}
+            postal_code = ->(address) {single_address[address][:postal_code]}
+            emails = ->() {@body[:person][:emails]}
+            single_email = ->(email) {email[:email]}
+            email_type = ->(email) {single_email[email][:type]}
+            email_address = ->(email) {single_email[email][:email_address]}
+            person_demographics = ->() {@body[:person_demographics]}
+            ssn = ->() {person_demographics.call[:ssn]}
+            sex = ->() {person_demographics.call[:sex]}
+            birth_date = ->() {person_demographics.call[:birth_date]}
+            is_incarcerated = ->() {person_demographics.call[:is_incarcerated]}
 
             create_id = ->(xml) {
               xml.id do
@@ -41,10 +41,17 @@ module Api
               end
             }
 
-            create_person_names = ->(xml) {
+            create_person_names = ->(xml, session_pii_data) {
               xml.person_name do
-                xml.person_surname person_surname.call
-                xml.person_given_name person_given_name.call
+                person_surname.call.tap{|last_name|
+                  xml.person_surname last_name
+                  session_pii_data[:last_name] = last_name
+                }
+
+                person_given_name.call.tap{|first_name|
+                  xml.person_given_name first_name
+                  session_pii_data[:first_name] = first_name
+                }
               end
             }
 
@@ -73,10 +80,10 @@ module Api
               end
             }
 
-            create_person = ->(xml) {
+            create_person = ->(xml, session_pii_data) {
               xml.person do
                 create_person_id[xml]
-                create_person_names[xml]
+                create_person_names[xml, session_pii_data]
                 create_addresses[xml]
                 create_emails[xml]
               end
@@ -89,11 +96,20 @@ module Api
               }
             }
 
-            create_person_demographics = ->(xml) {
+            create_person_demographics = ->(xml, session_pii_data) {
               xml.person_demographics do
-                xml.ssn ssn.call
+                ssn.call.tap{|ssn|
+                  xml.ssn ssn
+                  session_pii_data[:ssn] = ssn
+                }
+
                 xml.sex "urn:openhbx:terms:v1:gender##{sex.call}"
-                xml.birth_date birth_date.call
+
+                birth_date.call.tap{|birth_date|
+                  xml.birth_date birth_date
+                  session_pii_data[:birth_date] = birth_date
+                }
+
                 xml.is_incarcerated is_incarcerated.call
                 create_timestamps[xml]
               end
@@ -103,28 +119,29 @@ module Api
           #
           # Build the XML request
           #
+          session_pii_data = {}
           xml = Nokogiri::XML::Builder.new do |xml|
             xml.interactive_verification_start '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
               xml.individual do
                 create_id[xml]
-                create_person[xml]
-                create_person_demographics[xml]
+                create_person[xml, session_pii_data]
+                create_person_demographics[xml, session_pii_data]
               end
             end
           end
+          {xml: xml, session_pii_data: session_pii_data}
         end
 
         def create_answer_request
           #
           # Extract attributes from the request body.
           #
-          ssn = ->() {@ssn = @body['ssn']}
-          session_id = ->() {@body['session_id']}
-          transaction_id = ->() {@body['transaction_id']}
-          question_responses = ->() {@body['question_response']}
-          question_id = ->(response) {response['question_id']}
-          response_id = ->(response) {response['answer']['response_id']}
-          response_text = ->(response) {response['answer']['response_text']}
+          session_id = ->() {@body[:session_id]}
+          transaction_id = ->() {@body[:transaction_id]}
+          question_responses = ->() {@body[:question_response]}
+          question_id = ->(response) {response[:question_id]}
+          response_id = ->(response) {response[:answer][:response_id]}
+          response_text = ->(response) {response[:answer][:response_text]}
 
           create_session_and_transaction_ids = ->(xml) {
             xml.session_id session_id.call
@@ -143,13 +160,10 @@ module Api
             end
           }
 
-          # SSN is not sent to Experian but we need it later to check user existence so store it.
-          ssn.call
-
           #
           # Build the XML request
           #
-          xml = Nokogiri::XML::Builder.new do |xml|
+          Nokogiri::XML::Builder.new do |xml|
             xml.interactive_verification_question_response '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
               create_session_and_transaction_ids[xml]
               create_answers[xml]
