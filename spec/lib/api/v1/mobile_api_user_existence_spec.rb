@@ -12,9 +12,9 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
       user_existence = Mobile::UserExistence.new ssn: '111222333'
       response = JSON.parse user_existence.check_user_existence
       expect(response).to be_a_kind_of Hash
-      expect(response).to include('ridp_verified', 'error')
-      expect(response['ridp_verified']).to eq true
-      expect(response['error']).to eq Api::V1::Mobile::UserExistence::USER_DOES_NOT_EXIST
+      expect(response).to include('ridp_verified', 'user_found_in_enroll')
+      expect(response['ridp_verified']).to be true
+      expect(response['user_found_in_enroll']).to be false
     end
 
     it 'should handle the case where the ssn is empty' do
@@ -22,7 +22,7 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
       response = JSON.parse user_existence.check_user_existence
       expect(response).to be_a_kind_of Hash
       expect(response).to include('ridp_verified', 'error')
-      expect(response['ridp_verified']).to eq true
+      expect(response['ridp_verified']).to be true
       expect(response['error']).to eq Api::V1::Mobile::UserExistence::SSN_EMPTY
     end
 
@@ -30,9 +30,9 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
       user = FactoryGirl.create :user, :with_consumer_role
       user_existence = Mobile::UserExistence.new ssn: user.person.ssn
       response = JSON.parse user_existence.check_user_existence
-      expect(response).to include('ridp_verified', 'error')
+      expect(response).to include('ridp_verified', 'user_found_in_enroll')
       expect(response['ridp_verified']).to eq true
-      expect(response['error']).to eq 'The social security number you entered is affiliated with another account.'
+      expect(response['user_found_in_enroll']).to be true
     end
 
     it ' should handle the case where the user does exist ' do
