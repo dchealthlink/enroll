@@ -55,7 +55,7 @@ module Api
                     } #token_expiration
                   end #lambda
 
-                  token_contents_response @session_pii_data[:first_name], @session_pii_data[:last_name], @session_pii_data[:birth_date], token_expiration.call, @session_pii_data[:ssn]
+                  token_contents_response @pii_data[:first_name], @pii_data[:last_name], @pii_data[:birth_date], token_expiration.call, @pii_data[:ssn]
                 } #token_contents
               end
 
@@ -67,9 +67,9 @@ module Api
 
             # Returns a person for the given DOB, First Name and Last Name.
             find_by_dob_and_names = ->() {
-              pers = Person.match_by_id_info dob: @session_pii_data[:birth_date],
-                                             last_name: @session_pii_data[:last_name],
-                                             first_name: @session_pii_data[:first_name]
+              pers = Person.match_by_id_info dob: @pii_data[:birth_date],
+                                             last_name: @pii_data[:last_name],
+                                             first_name: @pii_data[:first_name]
               pers.first if pers.present?
             }
 
@@ -77,10 +77,10 @@ module Api
             user = ->(person) {person.user if person.present?}
           end #lambda
 
-          raise 'Invalid Request' unless @session_pii_data
+          raise 'Invalid Request' unless @pii_data
 
           # If there is NO person found for either the given SSN or a combination of DOB/FirstName/LastName, check the roster.
-          person = @session_pii_data[:ssn].present? ? Person.find_by_ssn(@session_pii_data[:ssn]) : find_by_dob_and_names.call
+          person = @pii_data[:ssn].present? ? Person.find_by_ssn(@pii_data[:ssn]) : find_by_dob_and_names.call
           user[person].present? ? ue_found_response(true) : check_roster[person]
         end
 

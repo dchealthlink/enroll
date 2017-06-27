@@ -14,7 +14,7 @@ module Api
           end
 
           if controller.current_user.oim_id == ENV['HAVEN_USER_OIM_ID']
-            controller.render json: Mobile::UserExistence.new(person_request: person_request.call).check_user_existence
+            controller.render json: Mobile::UserExistence.new(pii_data: person_request.call).check_user_existence
           else
             BaseRenderer::report_error 'You are not authorized to make this request', controller, 401
           end

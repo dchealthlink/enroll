@@ -10,7 +10,7 @@ module Api
           begin
             create_request_payload = ->() {
               xml_payload = _ridp_request_instance.create_question_request
-              @session[:session_pii_data] = xml_payload[:session_pii_data]
+              @session[:pii_data] = xml_payload[:pii_data]
               xml_payload[:xml].to_xml
             }
           end #lambda
@@ -25,7 +25,7 @@ module Api
           begin
             create_request_payload = ->() {_ridp_request_instance.create_answer_request.to_xml}
             check_user_existence = ->() {
-              Mobile::UserExistence.new(session_pii_data: @session[:session_pii_data]).check_user_existence
+              Mobile::UserExistence.new(pii_data: @session[:pii_data]).check_user_existence
             }
 
             response = ->() {
