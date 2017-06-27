@@ -25,7 +25,7 @@ module Api
           begin
             create_request_payload = ->() {_ridp_request_instance.create_answer_request.to_xml}
             check_user_existence = ->() {
-              Mobile::UserExistence.new(pii_data: @session[:pii_data]).check_user_existence
+              Mobile::Ridp::RidpUserExistence.new(pii_data: @session[:pii_data]).check_user_existence
             }
 
             response = ->() {

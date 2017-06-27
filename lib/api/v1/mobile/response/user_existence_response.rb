@@ -11,6 +11,12 @@ module Api
           end
         end
 
+        def user_not_exist_error_response
+          Jbuilder.encode do |json|
+            json.error 'User does not exist'
+          end
+        end
+
         def ue_error_response error_message
           Jbuilder.encode do |json|
             _ridp_verified json, true
@@ -41,6 +47,17 @@ module Api
           end
         end
 
+        def primary_applicant_response person
+          Jbuilder.encode do |json|
+            _add_person json, person
+            json.ssn person.ssn
+            json.gender person.gender
+            json.dob person.dob
+            json.addresses person.addresses
+            json.emails person.emails
+          end
+        end
+
         #
         # Private
         #
@@ -52,11 +69,15 @@ module Api
 
         def _add_primary_applicant json, person
           json.primary_applicant do
-            json.id person.id
-            json.user_id person.user_id
-            json.first_name person.first_name
-            json.last_name person.last_name
+            _add_person json, person
           end
+        end
+
+        def _add_person json, person
+          json.id person.id
+          json.user_id person.user_id
+          json.first_name person.first_name
+          json.last_name person.last_name
         end
 
         def _add_employers employer_profiles, json, staff
