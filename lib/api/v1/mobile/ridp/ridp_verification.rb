@@ -35,7 +35,7 @@ module Api
             error_response = ->() {JSON.parse(response.call.to_json).merge ridp_verified: false}
           end #lambda
 
-          !response.call.successful? ? check_user_existence.call : error_response.call
+          response.call.successful? ? check_user_existence.call : error_response.call
         end
 
         #
