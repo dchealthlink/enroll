@@ -2,7 +2,6 @@ module Api
   module V1
     module Mobile
       class Base
-        ENROLL_PRODUCTION_URL = 'https://enroll.dchealthlink.com'
 
         def initialize args={}
           args.each do |k, v|
@@ -16,21 +15,8 @@ module Api
         # - BaseEnrollment::__initialize_enrollment
         #
         def image_tag source, options
-          begin
-            #
-            # Android devices have trouble reading an image with a self-signed certificate
-            # so we are just temporarily hardwiring this to go to prod enroll until either:
-            # 1) we get a proper certificate on the preprod box, or
-            # 2) we ship to production, in which case we can remove this and it will work on prod
-            # and fail gracefully on preprod.
-            #
-            # TODO Kanban card 8448 tracks this temporary fix's pending removal
-            #
-            android_hack_carrier_logo = ->(logo) {"#{ENROLL_PRODUCTION_URL}#{logo}"}
-          end
-
           nok = Nokogiri::HTML ActionController::Base.helpers.image_tag source, options
-          android_hack_carrier_logo[nok.at_xpath('//img/@src').value]
+          nok.at_xpath('//img/@src').value
         end
 
         #
