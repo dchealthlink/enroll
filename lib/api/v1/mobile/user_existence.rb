@@ -11,7 +11,7 @@ module Api
         #
         def check_user_existence
           person = __find_person
-          person ? primary_applicant_response(person): user_not_exist_error_response
+          person ? primary_applicant_response(person): user_not_found_response
         end
 
         #

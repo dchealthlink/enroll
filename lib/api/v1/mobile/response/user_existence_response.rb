@@ -11,9 +11,9 @@ module Api
           end
         end
 
-        def user_not_exist_error_response
+        def user_not_found_response
           Jbuilder.encode do |json|
-            json.error 'User does not exist'
+            json.message 'User not found'
           end
         end
 
