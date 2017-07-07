@@ -3,6 +3,7 @@ module Api
     module Mobile::Ridp
       class RidpUserExistence < Mobile::UserExistence
         TOKEN_EXPIRES_IN_SECONDS = 30
+        PEM_FILE = 'pem/symmetric.pem'
 
         #
         # Check if the user exists in Enroll (as a registered user who can login), or in the Roster (as a dependent
@@ -22,8 +23,9 @@ module Api
                     }
                   end
 
-                  pem_file = "#{Rails.root}/#{ENV['MOBILE_PEM_FILE']}"
-                  File.file?(pem_file) ? token_response(encrypt_token_with_date[pem_file]) : token_response('')
+                  pem_file = "#{Rails.root}/".concat(ENV['MOBILE_PEM_FILE'] || PEM_FILE)
+                  raise 'pem file is missing' unless File.file? pem_file
+                  token_response encrypt_token_with_date[pem_file]
                 } #encrypt_token
 
                 # Returns a response if the person were to have been found in the roster.
