@@ -5,15 +5,56 @@ module Api
 
         def ue_response person, employer_profiles, staff
           Jbuilder.encode do |json|
+            _ridp_verified json, true
             _add_primary_applicant json, person
             _add_employers employer_profiles, json, staff
           end
         end
 
+        def user_not_found_response
+          Jbuilder.encode do |json|
+            json.message 'User not found'
+          end
+        end
+
         def ue_error_response error_message
           Jbuilder.encode do |json|
-            json.ridp_verified true
+            _ridp_verified json, true
             json.error error_message
+          end
+        end
+
+        def ue_found_response flag
+          Jbuilder.encode do |json|
+            _ridp_verified json, true
+            json.user_found_in_enroll flag
+          end
+        end
+
+        def token_contents_response first_name, last_name, dob, expires_at, ssn
+          Jbuilder.encode do |json|
+            json.ssn ssn
+            json.first_name first_name
+            json.last_name last_name
+            json.dob dob
+            json.expires_at expires_at
+          end
+        end
+
+        def token_response token
+          Jbuilder.encode do |json|
+            json.token token
+          end
+        end
+
+        def primary_applicant_response person
+          Jbuilder.encode do |json|
+            _add_person json, person
+            json.ssn person.ssn
+            json.gender person.gender
+            json.dob person.dob
+            json.addresses person.addresses
+            json.emails person.emails
           end
         end
 
@@ -22,13 +63,21 @@ module Api
         #
         private
 
+        def _ridp_verified json, flag
+          json.ridp_verified flag
+        end
+
         def _add_primary_applicant json, person
           json.primary_applicant do
-            json.id person.id
-            json.user_id person.user_id
-            json.first_name person.first_name
-            json.last_name person.last_name
+            _add_person json, person
           end
+        end
+
+        def _add_person json, person
+          json.id person.id
+          json.user_id person.user_id
+          json.first_name person.first_name
+          json.last_name person.last_name
         end
 
         def _add_employers employer_profiles, json, staff

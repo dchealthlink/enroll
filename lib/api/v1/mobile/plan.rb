@@ -28,14 +28,6 @@ module Api
         end
 
         #
-        # Called by ApplicationHelper.display_carrier_logo via PlanResponse::_render_links!
-        #
-        def image_tag source, options
-          nok = Nokogiri::HTML ActionController::Base.helpers.image_tag source, options
-          nok.at_xpath('//img/@src').value
-        end
-
-        #
         # Private
         #
         private

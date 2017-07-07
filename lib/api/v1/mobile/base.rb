@@ -10,9 +10,23 @@ module Api
         end
 
         #
+        # Called by ApplicationHelper.display_carrier_logo via:
+        # - PlanResponse::_render_links!
+        # - BaseEnrollment::__initialize_enrollment
+        #
+        def image_tag source, options
+          nok = Nokogiri::HTML ActionController::Base.helpers.image_tag source, options
+          nok.at_xpath('//img/@src').value
+        end
+
+        #
         # Protected
         #
         protected
+
+        def __merge_these (hash, *details)
+          details.each {|m| hash.merge! JSON.parse(m)}
+        end
 
         def __summary_of_benefits_url plan
           document = plan.sbc_document

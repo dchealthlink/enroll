@@ -5,37 +5,39 @@ module Api
         include ActionView::Helpers::NumberHelper
         include Api::V1::Mobile::Response::UserExistenceResponse
 
-        USER_DOES_NOT_EXIST = 'user does not exist'
-        SSN_EMPTY = 'ssn is empty'
-
+        #
+        # Check if the user exists in Enroll (as a registered user who can login), or in the Roster (as a dependent
+        # of another primary applicant).
+        #
         def check_user_existence
+          person = __find_person
+          person ? primary_applicant_response(person): user_not_found_response
+        end
+
+        #
+        # Protected
+        #
+        protected
+
+        #
+        # If the client sends a SSN, we use that to find the user. If there is no SSN, we rely on a combination of
+        # First Name, Last Name and Date of Birth to look up the user.
+        #
+        def __find_person
           begin
-            staff = ->(employer_profiles) {
-              Api::V1::Mobile::Util::StaffUtil.new(employer_profiles: employer_profiles).keyed_by_employer_id
+            # Returns a person for the given DOB, First Name and Last Name.
+            find_by_dob_and_names = ->() {
+              pers = Person.match_by_id_info dob: @pii_data[:birth_date],
+                                             last_name: @pii_data[:last_name],
+                                             first_name: @pii_data[:first_name]
+              pers.first if pers.present?
             }
+          end #lambda
 
-            create_response = ->(person) {
-              primary_applicant = Family.find_all_by_person(person).first.try(:primary_applicant).person
-              employer_profiles = primary_applicant.employee_roles.map(&:employer_profile)
-              ue_response primary_applicant, employer_profiles, staff[employer_profiles]
-            }
+          raise 'Invalid Request' unless @pii_data
 
-            check_roster = ->() {
-              person = Person.where(encrypted_ssn: Person.encrypt_ssn(@ssn)).first
-              person ? create_response[person] : ue_error_response(USER_DOES_NOT_EXIST)
-            }
-
-            validate_and_respond = ->() {
-              errors = Forms::ConsumerCandidate.new(ssn: @ssn).uniq_ssn
-              if errors.present? # Either there is a user already with this SSN or the SSN is empty.
-                errors == true ? ue_error_response(SSN_EMPTY) : ue_error_response(errors.first)
-              else
-                check_roster.call # No corresponding user for this SSN, so check the roster.
-              end
-            }
-          end
-
-          validate_and_respond.call
+          # If there is NO person found for either the given SSN or a combination of DOB/FirstName/LastName, check the roster.
+          @pii_data[:ssn].present? ? Person.find_by_ssn(@pii_data[:ssn]) : find_by_dob_and_names.call
         end
 
         #
