@@ -20,11 +20,12 @@ development:
     key_type: hashed
     
 test:
-    allow_bugger: 
+    allow_bugger: true
     allowed_ips: 
-    api_user: 
-    api_key: 
-    key_type: 
+        - 0.0.0.0
+    api_user: emma
+    api_key: $2a$10$dAPlk2t1TpdEMd/UDj/m6.jHgRifse4m9qN/Sx8z7pNq7WNq0kgNO
+    key_type: hashed
     
 production:
     allow_bugger: 
