@@ -4,7 +4,7 @@ module Api
       include Api::V1::Mobile::Renderer::BaseRenderer
       Mobile = Api::V1::Mobile
 
-      before_filter :_require_login, except: [:services_rates, :plans]
+      before_filter :_require_login, except: [:services_rates, :plans, :verify_identity, :verify_identity_answers]
 
       #
       # /broker

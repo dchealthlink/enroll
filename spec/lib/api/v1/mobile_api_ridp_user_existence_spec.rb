@@ -9,7 +9,7 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
   context 'User Existence Check' do
 
     it 'should handle the case where the user does not exist' do
-      user_existence = Mobile::UserExistence.new ssn: '111222333'
+      user_existence = Mobile::Ridp::RidpUserExistence.new pii_data: {ssn: '111222333'}
       response = JSON.parse user_existence.check_user_existence
       expect(response).to be_a_kind_of Hash
       expect(response).to include('ridp_verified', 'user_found_in_enroll')
@@ -18,17 +18,18 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
     end
 
     it 'should handle the case where the ssn is empty' do
-      user_existence = Mobile::UserExistence.new ssn: ''
+      user_existence = Mobile::Ridp::RidpUserExistence.new pii_data: {ssn: '', first_name: 'John',
+                                                                      last_name: 'Smith30', birth_date: '19720404'}
       response = JSON.parse user_existence.check_user_existence
       expect(response).to be_a_kind_of Hash
-      expect(response).to include('ridp_verified', 'error')
+      expect(response).to include('ridp_verified', 'token', 'user_found_in_enroll')
       expect(response['ridp_verified']).to be true
-      expect(response['error']).to eq Api::V1::Mobile::UserExistence::SSN_EMPTY
+      expect(response['user_found_in_enroll']).to be false
     end
 
     it 'should handle the case where the user with the same SSN already exists' do
       user = FactoryGirl.create :user, :with_consumer_role
-      user_existence = Mobile::UserExistence.new ssn: user.person.ssn
+      user_existence = Mobile::Ridp::RidpUserExistence.new pii_data: {ssn: user.person.ssn}
       response = JSON.parse user_existence.check_user_existence
       expect(response).to include('ridp_verified', 'user_found_in_enroll')
       expect(response['ridp_verified']).to eq true
@@ -36,10 +37,10 @@ RSpec.describe Api::V1::Mobile::UserExistence, dbclean: :after_each do
     end
 
     it ' should handle the case where the user does exist ' do
-      user_existence = Mobile::UserExistence.new ssn: person_no_user.ssn
+      user_existence = Mobile::Ridp::RidpUserExistence.new pii_data: {ssn: person_no_user.ssn}
       response = JSON.parse user_existence.check_user_existence
       expect(response).to be_a_kind_of Hash
-      expect(response).to include('primary_applicant', 'employers')
+      expect(response).to include('ridp_verified', 'token', 'primary_applicant', 'employers')
 
       primary_applicant = response['primary_applicant']
       expect(primary_applicant).to include('id', 'user_id', 'first_name', 'last_name')
