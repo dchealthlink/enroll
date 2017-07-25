@@ -30,6 +30,7 @@ module IdentityVerification
     def initiate_session(payload)
       Rails.logger.error "Initiate Session: #{Rails.env}"
       # Configured with a timeout of 5, we can extend it
+      Rails.logger.error payload
       code, body = invoke_request("identity_verification.interactive_verification.initiate_session", payload, 5)
       Rails.logger.error body
       return nil if code == "503"
