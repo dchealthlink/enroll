@@ -3,14 +3,14 @@ module IdentityVerification
     class SlugRequestor
       def self.request(key, opts, timeout)
         case key.to_s
-        when "identity_verification.interactive_verification.initiate_session"
-          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml")) }
-        when "identity_verification.interactive_verification.respond_to_questions"
-          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "failed_start_response.xml")) }
-        when "identity_verification.interactive_verification.override"
-          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_fars_response.xml")) }
-        else
-          raise "I don't understand this request!"
+          when "identity_verification.interactive_verification.initiate_session"
+            { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml")) }
+          when "identity_verification.interactive_verification.respond_to_questions"
+            { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "failed_start_response.xml")) }
+          when "identity_verification.interactive_verification.override"
+            { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_fars_response.xml")) }
+          else
+            raise "I don't understand this request!"
         end
       end
     end
@@ -28,15 +28,19 @@ module IdentityVerification
     end
 
     def initiate_session(payload)
+      Rails.logger.error "Initiate Session: #{Rails.env}"
       # Configured with a timeout of 5, we can extend it
       code, body = invoke_request("identity_verification.interactive_verification.initiate_session", payload, 5)
+      Rails.logger.error body
       return nil if code == "503"
       IdentityVerification::InteractiveVerificationResponse.parse(body, :single => true)
     end
 
     def respond_to_questions(payload)
+      Rails.logger.error "Respond Questions: #{Rails.env}"
       # Configured with a timeout of 5, we can extend it
       code, body = invoke_request("identity_verification.interactive_verification.respond_to_questions", payload, 5)
+      Rails.logger.error body
       return nil if code == "503"
       IdentityVerification::InteractiveVerificationResponse.parse(body, :single => true)
     end
@@ -54,10 +58,10 @@ module IdentityVerification
         result_hash = r.stringify_keys
         result_code = result_hash["return_status"]
         case result_code.to_s
-        when "503"
-          ["503", nil]
-        else
-          [result_code.to_s, result_hash["body"]]
+          when "503"
+            ["503", nil]
+          else
+            [result_code.to_s, result_hash["body"]]
         end
       rescue Timeout::Error => e
         ["503", nil]
