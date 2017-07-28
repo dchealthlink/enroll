@@ -47,7 +47,7 @@ module Api
 
         def _add_employer_phone employer_profile, staff
           if staff[employer_profile.id].present?
-            number_to_phone(staff[employer_profile.id].first.phones.first.full_phone_number, area_code: true)
+            number_to_phone(staff[employer_profile.id].first.phones.first.try(:full_phone_number), area_code: true)
           end
         end
 
