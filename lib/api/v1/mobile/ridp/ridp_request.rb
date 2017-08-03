@@ -20,14 +20,17 @@ module Api
             location_state_code = ->(address) {single_address[address][:location_state_code]}
             postal_code = ->(address) {single_address[address][:postal_code]}
             emails = ->() {@body[:person][:emails]}
+            phones = ->() {@body[:person][:phones]}
             single_email = ->(email) {email[:email]}
+            single_phone = ->(phone) {phone[:phone]}
             email_type = ->(email) {single_email[email][:type]}
+            phone_type = ->(phone) {single_phone[phone][:type]}
             email_address = ->(email) {single_email[email][:email_address]}
+            phone_number = ->(phone) {single_phone[phone][:phone_number]}
             person_demographics = ->() {@body[:person_demographics]}
             ssn = ->() {person_demographics.call[:ssn]}
             sex = ->() {person_demographics.call[:sex]}
             birth_date = ->() {person_demographics.call[:birth_date]}
-            is_incarcerated = ->() {person_demographics.call[:is_incarcerated]}
 
             create_id = ->(xml) {
               xml.id do
@@ -80,12 +83,25 @@ module Api
               end
             }
 
+            create_phones = ->(xml) {
+              xml.phones do
+                phones.call.each do |phone|
+                  xml.phone do
+                    xml.type "urn:openhbx:terms:v1:phone_type##{phone_type[phone]}"
+                    xml.full_phone_number phone_number[phone]
+                    xml.is_preferred false
+                  end
+                end
+              end
+            }
+
             create_person = ->(xml, pii_data) {
               xml.person do
                 create_person_id[xml]
                 create_person_names[xml, pii_data]
                 create_addresses[xml]
                 create_emails[xml]
+                create_phones[xml]
               end
             }
 
@@ -110,7 +126,6 @@ module Api
                   pii_data[:birth_date] = birth_date
                 }
 
-                xml.is_incarcerated is_incarcerated.call
                 create_timestamps[xml]
               end
             }
