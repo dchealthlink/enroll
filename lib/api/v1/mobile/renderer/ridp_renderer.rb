@@ -5,7 +5,7 @@ module Api
         include BaseRenderer
         extend Api::V1::Mobile::Util::UrlUtil
         MESSAGE_SUFFIX = "not received or could not be processed"
-        IDENTITY_VERIFICATION_QUESTIONS_ERROR = "valid identity verification questions were #{MESSAGE_SUFFIX}"
+        IDENTITY_VERIFICATION_QUESTIONS_ERROR = "Invalid JSON or valid identity verification questions were #{MESSAGE_SUFFIX}"
         IDENTITY_VERIFICATION_ANSWERS_ERROR = "valid identity verification response was #{MESSAGE_SUFFIX}"
 
         def render_questions session, request, controller
