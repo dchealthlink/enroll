@@ -27,7 +27,7 @@ module Api
 
         # Show more error details in the lower environments.
         def env_specific_error e, error=nil
-          ([:development, :test].include? Rails.env.to_sym) ? [e.message, error].compact + e.backtrace : e.message
+          ([:development, :test].include? Rails.env.to_sym) ? [e.message, error].compact + e.backtrace : error || e.message
         end
       end
 

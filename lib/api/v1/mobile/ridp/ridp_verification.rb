@@ -15,7 +15,9 @@ module Api
             }
           end #lambda
 
-          _verification_service_instance.initiate_session create_request_payload.call
+          response = _verification_service_instance.initiate_session create_request_payload.call
+          response = {error: 'No response received from RIDP. Check the request JSON.'} unless response
+          response
         end
 
         #
