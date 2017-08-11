@@ -19,6 +19,9 @@ module Api
         def execute proc, controller, error=nil
           begin
             proc.call
+          rescue Mobile::Error::RIDPException => e
+            Rails.logger.error "Exception: #{e.message}"
+            report_error env_specific_error(e, error), controller, 406
           rescue StandardError => e
             Rails.logger.error "Exception: #{e.message}"
             report_error env_specific_error(e, error), controller
