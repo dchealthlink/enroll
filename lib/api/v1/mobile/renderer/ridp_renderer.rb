@@ -23,7 +23,7 @@ module Api
           begin
             render_response = ->() {
               raise "This service requires a session and should be called after #{verify_identity_path}" unless session && session[:pii_data]
-              controller.render json: _ridp_verification_instance(session, request).build_answer_response
+              controller.render json: _ridp_verification_instance(session, request).build_answer_response, status: 406
             }
           end
 
