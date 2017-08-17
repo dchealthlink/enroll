@@ -8,7 +8,7 @@ require 'lib/api/v1/support/mobile_ridp_data'
 RSpec.describe Api::V1::MobileController, dbclean: :after_each do
   include_context 'broker_agency_data'
 
-  describe "GET employers_list" do
+   describe "GET employers_list" do
 
     it "should get summaries for employers where broker_agency_account is active" do
       allow(user).to receive(:has_hbx_staff_role?).and_return(true)
@@ -465,6 +465,22 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
         output = JSON.parse response.body
         expect(response).to have_http_status(200)
         expect(output).to be_a_kind_of Hash
+      end
+    end
+  end
+
+  context 'Routes: /check_user_coverage' do
+    include_context 'individual_data'
+
+    describe 'POST check_user_coverage' do
+      it 'should return an unauthorized error since token is empty' do
+        post :check_user_coverage, {token: '', person: {ssn: '111222333'}}.to_json
+        expect(response).to have_http_status(401)
+      end
+
+      it 'should return an unauthorized error since token is invalid' do
+        post :check_user_coverage, {token: 'invalid', person: {ssn: '111222333'}}.to_json
+        expect(response).to have_http_status(401)
       end
     end
   end

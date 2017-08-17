@@ -4,7 +4,8 @@ module Api
       include Api::V1::Mobile::Renderer::BaseRenderer
       Mobile = Api::V1::Mobile
 
-      before_filter :_require_login, except: [:services_rates, :plans, :verify_identity, :verify_identity_answers]
+      before_filter :_require_login, except: [:services_rates, :plans, :verify_identity, :verify_identity_answers,
+                                              :check_user_coverage]
 
       #
       # /broker
@@ -88,6 +89,13 @@ module Api
       #
       def check_user_existence
         _execute {Mobile::Renderer::UserExistenceRenderer::render_details request, self}
+      end
+
+      #
+      # /check_user_coverage
+      #
+      def check_user_coverage
+        _execute {Mobile::Renderer::UserCoverageRenderer::render_details request, params, self}
       end
 
       #

@@ -436,6 +436,7 @@ Rails.application.routes.draw do
         post :verify_identity
         post 'verify_identity/answers', action: :verify_identity_answers
         post :check_user_existence
+        post :check_user_coverage
       end
     end
   end
