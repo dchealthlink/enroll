@@ -10,7 +10,7 @@ module Api
           user_coverage = Mobile::UserCoverage.new(payload: BaseRenderer::payload_body(request))
           if user_coverage.token_valid?
             begin
-              controller.render json: user_coverage.check_user_coverage(params[:date])
+              controller.render json: user_coverage.check_user_coverage
             rescue StandardError => e
               BaseRenderer::report_error e.message, controller, 404
             end

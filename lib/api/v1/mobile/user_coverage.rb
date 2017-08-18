@@ -52,19 +52,13 @@ module Api
         end
 
         #
-        # Check if the user exists in Enroll (as a registered user who can login) and if they do, check to see if they
-        # have coverage for the requested year.
+        # Check if the user exists in Enroll (as a registered user who can login) and if they do, return their
+        # enrollments.
         #
-        def check_user_coverage date
-          begin
-            coverage_response = ->(insured_response) {
-              {enrollments: insured_response.with_indifferent_access[:enrollments].select {|enr| enr[:start_on] == date}}
-            }
-          end #lambda
-
+        def check_user_coverage
           person = __find_person
           raise 'Person was not found' unless person
-          coverage_response[Api::V1::Mobile::Util::InsuredUtil.new(person: person).build_response]
+          {enrollments: Api::V1::Mobile::Util::InsuredUtil.new(person: person).build_response['enrollments']}
         end
 
       end
