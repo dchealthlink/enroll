@@ -5,7 +5,7 @@ module Api
         include BaseRenderer
         extend Api::V1::Mobile::Util::UrlUtil
         MESSAGE_SUFFIX = "not received or could not be processed"
-        IDENTITY_VERIFICATION_QUESTIONS_ERROR = "valid identity verification questions were #{MESSAGE_SUFFIX}"
+        IDENTITY_VERIFICATION_QUESTIONS_ERROR = "Invalid JSON or valid identity verification questions were #{MESSAGE_SUFFIX}"
         IDENTITY_VERIFICATION_ANSWERS_ERROR = "valid identity verification response was #{MESSAGE_SUFFIX}"
 
         def render_questions session, request, controller
@@ -22,7 +22,7 @@ module Api
         def render_answers session, request, controller
           begin
             render_response = ->() {
-              raise "This service requires a session and should be called after #{verify_identity_answers_path}" unless session && session[:pii_data]
+              raise Mobile::Error::RIDPException, "This service requires a session and should be called after #{verify_identity_path}" unless session && session[:pii_data]
               controller.render json: _ridp_verification_instance(session, request).build_answer_response
             }
           end

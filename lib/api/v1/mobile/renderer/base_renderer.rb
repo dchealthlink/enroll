@@ -19,6 +19,9 @@ module Api
         def execute proc, controller, error=nil
           begin
             proc.call
+          rescue Mobile::Error::RIDPException => e
+            Rails.logger.error "Exception: #{e.message}"
+            report_error env_specific_error(e), controller, 406
           rescue StandardError => e
             Rails.logger.error "Exception: #{e.message}"
             report_error env_specific_error(e, error), controller
@@ -27,7 +30,7 @@ module Api
 
         # Show more error details in the lower environments.
         def env_specific_error e, error=nil
-          ([:development, :test].include? Rails.env.to_sym) ? [e.message, error].compact + e.backtrace : e.message
+          ([:development, :test, :preprod2].include? Rails.env.to_sym) ? [e.message, error].compact + e.backtrace : error || e.message
         end
       end
 
