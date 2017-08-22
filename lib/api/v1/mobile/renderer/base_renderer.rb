@@ -21,7 +21,7 @@ module Api
             proc.call
           rescue Mobile::Error::RIDPException => e
             Rails.logger.error "Exception: #{e.message}"
-            report_error env_specific_error(e), controller, 406
+            report_error env_specific_error(e), controller, e.code
           rescue StandardError => e
             Rails.logger.error "Exception: #{e.message}"
             report_error env_specific_error(e, error), controller

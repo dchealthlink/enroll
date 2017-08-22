@@ -16,7 +16,7 @@ module Api
           end #lambda
 
           response = _verification_service_instance.initiate_session create_request_payload.call
-          response = {error: 'No response received from RIDP. Check the request JSON.'} unless response
+          raise Mobile::Error::RIDPException.new('No response received from RIDP, check the request JSON', 404) unless response
           response
         end
 
