@@ -6,7 +6,7 @@ module IdentityVerification
         when "identity_verification.interactive_verification.initiate_session"
           { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml")) }
         when "identity_verification.interactive_verification.respond_to_questions"
-          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "failed_start_response.xml")) }
+          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_question_response.xml")) }
         when "identity_verification.interactive_verification.override"
           { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_fars_response.xml")) }
         else
@@ -66,6 +66,6 @@ module IdentityVerification
   end
 end
 
-if !Rails.env.production?
+# TODO UNCOMMENT --> if !Rails.env.production?
   ::IdentityVerification::InteractiveVerificationService.slug!
-end
+# TODO UNCOMMENT --> end
