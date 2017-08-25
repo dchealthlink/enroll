@@ -29,6 +29,20 @@ module MobileRidpData
                     email_address: 'some@some.com'
                   }
               }
+            ],
+            phones: [
+              {
+                phone: {
+                  type: 'home',
+                  phone_number: '2021112222'
+                }
+              },
+              {
+                phone: {
+                  type: 'mobile',
+                  phone_number: '2021113333'
+                }
+              }
             ]
           },
         person_demographics:
@@ -78,6 +92,25 @@ module MobileRidpData
             }
           }
         ]
+      }.to_json
+    }
+
+    let (:answers_response) {
+      "<ridp:interactive_verification_result
+      xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+      xmlns:ridp='http://openhbx.org/api/terms/1.0'
+      xsi:schemaLocation='http://openhbx.org/api/terms/1.0 file:/Users/tevans/proj/cv_example_builder/verification_services.xsd'>
+      <ridp:verification_result>
+        <ridp:response_code>urn:openhbx:terms:v1:interactive_identity_verification#SUCCESS</ridp:response_code>
+        <ridp:response_text>You knew the right answers.</ridp:response_text>
+        <ridp:transaction_id>WhateverRefNumberHere</ridp:transaction_id>
+      </ridp:verification_result>
+      </ridp:interactive_verification_result>"
+    }
+
+    let (:transaction_id_post) {
+      {
+        transaction_id: '2ffe-a5-1cbf'
       }.to_json
     }
   end

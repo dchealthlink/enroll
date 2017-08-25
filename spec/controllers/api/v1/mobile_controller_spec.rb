@@ -8,7 +8,7 @@ require 'lib/api/v1/support/mobile_ridp_data'
 RSpec.describe Api::V1::MobileController, dbclean: :after_each do
   include_context 'broker_agency_data'
 
-   describe "GET employers_list" do
+  describe "GET employers_list" do
 
     it "should get summaries for employers where broker_agency_account is active" do
       allow(user).to receive(:has_hbx_staff_role?).and_return(true)
@@ -427,8 +427,16 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
     end
   end
 
-  context 'Routes: /verify_identity & /verify_identity/answers' do
+  # Handle the RIDP Cases. There are more test cases but this covers a decent number of them and is a start.
+  context 'All RIDP Related Routes' do
     include_context 'ridp_data'
+
+    let(:mock_person) { double }
+    let(:mock_user) { double(:person => mock_person) }
+    let(:mock_service) { instance_double("::IdentityVerification::InteractiveVerificationService") }
+    let(:mock_service_result) { instance_double("::IdentityVerification::InteractiveVerificationResponse", :failed? => service_failed, :to_model => mock_session) }
+    let(:mock_session) { double }
+    let(:mock_template_result) { double }
 
     describe 'POST verify_identity' do
       it 'should return the identity verification questions' do
@@ -437,13 +445,65 @@ RSpec.describe Api::V1::MobileController, dbclean: :after_each do
         expect(response).to have_http_status(200)
         expect(output).to be_a_kind_of Hash
       end
-    end
 
-    it 'should return the identity verification questions' do
-      post :verify_identity_answers, answer_request_json
-      output = JSON.parse response.body
-      expect(response).to have_http_status(200)
-      expect(output).to be_a_kind_of Hash
+      it 'should return an error as there is no PII data in the session' do
+        post :verify_identity_answers, answer_request_json
+        expect(response).to have_http_status(406)
+      end
+
+      it 'should return an error as identity could not be verified ' do
+        post :verify_identity, question_request_json
+        post :verify_identity_answers, answer_request_json
+        expect(response).to have_http_status(412)
+      end
+
+      let(:service_failed) { false }
+      let(:mock_session) { double }
+      let(:mock_service_result) { double("::IdentityVerification::InteractiveVerificationResponse", :failed? => service_failed) }
+
+      it 'should return a service is unavailable error' do
+        post :verify_identity, question_request_json
+        allow(::IdentityVerification::InteractiveVerificationService).to receive_message_chain(:new, :respond_to_questions)
+        post :verify_identity_answers, answer_request_json
+        expect(response).to have_http_status(503)
+      end
+
+      it 'should return an unauthorized error' do
+        post :verify_identity, question_request_json
+        iv_response = ::IdentityVerification::InteractiveVerificationResponse.new
+        allow(iv_response).to receive_message_chain(:verification_result, :response_code).and_return('FAILURE')
+        allow(::IdentityVerification::InteractiveVerificationService).to receive_message_chain(:new, :respond_to_questions).and_return(iv_response)
+        post :verify_identity_answers, answer_request_json
+        expect(response).to have_http_status(403)
+      end
+
+      it 'should return a success' do
+        post :verify_identity, question_request_json
+        iv_response = ::IdentityVerification::InteractiveVerificationResponse.new
+        allow(iv_response).to receive_message_chain(:verification_result, :response_code).and_return('SUCCESS')
+        allow(::IdentityVerification::InteractiveVerificationService).to receive_message_chain(:new, :respond_to_questions).and_return(iv_response)
+        post :verify_identity_answers, answer_request_json
+        expect(response).to have_http_status(200)
+      end
+
+      describe 'check_override' do
+        it 'should return an error as there is no PII data in the session' do
+          post :verify_identify_check_override
+          expect(response).to have_http_status(406)
+        end
+
+        it 'should return an error as transaction id is not passed' do
+          post :verify_identity, question_request_json
+          post :verify_identify_check_override
+          expect(response).to have_http_status(422)
+        end
+
+        it 'should return a success' do
+          post :verify_identity, question_request_json
+          post :verify_identify_check_override, transaction_id_post
+          expect(response).to have_http_status(200)
+        end
+      end
     end
   end
 
