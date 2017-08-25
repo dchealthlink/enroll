@@ -5,7 +5,7 @@ module Api
 
         # Responds with an error.
         def report_error message, controller, status=:not_found
-          controller.render json: {error: message}, status: status
+          controller.render json: message, status: status
         end
 
         # Returns a hash of the request payload.
@@ -21,7 +21,7 @@ module Api
             proc.call
           rescue Mobile::Error::RIDPException => e
             Rails.logger.error "Exception: #{e.message}"
-            report_error env_specific_error(e), controller, 406
+            report_error env_specific_error(e), controller, e.code
           rescue StandardError => e
             Rails.logger.error "Exception: #{e.message}"
             report_error env_specific_error(e, error), controller

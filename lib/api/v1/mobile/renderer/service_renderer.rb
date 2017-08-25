@@ -13,7 +13,7 @@ module Api
             }
 
             render_error = ->() {
-              BaseRenderer::report_error PARAMETERS_MISSING, controller, :unprocessable_entity
+              BaseRenderer::report_error({error: PARAMETERS_MISSING}, controller, :unprocessable_entity)
             }
           end
 
