@@ -22,7 +22,7 @@ module Api
 
           response = _verification_service_instance.initiate_session create_request_payload.call
           raise _error_response_message(ridp_initiate_session_unreachable_error, 503) unless response
-          raise _error_response_message(ridp_initiate_session_unknown_error, 401) if !_failed_response_code(response.session.response_code, 'MORE_INFORMATION_REQUIRED')
+          raise _error_response_message(ridp_initiate_session_unknown_error, 401) if !_response_code_matches(response.session.response_code, 'MORE_INFORMATION_REQUIRED')
           response
         end
 
@@ -38,7 +38,7 @@ module Api
           response = _verification_service_instance.respond_to_questions create_request_payload.call
           raise _error_response_message(ridp_initiate_session_unreachable_error, 503) unless response
           raise _error_response_message(ridp_respond_questions_failure_error(response.transaction_id), 412) if response.failed?
-          raise _error_response_message(ridp_respond_questions_invalid_error, 403) if !_failed_response_code(response.verification_result.response_code, 'SUCCESS')
+          raise _error_response_message(ridp_respond_questions_invalid_error, 403) if !_response_code_matches(response.verification_result.response_code, 'SUCCESS')
           _check_user_existence
         end
 
@@ -53,7 +53,7 @@ module Api
 
           raise _error_response_message(transaction_id_missing, 422) unless @body[:transaction_id]
           response = _verification_service_instance.check_override create_request_payload.call
-          raise _error_response_message(ridp_respond_questions_failure_error(response.transaction_id), 412) if !_failed_response_code(response.response_code, 'SUCCESS')
+          raise _error_response_message(ridp_respond_questions_failure_error(response.transaction_id), 412) if !_response_code_matches(response.response_code, 'SUCCESS')
           _check_user_existence
         end
 
@@ -68,7 +68,7 @@ module Api
         end
 
         # Returns TRUE if Experian could be reached but we received an error response.
-        def _failed_response_code response_code, error_code
+        def _response_code_matches response_code, error_code
           response_code.match(/#{error_code}$/)
         end
 
