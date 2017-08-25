@@ -4,6 +4,9 @@ module Api
       class RidpRequest < Api::V1::Mobile::Base
         attr_accessor :body
 
+        #
+        # Creates the payload to be sent to Experian to get the Identity Verification questions.
+        #
         def create_question_request
           begin
             #
@@ -46,12 +49,12 @@ module Api
 
             create_person_names = ->(xml, pii_data) {
               xml.person_name do
-                person_surname.call.tap{|last_name|
+                person_surname.call.tap {|last_name|
                   xml.person_surname last_name
                   pii_data[:last_name] = last_name
                 }
 
-                person_given_name.call.tap{|first_name|
+                person_given_name.call.tap {|first_name|
                   xml.person_given_name first_name
                   pii_data[:first_name] = first_name
                 }
@@ -114,14 +117,14 @@ module Api
 
             create_person_demographics = ->(xml, pii_data) {
               xml.person_demographics do
-                ssn.call.tap{|ssn|
+                ssn.call.tap {|ssn|
                   xml.ssn ssn
                   pii_data[:ssn] = ssn
                 }
 
                 xml.sex "urn:openhbx:terms:v1:gender##{sex.call}"
 
-                birth_date.call.tap{|birth_date|
+                birth_date.call.tap {|birth_date|
                   xml.birth_date birth_date
                   pii_data[:birth_date] = birth_date
                 }
@@ -147,6 +150,9 @@ module Api
           {xml: xml, pii_data: pii_data}
         end
 
+        #
+        # Creates the payload to be sent to Experian that contains the answers to the security questions.
+        #
         def create_answer_request
           #
           # Extract attributes from the request body.
@@ -184,6 +190,19 @@ module Api
               create_answers[xml]
             end
           end
+        end
+
+        #
+        # Creates the payload to be sent to Experian to override the Identity Verification failure.
+        #
+        def create_check_override_request
+          # Build the XML request
+          Nokogiri::XML::Builder.new do |xml|
+            xml.interactive_verification_override_request '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
+              xml.transaction_id @body[:transaction_id]
+            end
+          end
+
         end
 
       end

@@ -13,7 +13,7 @@ module Api
             }
 
             render_error = ->(authorized) {
-              BaseRenderer::report_error NO_BROKER_AGENCY_PROFILE_FOUND, controller, authorized[:status]
+              BaseRenderer::report_error({error: NO_BROKER_AGENCY_PROFILE_FOUND}, controller, authorized[:status])
             }
           end
 

@@ -31,7 +31,7 @@ module Api
               }
 
               render_error = ->() {
-                BaseRenderer::report_error NO_EMPLOYEE_ROSTER_FOUND, controller
+                BaseRenderer::report_error({error: NO_EMPLOYEE_ROSTER_FOUND}, controller)
               }
             end
 
