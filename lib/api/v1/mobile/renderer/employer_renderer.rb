@@ -25,7 +25,7 @@ module Api
               }
 
               render_error = ->() {
-                BaseRenderer::report_error NO_EMPLOYER_DETAILS_FOUND, controller
+                BaseRenderer::report_error({error: NO_EMPLOYER_DETAILS_FOUND}, controller)
               }
             end
 

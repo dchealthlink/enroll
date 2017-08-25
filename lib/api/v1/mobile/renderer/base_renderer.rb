@@ -5,7 +5,7 @@ module Api
 
         # Responds with an error.
         def report_error message, controller, status=:not_found
-          controller.render json: {error: message}, status: status
+          controller.render json: message, status: status
         end
 
         # Returns a hash of the request payload.

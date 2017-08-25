@@ -435,6 +435,7 @@ Rails.application.routes.draw do
         get :plans
         post :verify_identity
         post 'verify_identity/answers', action: :verify_identity_answers
+        post 'verify_identity/check_override', action: :verify_identify_check_override
         post :check_user_existence
         post :check_user_coverage
       end

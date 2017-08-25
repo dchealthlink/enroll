@@ -12,10 +12,10 @@ module Api
             begin
               controller.render json: user_coverage.check_user_coverage
             rescue StandardError => e
-              BaseRenderer::report_error e.message, controller, 404
+              BaseRenderer::report_error({error: e.message}, controller, 404)
             end
           else
-            BaseRenderer::report_error 'You are not authorized to make this request', controller, 401
+            BaseRenderer::report_error({error: 'You are not authorized to make this request'}, controller, 401)
           end
         end
       end

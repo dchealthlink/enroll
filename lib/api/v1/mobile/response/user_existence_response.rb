@@ -11,17 +11,12 @@ module Api
           end
         end
 
-        def user_not_found_response
-          Jbuilder.encode do |json|
-            json.message 'User not found'
-          end
+        def transaction_id_missing
+          _error_response 'Transaction id needs to be passed'
         end
 
-        def ue_error_response error_message
-          Jbuilder.encode do |json|
-            _ridp_verified json, true
-            json.error error_message
-          end
+        def user_not_found_response
+          _error_response 'User not found'
         end
 
         def ue_found_response flag
@@ -29,6 +24,37 @@ module Api
             _ridp_verified json, true
             json.user_found_in_enroll flag
           end
+        end
+
+        def ridp_initiate_session_unreachable_error
+          _ridp_initiate_session_error_response 'unreachable',
+                                                'We are sorry. The third-party service used to confirm your identity is currently '\
+                                                'unavailable. Please try again later. If you continue to receive this message after '\
+                                                'trying several times, please call DC Health Link customer service for assistance at 1-855-532-5464.'
+        end
+
+        def ridp_initiate_session_unknown_error
+          _ridp_initiate_session_error_response 'cannot formulate questions for this consumer',
+                                                'To keep your data secure, we are required to verify your identity electronically '\
+                                                'using the credit reporting agency Experian. Unfortunately, Experian was unable to '\
+                                                'confirm your identity based on the information you provided. You will need to '\
+                                                'complete your application at the DC Health Benefit Exchange Authority office at '\
+                                                '1225 I St NW. Please call (202) 715-7576 to set up an appointment.'
+        end
+
+        def ridp_respond_questions_invalid_error
+          _ridp_initiate_session_error_response 'identity could not be verified',
+                                                'Experian was unable to confirm your identity based on the information '\
+                                                'you provided. You will need to complete your application at the '\
+                                                'DC Health Benefit Exchange Authority office at 1225 I St NW. '\
+                                                'Please call (202) 715-7576 to set up an appointment.'
+        end
+
+        def ridp_respond_questions_failure_error transaction_id
+          _ridp_initiate_session_error_response 'identity could not be verified',
+                                                'You have not passed identity validation. To proceed please contact '\
+                                                "Experian at 1-866-578-5409, and provide them with reference number #{transaction_id}.",
+                                                transaction_id
         end
 
         def token_contents_response first_name, last_name, dob, expires_at, ssn
@@ -62,6 +88,24 @@ module Api
         # Private
         #
         private
+
+        def _error_response error_message
+          Jbuilder.encode do |json|
+            json.message error_message
+          end
+        end
+
+        def _ridp_initiate_session_error_response code, text, transaction_id=nil
+          Jbuilder.encode do |json|
+            json.verification_result do
+              json.response_code code
+              json.response_text text
+              json.transaction_id transaction_id if transaction_id
+            end
+            json.session nil
+            json.ridp_verified false
+          end
+        end
 
         def _ridp_verified json, flag
           json.ridp_verified flag
