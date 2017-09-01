@@ -151,7 +151,7 @@ class Api::V1::Marketing::Lists
                     target = true
                 end
 
-                if ! target then
+                if ! target && r[:broker_role][:carrier_appointments].keys then
                     r[:broker_role][:carrier_appointments].keys.each do |appointment|
                         if ! r[:broker_role][:carrier_appointments][appointment] then
                             target = true 
@@ -168,7 +168,7 @@ class Api::V1::Marketing::Lists
                             tdate = tr[:transition_at]
                             break
                         end
-                    end
+                    end if r[:broker_role][:workflow_state_transitions]
 
                     tmp = {
                         :first_name => r[:first_name],
@@ -198,7 +198,7 @@ class Api::V1::Marketing::Lists
                 }
                 mlist.push(tmp)
             end
-        end
+        end if found
 
         return mlist
     end
@@ -233,7 +233,7 @@ class Api::V1::Marketing::Lists
                 :is_employer => true,
             }
             mlist.push(tmp)
-        end
+        end if found
 
         return mlist
     end
@@ -274,7 +274,7 @@ class Api::V1::Marketing::Lists
                 }
                 mlist.push(tmp)
             end
-        end
+        end if found 
 
         return mlist
     end
@@ -298,6 +298,7 @@ class Api::V1::Marketing::Lists
                 :roles => "consumer",
                 :updated_at => (q_span_from .. q_span_to)
             )
+
         bugger_add('users...') # bugger
         bugger_add(pp users) # bugger
 
@@ -335,7 +336,7 @@ class Api::V1::Marketing::Lists
                     bugger_add('* found match for : ' + em[:address]) # bugger
                 end
             end
-        end
+        end if users
 
         return mlist
     end
@@ -380,7 +381,7 @@ class Api::V1::Marketing::Lists
                         plans = []
                         enr[:households].each do |hh|
                             get_selected_coverage(hh[:hbx_enrollments], plans, enr[:family_members])
-                        end
+                        end if enr[:households]
 
                         bugger_add(pp plans) # bugger
                         tmp[:plans] = plans
@@ -388,8 +389,8 @@ class Api::V1::Marketing::Lists
                         break
                     end
                 end
-            end
-        end
+            end if enr[:family_members]
+        end if enrollments
 
         return mlist
     end
@@ -429,7 +430,7 @@ class Api::V1::Marketing::Lists
                 })
                 found += 1
             end
-        end
+        end if recs
         bugger_add({'records_found' => found}) # bugger
 
         return out
@@ -469,7 +470,7 @@ class Api::V1::Marketing::Lists
             seen_carrier_ids[r[:carrier_profile_id]] = 1
             @plan_id_to_plan_year[r[:_id]] = r['active_year']
             @plan_id_to_plan_name[r[:_id]] = r['name']
-        end
+        end if plans
 
         bugger_add('plan_id_to_carrier (' + @plan_id_to_carrier.length.to_s + ')') # bugger
         bugger_add(pp @plan_id_to_carrier) # bugger
@@ -485,7 +486,7 @@ class Api::V1::Marketing::Lists
 
         orgs.each do |r|
             @carrier_to_name[r[:carrier_profile][:_id]] = r[:legal_name]
-        end
+        end if orgs
 
         bugger_add('carrier_to_name') # bugger
         bugger_add(pp @carrier_to_name) # bugger
@@ -510,7 +511,7 @@ class Api::V1::Marketing::Lists
                     if wst[:to_state] == 'coverage_selected' then
                         tmp[:selected_on] = wst[:transition_at]
                     end
-                end
+                end if enr[:workflow_state_transitions]
 
                 tmp[:type] = enr[:coverage_kind]
 
@@ -529,7 +530,7 @@ class Api::V1::Marketing::Lists
 
                 plans.push(tmp)
             end
-        end
+        end if enrollments
     end
 
     # 
@@ -543,17 +544,17 @@ class Api::V1::Marketing::Lists
 
         family.each do |fm|
             family_map[fm[:_id]] = fm[:person_id]
-        end
+        end if family
 
         enr[:hbx_enrollment_members].each do |m|
             person_ids.push(family_map[m[:applicant_id]])
-        end
+        end if enr[:hbx_enrollment_members]
 
         p = CollPeople.only(:first_name).where("_id": { '$in': person_ids })
 
         p.each do |person|
             persons.push(person[:first_name])
-        end
+        end if p
 
         return persons
     end
