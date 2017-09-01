@@ -144,7 +144,7 @@ class Api::V1::Marketing::Lists
         ck_stopwatch('pre q_brokers_pending loop') # bugger
         # broker_role.aasm_state states: applicant, broker_agency_pending, active, decertified
 
-        found.each do |r| 
+        found.each do |r|
             if r[:broker_role][:provider_kind] == 'broker' && r[:broker_role][:aasm_state] == 'broker_agency_pending' then
                 target = false
                 if ! r[:broker_role][:license] || ! r[:broker_role][:training] then
@@ -198,7 +198,7 @@ class Api::V1::Marketing::Lists
                 }
                 mlist.push(tmp)
             end
-        end unless ! found
+        end if found
 
         return mlist
     end
