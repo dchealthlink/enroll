@@ -5,6 +5,17 @@ module Api
         attr_accessor :body
 
         #
+        # Validates the request.
+        #
+        def valid_request?
+          (!_person || !_person_name || !_person_surname || !_person_given_name) ||
+            !_phones.present? || !_emails.present? || !_addresses.present? ||
+            !_person_demographics ||
+            (!_ssn || _ssn.match(/^\d{9}$/).nil?) || (!_sex || !%w{male female}.include?(_sex)) ||
+            (!_birth_date || _birth_date.match(/^\d{4}(0?[1-9]|1[012])(0?[1-9]|3[01])$/).nil?) ? false : true
+        end
+
+        #
         # Creates the payload to be sent to Experian to get the Identity Verification questions.
         #
         def create_question_request
@@ -12,28 +23,18 @@ module Api
             #
             # Extract attributes from the request body.
             #
-            person_name = ->() {@body[:person][:person_name]}
-            person_surname = ->() {person_name.call[:person_surname]}
-            person_given_name = ->() {person_name.call[:person_given_name]}
-            addresses = ->() {@body[:person][:addresses]}
             single_address = ->(address) {address[:address]}
             address_type = ->(address) {single_address[address][:type]}
             address_line1 = ->(address) {single_address[address][:address_line_1]}
             location_city_name = ->(address) {single_address[address][:location_city_name]}
             location_state_code = ->(address) {single_address[address][:location_state_code]}
             postal_code = ->(address) {single_address[address][:postal_code]}
-            emails = ->() {@body[:person][:emails]}
-            phones = ->() {@body[:person][:phones]}
             single_email = ->(email) {email[:email]}
             single_phone = ->(phone) {phone[:phone]}
             email_type = ->(email) {single_email[email][:type]}
             phone_type = ->(phone) {single_phone[phone][:type]}
             email_address = ->(email) {single_email[email][:email_address]}
             phone_number = ->(phone) {single_phone[phone][:phone_number]}
-            person_demographics = ->() {@body[:person_demographics]}
-            ssn = ->() {person_demographics.call[:ssn]}
-            sex = ->() {person_demographics.call[:sex]}
-            birth_date = ->() {person_demographics.call[:birth_date]}
 
             create_id = ->(xml) {
               xml.id do
@@ -49,12 +50,12 @@ module Api
 
             create_person_names = ->(xml, pii_data) {
               xml.person_name do
-                person_surname.call.tap {|last_name|
+                _person_surname.tap {|last_name|
                   xml.person_surname last_name
                   pii_data[:last_name] = last_name
                 }
 
-                person_given_name.call.tap {|first_name|
+                _person_given_name.tap {|first_name|
                   xml.person_given_name first_name
                   pii_data[:first_name] = first_name
                 }
@@ -63,7 +64,7 @@ module Api
 
             create_addresses = ->(xml) {
               xml.addresses do
-                addresses.call.each do |address|
+                _addresses.each do |address|
                   xml.address do
                     xml.type "urn:openhbx:terms:v1:address_type##{address_type[address]}"
                     xml.address_line_1 address_line1[address]
@@ -77,7 +78,7 @@ module Api
 
             create_emails = ->(xml) {
               xml.emails do
-                emails.call.each do |email|
+                _emails.each do |email|
                   xml.email do
                     xml.type "urn:openhbx:terms:v1:email_type##{email_type[email]}"
                     xml.email_address email_address[email]
@@ -88,7 +89,7 @@ module Api
 
             create_phones = ->(xml) {
               xml.phones do
-                phones.call.each do |phone|
+                _phones.each do |phone|
                   xml.phone do
                     xml.type "urn:openhbx:terms:v1:phone_type##{phone_type[phone]}"
                     xml.full_phone_number phone_number[phone]
@@ -117,14 +118,14 @@ module Api
 
             create_person_demographics = ->(xml, pii_data) {
               xml.person_demographics do
-                ssn.call.tap {|ssn|
+                _ssn.tap {|ssn|
                   xml.ssn ssn
                   pii_data[:ssn] = ssn
                 }
 
-                xml.sex "urn:openhbx:terms:v1:gender##{sex.call}"
+                xml.sex "urn:openhbx:terms:v1:gender##{_sex}"
 
-                birth_date.call.tap {|birth_date|
+                _birth_date.tap {|birth_date|
                   xml.birth_date birth_date
                   pii_data[:birth_date] = birth_date
                 }
@@ -202,9 +203,56 @@ module Api
               xml.transaction_id @body[:transaction_id]
             end
           end
-
         end
 
+        #
+        # Private
+        #
+        private
+
+        def _person
+          @body[:person]
+        end
+
+        def _person_name
+          _person[:person_name]
+        end
+
+        def _person_surname
+          _person_name[:person_surname]
+        end
+
+        def _person_given_name
+          _person_name[:person_given_name]
+        end
+
+        def _addresses
+          @body[:person][:addresses]
+        end
+
+        def _emails
+          @body[:person][:emails]
+        end
+
+        def _phones
+          @body[:person][:phones]
+        end
+
+        def _person_demographics
+          @body[:person_demographics]
+        end
+
+        def _ssn
+          _person_demographics[:ssn]
+        end
+
+        def _sex
+          _person_demographics[:sex]
+        end
+
+        def _birth_date
+          _person_demographics[:birth_date]
+        end
       end
     end
   end
