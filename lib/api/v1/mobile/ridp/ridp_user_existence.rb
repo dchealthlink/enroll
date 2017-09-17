@@ -2,7 +2,7 @@ module Api
   module V1
     module Mobile::Ridp
       class RidpUserExistence < Mobile::UserExistence
-        TOKEN_EXPIRES_IN_SECONDS = 30
+        TOKEN_EXPIRES_IN_SECONDS = 30 * 2 * 10  #temporarily elevated for debugging TODO remove
 
         #
         # Check if the user exists in Enroll (as a registered user who can login), or in the Roster (as a dependent

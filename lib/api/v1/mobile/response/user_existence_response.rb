@@ -57,6 +57,13 @@ module Api
                                                 transaction_id
         end
 
+        def ridp_invalid_client_request
+          _ridp_initiate_session_error_response 'request payload is invalid',
+                                                'Check the request payload sent to ensure the following attributes were sent '\
+                                                'in the expected format: first name, last name, ssn, sex, birth date, '\
+                                                'phone, address, email '
+        end
+
         def token_contents_response first_name, last_name, dob, expires_at, ssn
           Jbuilder.encode do |json|
             json.ssn ssn
