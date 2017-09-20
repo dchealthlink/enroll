@@ -35,11 +35,11 @@ class Api::V1::Marketing::Lists
         @bugger = @app_config['allow_bugger'] && @caller.params['bugger'] != nil ? true : false
         @bugger_out = []
 
+        @new_enrollments_dayspan = 3.days.ago
         @stopwatch = {}
         @stopwatch_start = Time.now
         @stopwatch_seq = 0
         @carrier_to_name = {}
-
         @plan_id_to_plan_year = {}
         @plan_id_to_plan_name = {}
         @plan_id_to_carrier = {}
@@ -184,19 +184,22 @@ class Api::V1::Marketing::Lists
                     }
                     mlist.push(tmp)
                 end
-            elsif r[:broker_role][:aasm_state] == 'active' || r[:broker_role][:aasm_state] == 'decertified' then
-                em = r[:emails].shift
-                tmp = {
-                    :first_name => r[:first_name],
-                    :last_name => r[:last_name],
-                    :email => em[:address],
-                    :active => r[:broker_role][:aasm_state],
-                    :pending_since => false,
-                    :provider_kind => r[:broker_role][:provider_kind],
-                    :market_kind => r[:broker_role][:market_kind],
-                    :is_broker => true,
-                }
-                mlist.push(tmp)
+
+            # we don't need these anymore, it overlaps the all brokers query
+            # elsif r[:broker_role][:aasm_state] == 'active' || r[:broker_role][:aasm_state] == 'decertified' then
+            #     em = r[:emails].shift
+            #     tmp = {
+            #         :first_name => r[:first_name],
+            #         :last_name => r[:last_name],
+            #         :email => em[:address],
+            #         :active => r[:broker_role][:aasm_state],
+            #         :pending_since => false,
+            #         :provider_kind => r[:broker_role][:provider_kind],
+            #         :market_kind => r[:broker_role][:market_kind],
+            #         :is_broker => true,
+            #     }
+            #     mlist.push(tmp)
+
             end
         end if found
 
@@ -292,11 +295,12 @@ class Api::V1::Marketing::Lists
         q_span_from = 4.days.ago
         q_span_to = 1.days.ago
 
-        users = CollUsers.only(:identity_verified_date, :updated_at)
+        users = CollUsers.only(:identity_verified_date, :updated_at, :created_at)
             .where(
                 :identity_verified_date.ne => nil,
                 :roles => "consumer",
-                :updated_at => (q_span_from .. q_span_to)
+                :created_at => (q_span_from .. q_span_to),
+                :identity_verified_date => (q_span_from .. q_span_to)
             )
 
         bugger_add('users...') # bugger
@@ -330,6 +334,7 @@ class Api::V1::Marketing::Lists
                         :last_name => p[:last_name],
                         :verify_date => u[:identity_verified_date],
                         :lastmod => u[:updated_at],
+                        :created => u[:created_at],
                         :email => em[:address],
                     }
                     mlist.push(tmp)
@@ -343,20 +348,22 @@ class Api::V1::Marketing::Lists
 
     # 
     # q_individual_enrollments()
-    #   
+    # 
     # individuals who have selected a plan
-    #   
+    # 
     def q_individual_enrollments
-        days_overlap = 3.days.ago
+
         mlist = []
         ck_stopwatch('pre select enrollments') # bugger
         bugger_add('q_individual_enrollments()...') # bugger
 
         enrollments = CollFamilies.only(:family_members, :households)
-            .where(
-                "households.hbx_enrollments.aasm_state": "coverage_selected",
-                "households.hbx_enrollments.workflow_state_transitions.to_state": "coverage_selected",
-                "households.hbx_enrollments.workflow_state_transitions.transition_at": (days_overlap .. Time.now)
+            .elem_match(
+                'households.hbx_enrollments': {
+                    'aasm_state': 'coverage_selected',
+                    'kind': 'individual',
+                    'submitted_at': (@new_enrollments_dayspan .. Time.now)
+                }
             )
 
         bugger_add('enrollments: ' + enrollments.length.to_s) # bugger
@@ -397,9 +404,9 @@ class Api::V1::Marketing::Lists
 
     # 
     # q_individuals()
-    #   
+    # 
     # all active individuals
-    #   
+    # 
     def q_individuals
         bugger_add('q_individuals()...') # bugger
         out = []
@@ -499,7 +506,9 @@ class Api::V1::Marketing::Lists
         bugger_add('get_selected_coverage()...') # bugger
 
         enrollments.each do |enr|
-            if enr[:aasm_state] == 'coverage_selected' then
+            if enr[:aasm_state] == 'coverage_selected' && 
+                    enr[:kind] == 'individual' && 
+                    enr[:submitted_at].between?(@new_enrollments_dayspan, Time.now) then
                 tmp = {}
                 tmp[:id] = enr[:plan_id]
                 tmp[:carrier_name] = carrier_name_from_plan(enr[:plan_id])
