@@ -12,7 +12,7 @@ module Api
             !_phones.present? || !_emails.present? || !_addresses.present? ||
             !_person_demographics ||
             (!_ssn || _ssn.match(/^\d{9}$/).nil?) || (!_sex || !%w{male female}.include?(_sex)) ||
-            (!_birth_date || _birth_date.match(/^\d{4}(0?[1-9]|1[012])(0?[1-9]|3[01])$/).nil?) ? false : true
+            (!_birth_date || _birth_date.match(/^\d{4}(0?[1-9]|1[012])(0?[1-9]|1?[0-9]|2?[0-9]|3?[01])$/).nil?) ? false : true
         end
 
         #
