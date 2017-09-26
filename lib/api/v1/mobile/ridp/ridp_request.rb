@@ -3,6 +3,7 @@ module Api
     module Mobile::Ridp
       class RidpRequest < Api::V1::Mobile::Base
         attr_accessor :body
+        NAMESPACE_PREFIX_NS = 'ns'
 
         #
         # Validates the request.
@@ -143,7 +144,7 @@ module Api
           #
           pii_data = {}
           xml = Nokogiri::XML::Builder.new do |xml|
-            xml.interactive_verification_start '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
+            xml[NAMESPACE_PREFIX_NS].interactive_verification_start '', :"xmlns:#{NAMESPACE_PREFIX_NS}" => 'http://openhbx.org/api/terms/1.0' do
               xml.individual do
                 create_id[xml]
                 create_person[xml, pii_data]
@@ -189,7 +190,7 @@ module Api
           # Build the XML request
           #
           Nokogiri::XML::Builder.new do |xml|
-            xml.interactive_verification_question_response '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
+            xml[NAMESPACE_PREFIX_NS].interactive_verification_question_response '', :"xmlns:#{NAMESPACE_PREFIX_NS}" => 'http://openhbx.org/api/terms/1.0' do
               create_session_and_transaction_ids[xml]
               create_answers[xml]
             end
@@ -202,7 +203,7 @@ module Api
         def create_check_override_request
           # Build the XML request
           Nokogiri::XML::Builder.new do |xml|
-            xml.interactive_verification_override_request '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
+            xml[NAMESPACE_PREFIX_NS].interactive_verification_override_request '', :"xmlns:#{NAMESPACE_PREFIX_NS}" => 'http://openhbx.org/api/terms/1.0' do
               xml.transaction_id @body[:transaction_id]
             end
           end
