@@ -20,11 +20,11 @@ module Api
           BaseRenderer::execute render_response, controller, {error: IDENTITY_VERIFICATION_QUESTIONS_ERROR}
         end
 
-        def render_answers session, request, controller
+        def render_answers session, request, params, controller
           begin
             render_response = ->() {
               _validate session
-              controller.render json: _ridp_verification_instance(session, request).build_answer_response
+              controller.render json: _ridp_verification_instance(session, request, params).build_answer_response
             }
           end
 
@@ -48,8 +48,8 @@ module Api
         private
 
         class << self
-          def _ridp_verification_instance session, request
-            Mobile::Ridp::RidpVerification.new body: BaseRenderer::payload_body(request), session: session
+          def _ridp_verification_instance session, request, params=nil
+            Mobile::Ridp::RidpVerification.new body: BaseRenderer::payload_body(request), session: session, params: params
           end
 
           def _validate session

@@ -9,10 +9,13 @@ module Api
         #
         def valid_request?
           (!_person || !_person_name || !_person_surname || !_person_given_name) ||
-            !_phones.present? || !_emails.present? || !_addresses.present? ||
+            !_phones.present? ||
+            !_emails.present? ||
+            !_addresses.present? ||
             !_person_demographics ||
-            (!_ssn || _ssn.match(/^\d{9}$/).nil?) || (!_sex || !%w{male female}.include?(_sex)) ||
-            (!_birth_date || _birth_date.match(/^\d{4}(0?[1-9]|1[012])(0?[1-9]|3[01])$/).nil?) ? false : true
+            (_person_demographics.has_key?(:ssn) && _ssn.present? && _ssn.match(/^\d{9}$/).nil?) ||
+            (_person_demographics.has_key?(:sex) && _sex.present? && !%w{male female}.include?(_sex)) ||
+            (!_birth_date || _birth_date.match(/^\d{4}(0?[1-9]|1[012])(0?[1-9]|1?[0-9]|2?[0-9]|3?[01])$/).nil?) ? false : true
         end
 
         #
