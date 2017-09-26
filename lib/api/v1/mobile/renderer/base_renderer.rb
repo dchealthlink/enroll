@@ -20,10 +20,10 @@ module Api
           begin
             proc.call
           rescue Mobile::Error::RIDPException => e
-            Rails.logger.error "Exception: #{e.message}"
+            Rails.logger.error "Exception: #{[e.message] + e.backtrace}"
             report_error env_specific_error(e), controller, e.code
           rescue StandardError => e
-            Rails.logger.error "Exception: #{e.message}"
+            Rails.logger.error "Exception: #{[e.message] + e.backtrace}"
             report_error env_specific_error(e, error), controller
           end
         end
