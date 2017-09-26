@@ -1,11 +1,37 @@
 #
 # @see https://paper.dropbox.com/doc/10341-RIDP-verification-error-handling-API-yCXbFrR6V9FTnmknVjKTn RIDP Error Handling
 #
+
+module IdentityVerification
+  class InteractiveVerificationService
+    class SlugRequestor
+      def self.request(key, opts, timeout)
+        case key
+          when "identity_verification.interactive_verification.initiate_session"
+            {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml"))}
+          when "identity_verification.interactive_verification.respond_to_questions"
+            file = Api::V1::Mobile::Ridp::RidpVerification.status == 'success' ? 'successful_question_response.xml' : 'failed_start_response.xml'
+            {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", file))}
+          when "identity_verification.interactive_verification.override"
+            {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_fars_response.xml"))}
+          else
+            raise "I don't understand this request!"
+        end
+      end
+    end
+  end
+end
+
 module Api
   module V1
     module Mobile::Ridp
       class RidpVerification < Api::V1::Mobile::Base
         include Api::V1::Mobile::Response::UserExistenceResponse
+        @@status = 'success'
+
+        def self.status
+          @@status
+        end
 
         #
         # Returns the Identity Verification questions to the initial client request.
@@ -36,6 +62,7 @@ module Api
             create_request_payload = ->() {_ridp_request_instance.create_answer_request.to_xml}
           end #lambda
 
+          @@status = @params[:status] if @params[:status]
           response = _verification_service_instance.respond_to_questions create_request_payload.call
           raise _error_response_message(ridp_initiate_session_unreachable_error, 503) unless response
           raise _error_response_message(ridp_respond_questions_failure_error(response.transaction_id), 412) if response.failed?

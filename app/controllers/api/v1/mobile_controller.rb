@@ -74,6 +74,7 @@ module Api
       # /verify_identity
       #
       def verify_identity
+        _slug_ridp
         _execute {Mobile::Renderer::RidpRenderer::render_questions session, request, self}
       end
 
@@ -81,7 +82,8 @@ module Api
       # /verify_identity/answers
       #
       def verify_identity_answers
-        _execute {Mobile::Renderer::RidpRenderer::render_answers session, request, self}
+        _slug_ridp
+        _execute {Mobile::Renderer::RidpRenderer::render_answers session, request, params, self}
       end
 
       #
@@ -124,6 +126,9 @@ module Api
         render json: {error: 'user not authenticated'} unless current_user
       end
 
+      def _slug_ridp
+         ::IdentityVerification::InteractiveVerificationService.new if !Rails.env.production?
+      end
     end
   end
 end
