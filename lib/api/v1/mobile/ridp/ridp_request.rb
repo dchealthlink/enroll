@@ -25,9 +25,7 @@ module Api
             nested_attribute_exists = ->(attributes, attribute, keys_needed) {
               keys = attributes.map(&:keys)
               keys.flatten.uniq.size == 1 && keys.flatten.uniq.first.to_sym == attribute &&
-                attributes.detect {|x|
-                  !(keys_needed - x[attribute].keys.map(&:to_sym)).empty?
-                }.nil?
+                attributes.detect {|x| !(keys_needed - x[attribute].keys.map(&:to_sym)).empty?}.nil?
             }
             address_exists = ->() {
               nested_attribute_exists[@body[:person][:addresses], :address,
@@ -36,12 +34,17 @@ module Api
 
             email_exists = ->() {nested_attribute_exists[@body[:person][:emails], :email, [:type, :email_address]]}
             phone_exists = ->() {nested_attribute_exists[@body[:person][:phones], :phone, [:type, :phone_number]]}
+
+            valid_zip_code = ->() {
+              @body[:person][:addresses].select {|x| x[:address][:postal_code].match(/^\d{5}$/)}.size == @body[:person][:addresses].size
+            }
           end #lambda
 
           (!root_keys_exists.call ||
             !demographics_exists.call ||
             !person_exists.call ||
             !address_exists.call ||
+            !valid_zip_code.call ||
             !email_exists.call ||
             !phone_exists.call ||
             (_person_demographics.has_key?(:ssn) && _ssn.present? && _ssn.match(/^\d{9}$/).nil?) ||
