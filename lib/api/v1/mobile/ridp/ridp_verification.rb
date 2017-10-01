@@ -47,6 +47,7 @@ module Api
           end #lambda
 
           raise _error_response_message(ridp_invalid_client_request, 422) unless _ridp_request_instance.valid_request?
+          Rails.logger.info "<RIDP Question Request>: #{create_request_payload.call}"
           response = _verification_service_instance.initiate_session create_request_payload.call
           raise _error_response_message(ridp_initiate_session_unreachable_error, 503) unless response
           raise _error_response_message(ridp_initiate_session_unknown_error, 401) if !_response_code_matches(response.session.response_code, 'MORE_INFORMATION_REQUIRED')
@@ -63,6 +64,7 @@ module Api
           end #lambda
 
           @@status = @params[:status] if @params[:status]
+          Rails.logger.info "<<RIDP Answer Request>>: #{create_request_payload.call}"
           response = _verification_service_instance.respond_to_questions create_request_payload.call
           raise _error_response_message(ridp_initiate_session_unreachable_error, 503) unless response
           raise _error_response_message(ridp_respond_questions_failure_error(response.transaction_id), 412) if response.failed?
@@ -80,6 +82,7 @@ module Api
           end #lambda
 
           raise _error_response_message(transaction_id_missing, 422) unless @body[:transaction_id]
+          Rails.logger.info "<<RIDP Answer Request>>: #{create_request_payload.call}"
           response = _verification_service_instance.check_override create_request_payload.call
           raise _error_response_message(ridp_respond_questions_failure_error(response.transaction_id), 412) if !_response_code_matches(response.response_code, 'SUCCESS')
           _check_user_existence

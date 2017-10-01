@@ -90,6 +90,7 @@ module Api
       # /verify_identify/check_override
       #
       def verify_identify_check_override
+        _slug_ridp
         _execute {Mobile::Renderer::RidpRenderer::check_override session, request, self}
       end
 
