@@ -20,7 +20,9 @@ module Api
             }
           end #lambda
 
-          raise _error_response_message(ridp_invalid_client_request, 422) unless _ridp_request_instance.valid_request?
+          _ridp_request_instance.valid_request?.tap {|error_message|
+            raise _error_response_message(ridp_invalid_client_request(error_message), 422) if error_message.present?
+          }
           response = _verification_service_instance.initiate_session create_request_payload.call
           raise _error_response_message(ridp_initiate_session_unreachable_error, 503) unless response
           raise _error_response_message(ridp_initiate_session_unknown_error, 401) if response.session.nil? || !_response_code_matches(response.session.response_code, 'MORE_INFORMATION_REQUIRED')
