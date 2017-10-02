@@ -2,11 +2,14 @@ module IdentityVerification
   class InteractiveVerificationService
     class SlugRequestor
       def self.request(key, opts, timeout)
+        Rails.logger.info "<Old (enroll) RIDP Slug called>: #{key}, #{opts}, #{timeout}\n"
         case key.to_s
         when "identity_verification.interactive_verification.initiate_session"
           { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml")) }
         when "identity_verification.interactive_verification.respond_to_questions"
-          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "failed_start_response.xml")) }
+          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", 
+             "successful_question_response.xml")) } 
+            #  WAS: "failed_start_response.xml")) }
         when "identity_verification.interactive_verification.override"
           { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_fars_response.xml")) }
         else
@@ -16,6 +19,7 @@ module IdentityVerification
     end
 
     def self.slug!
+      Rails.logger.info "setting slug"
       set_requestor(SlugRequestor)
     end
 
@@ -30,6 +34,7 @@ module IdentityVerification
     def initiate_session(payload)
       # Configured with a timeout of 5, we can extend it
       code, body = invoke_request("identity_verification.interactive_verification.initiate_session", payload, 5)
+      Rails.logger.info "got code #{code}, body #{body} initiating session with payload #{payload}\n"
       return nil if code == "503"
       IdentityVerification::InteractiveVerificationResponse.parse(body, :single => true)
     end
