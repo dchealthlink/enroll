@@ -47,7 +47,7 @@ module Api
             }
           end #lambda
 
-          # raise _error_response_message(ridp_invalid_client_request, 422) unless _ridp_request_instance.valid_request?
+          raise _error_response_message(ridp_invalid_client_request, 422) unless _ridp_request_instance.valid_request?
           Rails.logger.info "<RIDP Question Request>: #{create_request_payload.call}"
           response = _verification_service_instance.initiate_session create_request_payload.call
           raise _error_response_message(ridp_initiate_session_unreachable_error, 503) unless response
