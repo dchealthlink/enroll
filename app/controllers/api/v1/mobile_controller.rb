@@ -128,7 +128,7 @@ module Api
       end
 
       def _slug_ridp
-         ::IdentityVerification::InteractiveVerificationService.new if !Rails.env.production?
+         ::IdentityVerification::InteractiveVerificationService.new # if !Rails.env.production?
       end
     end
   end
