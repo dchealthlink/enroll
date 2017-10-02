@@ -51,7 +51,7 @@ module Api
           Rails.logger.info "<RIDP Question Request>: #{create_request_payload.call}"
           response = _verification_service_instance.initiate_session create_request_payload.call
           raise _error_response_message(ridp_initiate_session_unreachable_error, 503) unless response
-          raise _error_response_message(ridp_initiate_session_unknown_error, 401) if !_response_code_matches(response.session.response_code, 'MORE_INFORMATION_REQUIRED')
+          raise _error_response_message(ridp_initiate_session_unknown_error, 401) if response.session.nil? || !_response_code_matches(response.session.response_code, 'MORE_INFORMATION_REQUIRED')
           response
         end
 
