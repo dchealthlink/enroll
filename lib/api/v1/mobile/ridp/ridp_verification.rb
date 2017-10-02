@@ -6,6 +6,7 @@ module IdentityVerification
   class InteractiveVerificationService
     class SlugRequestor
       def self.request(key, opts, timeout)
+        Rails.logger.info "<RIDP Slug called>: #{key}, #{opts}, #{timeout}\n"
         case key
           when "identity_verification.interactive_verification.initiate_session"
             {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml"))}
