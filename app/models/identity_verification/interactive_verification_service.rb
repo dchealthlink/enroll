@@ -66,6 +66,6 @@ module IdentityVerification
   end
 end
 
-if !Rails.env.production?
+if Rails.env.production?
   ::IdentityVerification::InteractiveVerificationService.slug!
 end
