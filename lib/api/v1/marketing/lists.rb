@@ -35,7 +35,7 @@ class Api::V1::Marketing::Lists
         @bugger = @app_config['allow_bugger'] && @caller.params['bugger'] != nil ? true : false
         @bugger_out = []
 
-        @new_enrollments_dayspan = 3.days.ago
+        @new_enrollments_dayspan = 15.days.ago
         @stopwatch = {}
         @stopwatch_start = Time.now
         @stopwatch_seq = 0
@@ -292,7 +292,7 @@ class Api::V1::Marketing::Lists
         bugger_add('q_individuals_no_enrollment()...') # bugger
 
         mlist = []
-        q_span_from = 4.days.ago
+        q_span_from = 16.days.ago
         q_span_to = 1.days.ago
 
         users = CollUsers.only(:identity_verified_date, :updated_at, :created_at)
