@@ -7,7 +7,7 @@ module Api
 
         def initialize args={}
           super args
-          @ages = @ages.split(',').map { |x| x.to_i } if @ages
+          @ages = @ages.split(',').map {|x| x.to_i} if @ages
         end
 
         #
@@ -24,7 +24,7 @@ module Api
             }
           end
 
-          response individual_plans.call
+          response _filter_catastrophic_plans individual_plans.call
         end
 
         #
@@ -32,13 +32,19 @@ module Api
         #
         private
 
+        # If any of the ages is > 29, we don’t show catastrophic plans.
+        def _filter_catastrophic_plans plans
+          @ages.select {|x| x > CATASTROPHIC::AGE_CAP}.present? ? plans.reject {|plan| plan.metal_level == CATASTROPHIC::METAL_LEVEL} :
+            plans
+        end
+
         def _services_rates plan
           services_rates_path plan.hios_id, plan.active_year, @coverage_kind
         end
 
         def _deductible plan
           return unless plan.family_deductible
-          deductible_text = plan.family_deductible.split(' ').map { |x| x[/\d+/] }.compact
+          deductible_text = plan.family_deductible.split(' ').map {|x| x[/\d+/]}.compact
           deductible = @ages.size > 1 ? deductible_text.last : deductible_text.first
           deductible.to_i
         end
@@ -70,8 +76,8 @@ module Api
 
                   hbx_enrollment_members = []
                   family_members = []
-                  @ages.each { |age|
-                    add_family_member.call(family_members).tap { |family_member|
+                  @ages.each {|age|
+                    add_family_member.call(family_members).tap {|family_member|
                       add_hbx_enrollment_member.call age, family_member, hbx_enrollment_members
                     }
                   }
@@ -109,6 +115,10 @@ module Api
           UnassistedPlanCostDecorator.new(plan, create_hbx_enrollment.call).total_employee_cost
         end
 
+        module CATASTROPHIC
+          METAL_LEVEL = 'catastrophic'
+          AGE_CAP = 29
+        end
       end
     end
   end

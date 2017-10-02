@@ -61,7 +61,7 @@ module Api
           _ridp_initiate_session_error_response 'request payload is invalid',
                                                 'Check the request payload sent to ensure the following attributes were sent '\
                                                 'in the expected format: first name, last name, ssn, sex, birth date, '\
-                                                'phone, address, email '
+                                                'phone, address, postal code, email '
         end
 
         def token_contents_response first_name, last_name, dob, expires_at, ssn
