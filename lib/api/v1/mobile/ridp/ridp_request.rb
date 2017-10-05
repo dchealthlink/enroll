@@ -3,16 +3,56 @@ module Api
     module Mobile::Ridp
       class RidpRequest < Api::V1::Mobile::Base
         attr_accessor :body
+        NAMESPACE_PREFIX_NS = 'ns'
 
         #
         # Validates the request.
         #
         def valid_request?
-          (!_person || !_person_name || !_person_surname || !_person_given_name) ||
-            !_phones.present? || !_emails.present? || !_addresses.present? ||
-            !_person_demographics ||
-            (!_ssn || _ssn.match(/^\d{9}$/).nil?) || (!_sex || !%w{male female}.include?(_sex)) ||
-            (!_birth_date || _birth_date.match(/^\d{4}(0?[1-9]|1[012])(0?[1-9]|1?[0-9]|2?[0-9]|3?[01])$/).nil?) ? false : true
+          begin
+            keys = ->(attr) {attr.map(&:to_sym)}
+            keys_exists = ->(keys_needed, keys_passed) {(keys_needed - keys[keys_passed.keys]).empty?}
+            root_keys_exists = ->() {keys_exists[[:person, :person_demographics], @body]}
+            person_exists = ->() {
+              keys_exists[[:person_name, :addresses, :emails, :phones], @body[:person]] &&
+                keys_exists[[:person_surname, :person_given_name], @body[:person][:person_name]]
+            }
+
+            demographics_exists = ->() {
+              keys_exists[[:ssn, :sex, :birth_date, :created_at, :modified_at], @body[:person_demographics]]
+            }
+
+            nested_attribute_exists = ->(attributes, attribute, keys_needed) {
+              keys = attributes.map(&:keys)
+              keys.flatten.uniq.size == 1 && keys.flatten.uniq.first.to_sym == attribute &&
+                attributes.detect {|x| !(keys_needed - x[attribute].keys.map(&:to_sym)).empty?}.nil?
+            }
+            address_exists = ->() {
+              nested_attribute_exists[@body[:person][:addresses], :address,
+                                      [:type, :address_line_1, :address_line_2, :location_city_name, :location_state_code, :postal_code]]
+            }
+
+            email_exists = ->() {nested_attribute_exists[@body[:person][:emails], :email, [:type, :email_address]]}
+            phone_exists = ->() {nested_attribute_exists[@body[:person][:phones], :phone, [:type, :phone_number]]}
+
+            valid_zip_code = ->() {
+              @body[:person][:addresses].select {|x| x[:address][:postal_code].match(/^\d{5}$/)}.size == @body[:person][:addresses].size
+            }
+          end #lambda
+          
+          error_message = ''
+          prefix = 'check attributes: '
+          error_message = "#{prefix} person and person_demographics" if !root_keys_exists.call
+          error_message = "#{prefix} person's demographics" if error_message.empty? && !demographics_exists.call
+          error_message = "#{prefix} person's root attributes - name, addresses, emails, phones" if error_message.empty? && !person_exists.call
+          error_message = "#{prefix} person's address " if error_message.empty? && !address_exists.call
+          error_message = "#{prefix} zip code and its format" if error_message.empty? && !valid_zip_code.call
+          error_message = "#{prefix} emails and email address" if error_message.empty? && !email_exists.call
+          error_message = "#{prefix} phones and phone number" if error_message.empty? && !phone_exists.call
+          error_message = "#{prefix} ssn and its format" if error_message.empty? && _person_demographics.has_key?(:ssn) && _ssn.present? && _ssn.match(/^\d{9}$/).nil?
+          error_message = "#{prefix} sex " if error_message.empty? && _person_demographics.has_key?(:sex) && _sex.present? && !%w{male female}.include?(_sex)
+          error_message = "#{prefix} birth date and its format" if error_message.empty? && (!_birth_date || _birth_date.match(/^\d{4}(0?[1-9]|1[012])(0?[1-9]|1?[0-9]|2?[0-9]|3?[01])$/).nil?)
+          error_message
         end
 
         #
@@ -140,7 +180,7 @@ module Api
           #
           pii_data = {}
           xml = Nokogiri::XML::Builder.new do |xml|
-            xml.interactive_verification_start '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
+            xml[NAMESPACE_PREFIX_NS].interactive_verification_start '', :"xmlns:#{NAMESPACE_PREFIX_NS}" => 'http://openhbx.org/api/terms/1.0' do
               xml.individual do
                 create_id[xml]
                 create_person[xml, pii_data]
@@ -186,7 +226,7 @@ module Api
           # Build the XML request
           #
           Nokogiri::XML::Builder.new do |xml|
-            xml.interactive_verification_question_response '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
+            xml[NAMESPACE_PREFIX_NS].interactive_verification_question_response '', :"xmlns:#{NAMESPACE_PREFIX_NS}" => 'http://openhbx.org/api/terms/1.0' do
               create_session_and_transaction_ids[xml]
               create_answers[xml]
             end
@@ -199,7 +239,7 @@ module Api
         def create_check_override_request
           # Build the XML request
           Nokogiri::XML::Builder.new do |xml|
-            xml.interactive_verification_override_request '', :xmlns => 'http://openhbx.org/api/terms/1.0' do
+            xml[NAMESPACE_PREFIX_NS].interactive_verification_override_request '', :"xmlns:#{NAMESPACE_PREFIX_NS}" => 'http://openhbx.org/api/terms/1.0' do
               xml.transaction_id @body[:transaction_id]
             end
           end
