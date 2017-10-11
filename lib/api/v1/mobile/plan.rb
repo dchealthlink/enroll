@@ -93,7 +93,7 @@ module Api
                 hbx_enrollment_instance = ->(hbx_enrollment_members) {
                   hbx_enrollment = HbxEnrollment.new
                   hbx_enrollment.hbx_enrollment_members = hbx_enrollment_members
-                  hbx_enrollment.effective_on = TimeKeeper.date_of_record
+                  hbx_enrollment.effective_on = Date.new @active_year.to_i
                   hbx_enrollment
                 }
 
@@ -112,6 +112,9 @@ module Api
             }
           end
 
+          raise "active year required" unless @active_year
+          raise "please provide a comma-separated list of ages of covered individuals" unless @ages.present?
+          raise "coverage_kind required" unless @coverage_kind
           UnassistedPlanCostDecorator.new(plan, create_hbx_enrollment.call).total_employee_cost
         end
 
