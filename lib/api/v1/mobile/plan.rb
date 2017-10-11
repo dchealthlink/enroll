@@ -87,7 +87,7 @@ module Api
                 hbx_enrollment_instance = ->(hbx_enrollment_members) {
                   hbx_enrollment = HbxEnrollment.new
                   hbx_enrollment.hbx_enrollment_members = hbx_enrollment_members
-                  hbx_enrollment.effective_on = Date.new(@active_year.to_i, 1, 1)
+                  hbx_enrollment.effective_on = Date.new @active_year.to_i
                   hbx_enrollment
                 }
 
