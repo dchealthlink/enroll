@@ -39,17 +39,20 @@ module Api
               @body[:person][:addresses].select {|x| x[:address][:postal_code].match(/^\d{5}$/)}.size == @body[:person][:addresses].size
             }
           end #lambda
-
-          (!root_keys_exists.call ||
-            !demographics_exists.call ||
-            !person_exists.call ||
-            !address_exists.call ||
-            !valid_zip_code.call ||
-            !email_exists.call ||
-            !phone_exists.call ||
-            (_person_demographics.has_key?(:ssn) && _ssn.present? && _ssn.match(/^\d{9}$/).nil?) ||
-            (_person_demographics.has_key?(:sex) && _sex.present? && !%w{male female}.include?(_sex)) ||
-            (!_birth_date || _birth_date.match(/^\d{4}(0?[1-9]|1[012])(0?[1-9]|1?[0-9]|2?[0-9]|3?[01])$/).nil?)) ? false : true
+          
+          error_message = ''
+          prefix = 'check attributes: '
+          error_message = "#{prefix} person and person_demographics" if !root_keys_exists.call
+          error_message = "#{prefix} person's demographics" if error_message.empty? && !demographics_exists.call
+          error_message = "#{prefix} person's root attributes - name, addresses, emails, phones" if error_message.empty? && !person_exists.call
+          error_message = "#{prefix} person's address " if error_message.empty? && !address_exists.call
+          error_message = "#{prefix} zip code and its format" if error_message.empty? && !valid_zip_code.call
+          error_message = "#{prefix} emails and email address" if error_message.empty? && !email_exists.call
+          error_message = "#{prefix} phones and phone number" if error_message.empty? && !phone_exists.call
+          error_message = "#{prefix} ssn and its format" if error_message.empty? && _person_demographics.has_key?(:ssn) && _ssn.present? && _ssn.match(/^\d{9}$/).nil?
+          error_message = "#{prefix} sex " if error_message.empty? && _person_demographics.has_key?(:sex) && _sex.present? && !%w{male female}.include?(_sex)
+          error_message = "#{prefix} birth date and its format" if error_message.empty? && (!_birth_date || _birth_date.match(/^\d{4}(0?[1-9]|1[012])(0?[1-9]|1?[0-9]|2?[0-9]|3?[01])$/).nil?)
+          error_message
         end
 
         #
