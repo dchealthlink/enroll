@@ -28,7 +28,7 @@ module Api
         def _sort_plans plans
           plans_with_premiums = []
           plans.each {|plan| plans_with_premiums << {plan: plan, monthly_premium: _total_premium(plan)}}
-          plans_with_premiums.sort_by {|x, y| x[:monthly_premium]}
+          plans_with_premiums.sort_by {|x| x[:monthly_premium]}
         end
 
         def _render_total_premium! json, sorted_plan
