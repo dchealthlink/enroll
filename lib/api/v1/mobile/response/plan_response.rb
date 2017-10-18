@@ -5,27 +5,37 @@ module Api
         include ApplicationHelper
         include Api::V1::Mobile::Util::UrlUtil
 
+        #
+        # Returns a list of available plans.
+        #
         def response plans
           Jbuilder.encode do |json|
-            json.array! plans do |plan|
-              _render_plan_details! json, plan
-              _render_total_premium! json, plan
-              _render_hios! json, plan
-              _render_links! json, plan
+            json.array! _sort_plans(plans) do |sorted_plan|
+              _render_plan_details! json, sorted_plan[:plan]
+              _render_total_premium! json, sorted_plan
+              _render_hios! json, sorted_plan[:plan]
+              _render_links! json, sorted_plan[:plan]
             end
           end
         end
+
 
         #
         # Private
         #
         private
 
-        def _render_total_premium! json, plan
+        def _sort_plans plans
+          plans_with_premiums = []
+          plans.each {|plan| plans_with_premiums << {plan: plan, monthly_premium: _total_premium(plan)}}
+          plans_with_premiums.sort_by {|x, y| x[:monthly_premium]}
+        end
+
+        def _render_total_premium! json, sorted_plan
           json.cost do
-            json.monthly_premium _total_premium plan
-            json.deductible _deductible plan
-            json.deductible_text _deductible_text plan
+            json.monthly_premium sorted_plan[:monthly_premium]
+            json.deductible _deductible sorted_plan[:plan]
+            json.deductible_text _deductible_text sorted_plan[:plan]
           end
         end
 
