@@ -83,7 +83,7 @@ module Api
       # /verify_identity/answers
       #
       def verify_identity_answers
-        _slug_ridp
+        _slug_ridp_answers
         _execute {Mobile::Renderer::RidpRenderer::render_answers session, request, params, self}
       end
 
@@ -91,7 +91,7 @@ module Api
       # /verify_identify/check_override
       #
       def verify_identify_check_override
-        _slug_ridp
+        _slug_ridp_answers
         _execute {Mobile::Renderer::RidpRenderer::check_override session, request, self}
       end
 
@@ -129,7 +129,16 @@ module Api
       end
 
       def _slug_ridp
-        unless SSNS.include? JSON.parse(request.body.read).with_indifferent_access[:person_demographics][:ssn]
+        _slug_check SSNS.include?(JSON.parse(request.body.read).with_indifferent_access[:person_demographics][:ssn])
+
+      end
+
+      def _slug_ridp_answers
+        _slug_check SSNS.include?(session[:pii_data][:ssn])
+      end
+
+      def _slug_check slug_ssn
+        unless slug_ssn
           ::IdentityVerification::InteractiveVerificationService.new
           ::IdentityVerification::InteractiveVerificationService.slug!
         else
