@@ -81,8 +81,7 @@ module Api
                 status: __status_label_for(enrollment.aasm_state),
                 plan_name: enrollment.plan.try(:name),
                 plan_type: enrollment.plan.try(:plan_type),
-                metal_level: enrollment.plan.try(coverage_kind == 'health' ? :metal_level : :dental_level),
-                total_premium: enrollment.total_premium
+                metal_level: enrollment.plan.try(coverage_kind == 'health' ? :metal_level : :dental_level)
               }.merge __specific_enrollment_fields(enrollment)
             }
           end
