@@ -6,6 +6,7 @@ module Api
 
       before_filter :_require_login, except: [:services_rates, :plans, :verify_identity, :verify_identity_answers,
                                               :verify_identify_check_override, :check_user_coverage]
+      SSNS = %w{010101010 666024882 666444438}
 
       #
       # /broker
@@ -128,8 +129,13 @@ module Api
       end
 
       def _slug_ridp
-         ::IdentityVerification::InteractiveVerificationService.new # if !Rails.env.production?
-         ::IdentityVerification::InteractiveVerificationService.slug!
+        unless SSNS.include? JSON.parse(request.body.read).with_indifferent_access[:person_demographics][:ssn]
+          ::IdentityVerification::InteractiveVerificationService.new
+          ::IdentityVerification::InteractiveVerificationService.slug!
+        else
+          ::IdentityVerification::InteractiveVerificationService.no_slug!
+        end
+        request.body.rewind
       end
     end
   end

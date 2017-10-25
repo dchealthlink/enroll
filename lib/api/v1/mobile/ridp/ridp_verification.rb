@@ -2,27 +2,6 @@
 # @see https://paper.dropbox.com/doc/10341-RIDP-verification-error-handling-API-yCXbFrR6V9FTnmknVjKTn RIDP Error Handling
 #
 
-module IdentityVerification
-  class InteractiveVerificationService
-    class SlugRequestor
-      def self.request(key, opts, timeout)
-        Rails.logger.info "<RIDP Slug called>: #{key}, #{opts}, #{timeout}\n"
-        case key
-          when "identity_verification.interactive_verification.initiate_session"
-            {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml"))}
-          when "identity_verification.interactive_verification.respond_to_questions"
-            file = Api::V1::Mobile::Ridp::RidpVerification.status == 'success' ? 'successful_question_response.xml' : 'failed_start_response.xml'
-            {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", file))}
-          when "identity_verification.interactive_verification.override"
-            {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_fars_response.xml"))}
-          else
-            raise "I don't understand this request!"
-        end
-      end
-    end
-  end
-end
-
 module Api
   module V1
     module Mobile::Ridp
