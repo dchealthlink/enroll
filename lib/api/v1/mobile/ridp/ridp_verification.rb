@@ -56,6 +56,7 @@ module Api
 
           raise _error_response_message(transaction_id_missing, 422) unless @body[:transaction_id]
           response = _verification_service_instance.check_override create_request_payload.call
+          raise _error_response_message(ridp_initiate_session_unreachable_error, 503) unless response
           raise _error_response_message(ridp_respond_questions_failure_error(response.transaction_id), 412) if !_response_code_matches(response.response_code, 'SUCCESS')
           _check_user_existence
         end
