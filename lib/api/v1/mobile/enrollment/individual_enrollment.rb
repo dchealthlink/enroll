@@ -40,6 +40,8 @@ module Api
 
         def __specific_enrollment_fields enrollment
           {
+            total_premium_without_aptc: enrollment.total_premium,
+            total_premium: enrollment.total_premium - enrollment.applied_aptc_amount.cents/100.to_f,
             elected_aptc_pct: enrollment.elected_aptc_pct,
             applied_aptc_amount_in_cents: enrollment.applied_aptc_amount.cents,
           }
