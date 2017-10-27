@@ -11,7 +11,7 @@ module Api
             #
             add_health_and_dental = ->(start_on, enrollments) {
               response = {}
-              __add_default_fields! start_on, response
+              __add_default_fields! start_on, start_on.at_end_of_year, response
               enrollments.each {|y| __health_and_dental! response, y unless __has_enrolled? response, y}
               response
             }
