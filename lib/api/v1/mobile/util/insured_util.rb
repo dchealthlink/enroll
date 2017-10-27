@@ -30,6 +30,16 @@ module Api
               }
             }
 
+            # Sorts the enrollments in chronologically descending order.
+            sort_enrollments = ->(enrollments) {
+              sorted_enrollments = []
+              enrollments.each {|enr| sorted_enrollments << {start_on: enr[:start_on], enrollment: enr}}
+
+              enrollments = []
+              sorted_enrollments.sort_by {|enr| enr[:start_on]}.reverse.each {|x| enrollments << x[:enrollment]}
+              enrollments
+            }
+
             # Returns a combination of IVL (individual) and EE (employee) enrollments.
             all_enrollments = ->() {
               ee_enrollments = insured_employee.call.ins_enrollments.flatten
@@ -37,7 +47,7 @@ module Api
               filter_duplicates[ivl_enrollments, ee_enrollments]
 
               Jbuilder.encode do |json|
-                json.enrollments ivl_enrollments + ee_enrollments
+                json.enrollments sort_enrollments[ivl_enrollments] + sort_enrollments[ee_enrollments]
               end
             }
           end
