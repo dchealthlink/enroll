@@ -33,9 +33,10 @@ module Api
         # Protected
         #
         protected
-
-        def __add_default_fields! start_on, response
+        
+        def __add_default_fields! start_on, end_on, response
           response[:start_on] = start_on
+          response[:end_on] = start_on
           response[:health] = {status: 'Not Enrolled'}
           response[:dental] = {status: 'Not Enrolled'}
         end

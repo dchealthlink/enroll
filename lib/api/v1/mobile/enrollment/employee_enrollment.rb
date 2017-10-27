@@ -31,7 +31,7 @@ module Api
 
             add_base_fields = ->(insured_employee, assignment, response) {
               response[:employer_profile_id] = insured_employee.employer_profile_id if insured_employee
-              __add_default_fields! assignment.plan_year.start_on, response
+              __add_default_fields! assignment.plan_year.start_on, assignment.plan_year.end_on, response
             }
 
             add_enrollments = ->() {
