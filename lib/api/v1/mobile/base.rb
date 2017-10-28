@@ -41,11 +41,14 @@ module Api
         # that provided this information in JSON, but it has been taken down (probably in connection with publishing
         # the new 2018 plans). While we wait for it to be restored, here's an ugly but functional screenscrape version
         def __summary_of_benefits_public_url plan
+          plan_name = plan.name.include?("$") ? plan.name.split("$").first : plan.name
           drupal_url = "https://dchealthlink.com/individuals/plans"
           # not yet available: drupal_url = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
-          fetched = `curl #{drupal_url}`
-          fetched =~ /onclick="planname_contract\(\d*\)">#{plan.name}.*benefits" onclick="javascript:window.open\('([^']*)'/
-          "https://dchealthlink.com#{$1}"
+          @fetched ||= `curl #{drupal_url}`
+          #Rails.logger.info "fetched #{@fetched.length} characters from #{drupal_url}"
+          @fetched =~ /onclick="planname_contract\((\d*)\)">#{plan_name}.*benefits" onclick="javascript:window.open\('([^']*)'/
+          #Rails.logger.info "for #{plan_name}, found plan #{$1} with summary of benefits url #{$2}"  
+          "https://dchealthlink.com#{$2}" if $2
         end
 
         def __format_date date
