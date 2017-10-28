@@ -66,7 +66,7 @@ module Api
 
         def _render_links! json, plan
           json.links do
-            json.summary_of_benefits __summary_of_benefits_url plan
+            json.summary_of_benefits __summary_of_benefits_public_url plan
             json.provider_directory plan.provider_directory_url
             json.rx_formulary plan.rx_formulary_url
             json.carrier_logo display_carrier_logo Maybe.new plan
