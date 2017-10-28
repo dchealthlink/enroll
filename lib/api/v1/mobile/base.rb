@@ -44,7 +44,7 @@ module Api
           drupal_url = "https://dchealthlink.com/individuals/plans"
           # not yet available: drupal_url = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
           @fetched ||= `curl #{drupal_url}`
-          Rails.logger.info "fetched #{fetched.length} characters from #{drupal_url}"
+          Rails.logger.info "fetched #{@fetched.length} characters from #{drupal_url}"
           @fetched =~ /onclick="planname_contract\((\d*)\)">#{plan.name}.*benefits" onclick="javascript:window.open\('([^']*)'/
           Rails.logger.info "found plan #{$1} with summary of benefits url #{$2}"  
           "https://dchealthlink.com#{$2}" if $2
