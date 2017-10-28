@@ -22,7 +22,7 @@ module Api
           @assignments = unique_assignments.call if @benefit_group_assignments
         end
 
-        def populate_enrollments insured_employee=nil
+        def populate_enrollments dependent_count, insured_employee=nil
           begin
             hbx_enrollments = ->(assignment) {
               enrollments = @grouped_bga_enrollments[assignment.id.to_s] if @grouped_bga_enrollments && !@grouped_bga_enrollments.empty?
@@ -39,7 +39,7 @@ module Api
                 response = {}
                 add_base_fields[insured_employee, assignment, response]
                 hbx_enrollments[assignment].map {|e|
-                  __health_and_dental! response, e unless __has_enrolled? response, e
+                  __health_and_dental! response, e, dependent_count unless __has_enrolled? response, e
                 }
                 response
               }
