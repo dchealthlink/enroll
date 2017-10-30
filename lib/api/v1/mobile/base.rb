@@ -48,7 +48,7 @@ module Api
         # the new 2018 plans). While we wait for it to be restored, here's an ugly but functional screenscrape version
         def __summary_of_benefits_public_url hios_id, fetched
           fetched =~ /{[^}]*"hios_id":"#{hios_id}"[^}]*"pdf_file":"([^"]*)"/
-          #Rails.logger.info "for #{plan.name}, found plan #{hios_id} with summary of benefits url #{$1}"  
+          Rails.logger.info "in fetched file (#{fetched.size)b), for #{hios_id}, found summary of benefits url #{$1}"  
           "https://dchealthlink.com#{$1.gsub("\\/", "/")}" if $1
         end
 
