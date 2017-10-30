@@ -24,7 +24,7 @@ module Api
             }
           end
 
-          response _filter_catastrophic_plans individual_plans.call
+          response _filter_catastrophic_plans(individual_plans.call), @active_year
         end
 
         #
