@@ -44,21 +44,11 @@ module Api
           ivl_plans = parsed ? parsed.select{|x| x["group_year"] == "#{plan_year} Individual" && x["is_health"] == "1" && x["enabled"] == "1"} : []
           r = Hash[ivl_plans.map do |p| 
              pdf = p["pdf_file"]
-             link = "https://dchealthlink.com#{pdf}" if pdf
+             link = pdf ? "https://dchealthlink.com#{pdf}" : nil
              [p["hios_id"], link]
-          end
+          end]
           Rails.logger.info "found plans: #{r}"
           r
-        end
-
-        # the other version of __summary_of_benefits retrieves the link in the enrolldb. sadly, this link requires
-        # an authenticated session, so it's no use to plan shopping. We know there was a Drupal endpoint available
-        # that provided this information in JSON, but it has been taken down (probably in connection with publishing
-        # the new 2018 plans). While we wait for it to be restored, here's an ugly but functional screenscrape version
-        def __summary_of_benefits_public_url hios_id, fetched
-          
-          Rails.logger.info "in fetched file (#{fetched.size)b), for #{hios_id}, found summary of benefits url #{$1}"  
-          "https://dchealthlink.com#{$1.gsub("\\/", "/")}" if $1
         end
 
         def __format_date date
