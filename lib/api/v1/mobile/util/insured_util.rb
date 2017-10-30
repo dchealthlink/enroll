@@ -30,21 +30,33 @@ module Api
               }
             }
 
+            # Sorts the enrollments in chronologically descending order.
+            sort_enrollments = ->(enrollments) {
+              sorted_enrollments = []
+              enrollments.each {|enr| sorted_enrollments << {start_on: enr[:start_on], enrollment: enr}}
+
+              enrollments = []
+              sorted_enrollments.sort_by {|enr| enr[:start_on]}.reverse.each {|x| enrollments << x[:enrollment]}
+              enrollments
+            }
+
             # Returns a combination of IVL (individual) and EE (employee) enrollments.
-            all_enrollments = ->() {
-              ee_enrollments = insured_employee.call.ins_enrollments.flatten
-              ivl_enrollments = ins_individual.call.ins_enrollments.flatten
+            all_enrollments = ->(ins_dependents) {
+              dependent_count = JSON.parse(ins_dependents)['dependents'].size
+              ee_enrollments = insured_employee.call.ins_enrollments(dependent_count).flatten
+              ivl_enrollments = ins_individual.call.ins_enrollments(dependent_count).flatten
               filter_duplicates[ivl_enrollments, ee_enrollments]
 
               Jbuilder.encode do |json|
-                json.enrollments ivl_enrollments + ee_enrollments
+                json.enrollments sort_enrollments[ivl_enrollments] + sort_enrollments[ee_enrollments]
               end
             }
           end
 
           result = {}
+          ins_dependents = ins_individual.call.ins_dependents
           __merge_these result, ins_individual.call.basic_person, ins_individual.call.addresses,
-                        ins_individual.call.ins_dependents, all_enrollments.call, insured_employee.call.ins_employments
+                        ins_dependents, all_enrollments[ins_dependents], insured_employee.call.ins_employments
           result
         end
 

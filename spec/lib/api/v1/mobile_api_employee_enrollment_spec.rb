@@ -10,7 +10,7 @@ RSpec.describe Api::V1::Mobile::Enrollment::EmployeeEnrollment, dbclean: :after_
     it 'should return employee enrollments' do
       assignments = [benefit_group_assignment, benefit_group_assignment]
       grouped_bga_enrollments = [hbx_enrollment].group_by {|x| x.benefit_group_assignment_id.to_s}
-      enrollments = Api::V1::Mobile::Enrollment::EmployeeEnrollment.new(assignments: assignments, grouped_bga_enrollments: grouped_bga_enrollments).populate_enrollments
+      enrollments = Api::V1::Mobile::Enrollment::EmployeeEnrollment.new(assignments: assignments, grouped_bga_enrollments: grouped_bga_enrollments).populate_enrollments(0)
       expect(enrollments).to be_a_kind_of Array
       expect(enrollments.size).to eq 2
 

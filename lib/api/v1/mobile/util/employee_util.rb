@@ -40,8 +40,8 @@ module Api
               end
 
               result = employee_hash.call
-              result[:enrollments] = enrollment_instance.call.populate_enrollments
               result[:dependents] = DependentUtil.new(employee: employee).include_dependents
+              result[:enrollments] = enrollment_instance.call.populate_enrollments result[:dependents].size
               result
             }
 
