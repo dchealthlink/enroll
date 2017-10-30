@@ -36,19 +36,20 @@ module Api
             .concat("?content_type=application/pdf&filename=#{plan.name.gsub(/[^0-9a-z]/i, '')}.pdf&disposition=inline")
         end
 
+
+        def __fetch_health_plans_json
+          drupal_url = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
+          `curl #{drupal_url}`
+        end
+
         # the other version of __summary_of_benefits retrieves the link in the enrolldb. sadly, this link requires
         # an authenticated session, so it's no use to plan shopping. We know there was a Drupal endpoint available
         # that provided this information in JSON, but it has been taken down (probably in connection with publishing
         # the new 2018 plans). While we wait for it to be restored, here's an ugly but functional screenscrape version
-        def __summary_of_benefits_public_url plan
-          plan_name = plan.name.include?("$") ? plan.name.split("$").first : plan.name
-          drupal_url = "https://dchealthlink.com/individuals/plans"
-          # not yet available: drupal_url = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
-          @fetched ||= `curl #{drupal_url}`
-          #Rails.logger.info "fetched #{@fetched.length} characters from #{drupal_url}"
-          @fetched =~ /onclick="planname_contract\((\d*)\)">#{plan_name}.*benefits" onclick="javascript:window.open\('([^']*)'/
-          #Rails.logger.info "for #{plan_name}, found plan #{$1} with summary of benefits url #{$2}"  
-          "https://dchealthlink.com#{$2}" if $2
+        def __summary_of_benefits_public_url hios_id, fetched
+          fetched =~ /{[^}]*"hios_id":"#{hios_id}"[^}]*"pdf_file":"([^"]*)"/
+          #Rails.logger.info "for #{plan.name}, found plan #{hios_id} with summary of benefits url #{$1}"  
+          "https://dchealthlink.com#{$1.gsub("\\/", "/")}" if $1
         end
 
         def __format_date date
