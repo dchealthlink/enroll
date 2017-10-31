@@ -3,7 +3,7 @@ module Api
     module Mobile::Enrollment
       class IndividualEnrollment < BaseEnrollment
 
-        def populate_enrollments
+        def populate_enrollments dependent_count
           begin
             #
             # Add the health and dental enrollments but do not override the enrollment if we already have one
@@ -12,7 +12,7 @@ module Api
             add_health_and_dental = ->(start_on, enrollments) {
               response = {}
               __add_default_fields! start_on, start_on.at_end_of_year, response
-              enrollments.each {|y| __health_and_dental! response, y unless __has_enrolled? response, y}
+              enrollments.each {|y| __health_and_dental! response, y, dependent_count unless __has_enrolled? response, y}
               response
             }
 
@@ -38,7 +38,7 @@ module Api
         #
         protected
 
-        def __specific_enrollment_fields enrollment
+        def __specific_enrollment_fields enrollment, apply_ivl_rules=false
           {
             total_premium_without_aptc: enrollment.total_premium,
             total_premium: enrollment.total_premium - enrollment.applied_aptc_amount.cents/100.to_f,
