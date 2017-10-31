@@ -40,6 +40,13 @@ module Api
               enrollments
             }
 
+            # Remove dental enrollments and enrollments that don't have a health component altogether.
+            ivl_rules_filter = ->(enrollments) {
+              enrollments.delete_if {|e| e[:health][:status] == Mobile::Enrollment::BaseEnrollment::NOT_ENROLLED}
+              enrollments.map{|e| e.delete :dental}
+              enrollments
+            }
+
             # Returns a combination of IVL (individual) and EE (employee) enrollments.
             all_enrollments = ->(ins_dependents) {
               dependent_count = JSON.parse(ins_dependents)['dependents'].size
@@ -48,7 +55,7 @@ module Api
               filter_duplicates[ivl_enrollments, ee_enrollments]
 
               Jbuilder.encode do |json|
-                json.enrollments sort_enrollments[ivl_enrollments] + sort_enrollments[ee_enrollments]
+                json.enrollments ivl_rules_filter[sort_enrollments[ivl_enrollments] + sort_enrollments[ee_enrollments]]
               end
             }
           end

@@ -7,6 +7,7 @@ module Api
         Util = Api::V1::Mobile::Util
         ENROLLMENT_PLAN_FIELDS = [:plan_type, :provider_directory_url, :rx_formulary_url]
         ZERO_DOLLARS = '$0'
+        NOT_ENROLLED = 'Not Enrolled'
 
         def services_rates hios_id, active_year, coverage_kind
           begin
@@ -38,11 +39,11 @@ module Api
         def __add_default_fields! start_on, end_on, response
           response[:start_on] = start_on
           response[:end_on] = end_on
-          response[:health] = {status: 'Not Enrolled'}
-          response[:dental] = {status: 'Not Enrolled'}
+          response[:health] = {status: NOT_ENROLLED}
+          response[:dental] = {status: NOT_ENROLLED}
         end
 
-        def __initialize_enrollment hbx_enrollment, coverage_kind, dependent_count=0
+        def __initialize_enrollment hbx_enrollment, coverage_kind, dependent_count=0, apply_ivl_rules=false
           begin
             enrollment_waived = ->(enrollment, result) {
               return unless result[:status] == EnrollmentConstants::WAIVED
@@ -102,7 +103,7 @@ module Api
                 plan_name: enrollment.plan.try(:name),
                 plan_type: enrollment.plan.try(:plan_type),
                 metal_level: enrollment.plan.try(coverage_kind == 'health' ? :metal_level : :dental_level)
-              }.merge __specific_enrollment_fields(enrollment)
+              }.merge __specific_enrollment_fields(enrollment, apply_ivl_rules)
             }
           end
 
@@ -124,8 +125,9 @@ module Api
           end
         end
 
-        def __health_and_dental! result, enrollment, dependent_count
-          result[enrollment.coverage_kind.to_sym] = __initialize_enrollment enrollment, enrollment.coverage_kind, dependent_count
+        def __health_and_dental! result, enrollment, dependent_count, apply_ivl_rules=false
+          result[enrollment.coverage_kind.to_sym] = __initialize_enrollment enrollment, enrollment.coverage_kind,
+                                                                            dependent_count, apply_ivl_rules
           result
         end
 
