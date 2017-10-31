@@ -66,7 +66,7 @@ module Api
           end
         end
 
-        def _render_links! json, plan, drupal_json
+        def _render_links! json, plan, drupal_map
           json.links do
             json.summary_of_benefits drupal_map[plan.hios_base_id]
             json.provider_directory plan.provider_directory_url

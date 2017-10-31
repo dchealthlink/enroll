@@ -36,20 +36,6 @@ module Api
             .concat("?content_type=application/pdf&filename=#{plan.name.gsub(/[^0-9a-z]/i, '')}.pdf&disposition=inline")
         end
 
-        def __fetch_ivl_health_pdfs_by_hios_id plan_year
-          drupal_url = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
-          result = `curl #{drupal_url}`
-          parsed = JSON.parse(result) if result
-          ivl_plans = parsed ? parsed.select{|x| x["group_year"] == "#{plan_year} Individual" && x["is_health"] == "1" && x["enabled"] == "1"} : []
-          r = Hash[ivl_plans.map do |p| 
-             pdf = p["pdf_file"]
-             link = pdf ? "https://dchealthlink.com#{pdf}" : nil
-             [p["hios_id"], link]
-          end]
-          Rails.logger.info "found plans: #{r}"
-          r
-        end
-
         def __format_date date
           date.strftime('%m-%d-%Y') if date.respond_to?(:strftime)
         end
