@@ -38,7 +38,7 @@ module Api
         #
         protected
 
-        def __specific_enrollment_fields enrollment
+        def __specific_enrollment_fields enrollment, apply_ivl_rules=false
           {
             total_premium_without_aptc: enrollment.total_premium,
             total_premium: enrollment.total_premium - enrollment.applied_aptc_amount.cents/100.to_f,

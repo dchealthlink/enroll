@@ -22,7 +22,7 @@ module Api
           @person.employee_roles.each do |employee_role|
             employee_role.census_employee.tap do |employee|
               enrollment = Mobile::Enrollment::EmployeeEnrollment.new benefit_group_assignments: employee.benefit_group_assignments
-              result << enrollment.populate_enrollments(dependent_count, employee)
+              result << enrollment.populate_enrollments(dependent_count, employee, true)
             end
           end
           result
