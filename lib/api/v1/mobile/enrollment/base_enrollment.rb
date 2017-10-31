@@ -65,7 +65,9 @@ module Api
             }
 
             calculate_deductible = ->(enrollment) {
-              deductibles = enrollment.plan.try(:family_deductible).scan(/\$\d+/)
+              family_deductible = enrollment.plan.try(:family_deductible)
+              family_deductible = family_deductible ? family_deductible.gsub(',','') : ''
+              deductibles = family_deductible.scan(/\$\d+/)
               if deductibles.empty?
                 deductibles = ZERO_DOLLARS
               elsif deductibles.size == 1
