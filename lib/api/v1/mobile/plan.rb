@@ -7,6 +7,9 @@ module Api
         include Api::V1::Mobile::Response::PlanResponse
         include ApplicationHelper
 
+        HBX_ROOT = "https://dchealthlink.com"
+        DRUPAL_PLANS_URL = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
+
         def initialize args={}
           super args
           @ages = @ages.split(',').map {|x| x.to_i} if @ages
@@ -122,8 +125,6 @@ module Api
 
 
         def _fetch_ivl_health_pdfs_by_hios_id plan_year
-          HBX_ROOT = "https://dchealthlink.com"
-          DRUPAL_PLANS_URL = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
           
           ivl_plans = []
           result = open(DRUPAL_PLANS_URL).try(:read) 
