@@ -22,7 +22,7 @@ module Api
           @assignments = unique_assignments.call if @benefit_group_assignments
         end
 
-        def populate_enrollments insured_employee=nil
+        def populate_enrollments dependent_count, insured_employee=nil, apply_ivl_rules=false
           begin
             hbx_enrollments = ->(assignment) {
               enrollments = @grouped_bga_enrollments[assignment.id.to_s] if @grouped_bga_enrollments && !@grouped_bga_enrollments.empty?
@@ -39,7 +39,7 @@ module Api
                 response = {}
                 add_base_fields[insured_employee, assignment, response]
                 hbx_enrollments[assignment].map {|e|
-                  __health_and_dental! response, e unless __has_enrolled? response, e
+                  __health_and_dental! response, e, dependent_count, apply_ivl_rules unless __has_enrolled? response, e
                 }
                 response
               }
@@ -54,13 +54,28 @@ module Api
         #
         protected
 
-        def __specific_enrollment_fields enrollment
-          {
-            total_premium: enrollment.total_premium,
+        def __specific_enrollment_fields enrollment, apply_ivl_rules=false
+          begin
+            add_contributions = ->(enrollment_attributes) {
+              if apply_ivl_rules
+                enrollment_attributes.merge(
+                  total_premium_without_employer_contribution: enrollment.total_premium,
+                  total_premium: enrollment.total_employee_cost
+                )
+              else
+                enrollment_attributes.merge(
+                  total_premium: enrollment.total_premium,
+                  employee_cost: enrollment.total_employee_cost
+                )
+              end
+            }
+          end #lambda
+
+          enrollment_attributes = {
             benefit_group_name: enrollment.try(:benefit_group).try(:title),
-            employer_contribution: enrollment.total_employer_contribution,
-            employee_cost: enrollment.total_employee_cost,
+            employer_contribution: enrollment.total_employer_contribution
           }
+          add_contributions[enrollment_attributes]
         end
 
       end
