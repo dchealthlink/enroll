@@ -9,7 +9,7 @@ module Api
         # Returns a list of available plans.
         #
         def response plans, active_year
-          drupal_map = __fetch_ivl_health_pdfs_by_hios_id active_year
+          drupal_map = _fetch_ivl_health_pdfs_by_hios_id active_year
 
           Jbuilder.encode do |json|
             json.array! _sort_plans(plans) do |sorted_plan|
