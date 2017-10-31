@@ -1,3 +1,5 @@
+require 'open-uri'
+
 module Api
   module V1
     module Mobile
