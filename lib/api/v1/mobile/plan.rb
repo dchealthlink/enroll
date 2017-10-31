@@ -123,7 +123,7 @@ module Api
 
         def _fetch_ivl_health_pdfs_by_hios_id plan_year
           HBX_ROOT = "https://dchealthlink.com"
-          DRUPAL_PLANS_URL = "#{HBX_ROOT}/individuals/plan-info/health-plans/json"
+          DRUPAL_PLANS_URL = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
           
           ivl_plans = []
           result = open(DRUPAL_PLANS_URL).try(:read) 
