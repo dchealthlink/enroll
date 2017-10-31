@@ -8,13 +8,15 @@ module Api
         #
         # Returns a list of available plans.
         #
-        def response plans
+        def response plans, active_year
+          drupal_map = __fetch_ivl_health_pdfs_by_hios_id active_year
+
           Jbuilder.encode do |json|
             json.array! _sort_plans(plans) do |sorted_plan|
               _render_plan_details! json, sorted_plan[:plan]
               _render_total_premium! json, sorted_plan
               _render_hios! json, sorted_plan[:plan]
-              _render_links! json, sorted_plan[:plan]
+              _render_links! json, sorted_plan[:plan], drupal_map
             end
           end
         end
@@ -64,9 +66,9 @@ module Api
           end
         end
 
-        def _render_links! json, plan
+        def _render_links! json, plan, drupal_map
           json.links do
-            json.summary_of_benefits __summary_of_benefits_url plan
+            json.summary_of_benefits drupal_map[plan.hios_base_id]
             json.provider_directory plan.provider_directory_url
             json.rx_formulary plan.rx_formulary_url
             json.carrier_logo display_carrier_logo Maybe.new plan
