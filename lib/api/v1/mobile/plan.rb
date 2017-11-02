@@ -123,26 +123,6 @@ module Api
           UnassistedPlanCostDecorator.new(plan, create_hbx_enrollment.call).total_employee_cost
         end
 
-
-        def _fetch_ivl_health_pdfs_by_hios_id plan_year
-          
-          ivl_plans = []
-          result = open(DRUPAL_PLANS_URL).try(:read) 
-          if result 
-            parsed = JSON.parse result 
-            if parsed
-              ivl_plans = parsed.select do |x| 
-                x['group_year'] == "#{plan_year} Individual" && x['is_health'].to_i == 1 && x['enabled'].to_i == 1
-              end 
-            end
-          end
-          Hash[ivl_plans.map do |p| 
-             pdf = p["pdf_file"]
-             link = pdf ? "#{HBX_ROOT}#{pdf}" : nil
-             [p["hios_id"], link]
-          end]
-        end
-
         module CATASTROPHIC
           METAL_LEVEL = 'catastrophic'
           AGE_CAP = 29
