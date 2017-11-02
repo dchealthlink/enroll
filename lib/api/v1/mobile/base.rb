@@ -96,55 +96,56 @@ module Api
           @pii_data[:ssn].present? ? Person.find_by_ssn(@pii_data[:ssn]) : find_by_dob_and_names.call
         end
 
-      class PlanPdfLinks
-        #
-        #  fetch and globally cache the drupal JSON plan info. It looks like this:
-        #   {"id":"768","created":"20150928123937","lastmod":"20151116123404","enabled":"1","hios_id":"78079DC0220022",
-        #   "carrier":"CareFirst","group_year":"2016 Small Group","type":"PPO",
-        #   "full_name":"BluePreferred PPO HSA\/HRA Silver 1500","metal":"Silver",
-        #   "pdf":"2016\/carefirst\/shop\/ghmsi_bluepreferred_ppo_hsa_hra_silver_1500_shop.pdf",
-        #   "coverage":"Nationwide In-Network","coverage_details":"All States; All Territories, except Midway Islands",
-        #   "is_dental":"0","is_health":"1","formulary_url":"http:\/\/www.carefirst.com\/acarx",
-        #   "contracts_plan_url":"https:\/\/content.carefirst.com\/sbc\/contracts\/APHDB66ARXCDBB6M.pdf",
-        #   "pdf_file":"\/sites\/default\/files\/v2\/download\/health-pl  ans\/2016\/carefirst\/shop\/ghmsi_bluepreferred_ppo_hsa_hra_silver_1500_shop.pdf",
-        #   "metal_color":"delta","span_class":"silver"}
-        #
-        #  The server must be rebooted when the plans are updated.
-        #
-        def self.plan_pdf_links
-          @plan_pdf_links ||= begin
-            ivl_plans = []
-            result = open(DRUPAL_PLANS_URL).try(:read)
-            if result
-              parsed = JSON.parse result
-              if parsed
-                ivl_plans = parsed.select { |x| x['enabled'].to_i == 1 }
+        class PlanPdfLinks
+          #
+          #  fetch and globally cache the drupal JSON plan info. It looks like this:
+          #   {"id":"768","created":"20150928123937","lastmod":"20151116123404","enabled":"1","hios_id":"78079DC0220022",
+          #   "carrier":"CareFirst","group_year":"2016 Small Group","type":"PPO",
+          #   "full_name":"BluePreferred PPO HSA\/HRA Silver 1500","metal":"Silver",
+          #   "pdf":"2016\/carefirst\/shop\/ghmsi_bluepreferred_ppo_hsa_hra_silver_1500_shop.pdf",
+          #   "coverage":"Nationwide In-Network","coverage_details":"All States; All Territories, except Midway Islands",
+          #   "is_dental":"0","is_health":"1","formulary_url":"http:\/\/www.carefirst.com\/acarx",
+          #   "contracts_plan_url":"https:\/\/content.carefirst.com\/sbc\/contracts\/APHDB66ARXCDBB6M.pdf",
+          #   "pdf_file":"\/sites\/default\/files\/v2\/download\/health-pl    ans\/2016\/carefirst\/shop\/ghmsi_bluepreferred_ppo_hsa_hra_silver_1500_shop.pdf",
+          #   "metal_color":"delta","span_class":"silver"}
+          #
+          #  The server must be rebooted when the plans are updated.
+          #
+          def self.plan_pdf_links
+            @plan_pdf_links ||= begin
+              ivl_plans = []
+              result = open(DRUPAL_PLANS_URL).try(:read)
+              if result
+                parsed = JSON.parse result
+                if parsed
+                  ivl_plans = parsed.select { |x| x['enabled'].to_i == 1 }
+                end
               end
-            end
+  
+              plans = {}
+              ivl_plans.each do |p|
+                plan = {}
+                pdf = p['pdf_file']
+                plan[:pdf_link] = pdf ? "#{HBX_ROOT}#{pdf}" : nil
+                if p['group_year'] =~ /(\d*) ([\w ]*)/
+                  plan[:year] = $1.to_i
+                  plan[:market] = $2
+                end
+                if p['is_health'].to_i == 1
+                  plan[:coverage_kind] = :health
+                elsif p['is_dental'].to_i == 1
+                  plan[:coverage_kind] = :dental
+                end
 
-            plans = {}
-            ivl_plans.each do |p|
-              plan = {}
-              pdf = p['pdf_file']
-              plan[:pdf_link] = pdf ? "#{HBX_ROOT}#{pdf}" : nil
-              if p['group_year'] =~ /(\d*) ([\w ]*)/
-                plan[:year] = $1.to_i
-                plan[:market] = $2
+                plans[p['hios_id']] ||= []
+                plans[p['hios_id']] << plan
               end
-              if p['is_health'].to_i == 1
-                plan[:coverage_kind] = :health
-              elsif p['is_dental'].to_i == 1
-                plan[:coverage_kind] = :dental
-              end
-              
-              plans[p['hios_id']] ||= []
-              plans[p['hios_id']] << plan
+              plans
             end
-            plans
           end
-        end
-
-      end
-    end
-  end
-end
+        end #class PlanPdfLinks
+  
+      end # class Base
+    end   # module Mobile
+  end     # module V1
+end       # modile Api
