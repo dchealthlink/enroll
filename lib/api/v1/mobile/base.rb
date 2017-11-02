@@ -96,9 +96,6 @@ module Api
           @pii_data[:ssn].present? ? Person.find_by_ssn(@pii_data[:ssn]) : find_by_dob_and_names.call
         end
 
-      end
-
-
       class PlanPdfLinks
         #
         #  fetch and globally cache the drupal JSON plan info. It looks like this:
@@ -147,6 +144,7 @@ module Api
           end
         end
 
+      end
     end
   end
 end
