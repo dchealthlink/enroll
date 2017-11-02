@@ -48,7 +48,7 @@ module Api
           hios_id = plan.hios_base_id
           plan_year = plan.active_year
 
-          plans = self._plan_pdf_links[hios_id]
+          plans = PlanPdfLinks.plan_pdf_links[hios_id]
           if plans
             plan = plans.detect do |p|
               p[:coverage_kind] == coverage_kind && p[:year] == plan_year && p[:market] == market
@@ -96,6 +96,10 @@ module Api
           @pii_data[:ssn].present? ? Person.find_by_ssn(@pii_data[:ssn]) : find_by_dob_and_names.call
         end
 
+      end
+
+
+      class PlanPdfLinks
         #
         #  fetch and globally cache the drupal JSON plan info. It looks like this:
         #   {"id":"768","created":"20150928123937","lastmod":"20151116123404","enabled":"1","hios_id":"78079DC0220022",
@@ -110,7 +114,7 @@ module Api
         #
         #  The server must be rebooted when the plans are updated.
         #
-        def self._plan_pdf_links
+        def self.plan_pdf_links
           @plan_pdf_links ||= begin
             ivl_plans = []
             result = open(DRUPAL_PLANS_URL).try(:read)
@@ -143,7 +147,6 @@ module Api
           end
         end
 
-      end
     end
   end
 end
