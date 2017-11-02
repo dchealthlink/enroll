@@ -7,9 +7,6 @@ module Api
         include Api::V1::Mobile::Response::PlanResponse
         include ApplicationHelper
 
-        HBX_ROOT = "https://dchealthlink.com"
-        DRUPAL_PLANS_URL = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
-
         def initialize args={}
           super args
           @ages = @ages.split(',').map {|x| x.to_i} if @ages
@@ -121,26 +118,6 @@ module Api
           raise "please provide a comma-separated list of ages of covered individuals" unless @ages.present?
           raise "coverage_kind required" unless @coverage_kind
           UnassistedPlanCostDecorator.new(plan, create_hbx_enrollment.call).total_employee_cost
-        end
-
-
-        def _fetch_ivl_health_pdfs_by_hios_id plan_year
-          
-          ivl_plans = []
-          result = open(DRUPAL_PLANS_URL).try(:read) 
-          if result 
-            parsed = JSON.parse result 
-            if parsed
-              ivl_plans = parsed.select do |x| 
-                x['group_year'] == "#{plan_year} Individual" && x['is_health'].to_i == 1 && x['enabled'].to_i == 1
-              end 
-            end
-          end
-          Hash[ivl_plans.map do |p| 
-             pdf = p["pdf_file"]
-             link = pdf ? "#{HBX_ROOT}#{pdf}" : nil
-             [p["hios_id"], link]
-          end]
         end
 
         module CATASTROPHIC
