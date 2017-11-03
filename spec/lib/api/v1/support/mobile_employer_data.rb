@@ -2,7 +2,7 @@ module MobileEmployerData
   shared_context 'employer_data' do
     let!(:employer_profile_cafe) { FactoryGirl.create(:employer_profile, legal_name: "Cafe Curioso") }
     let!(:employer_profile_salon) { FactoryGirl.create(:employer_profile, legal_name: "Moe's Hair Salon") }
-    let!(:calender_year) { TimeKeeper.date_of_record.year + 1 }
+    let!(:calender_year) { TimeKeeper.date_of_record.year }
 
     let!(:middle_of_prev_year) { Date.new(calender_year - 1, 6, 10) }
 
@@ -133,39 +133,39 @@ module MobileEmployerData
         e
       end
 
-        let(:staff_user) { FactoryGirl.create(:user) }
-        let(:staff) do
-          s = FactoryGirl.create(:person, :with_work_email, :male)
-          s.user = staff_user
-          s.first_name = "Seymour"
-          s.emails.clear
-          s.emails << ::Email.new(:kind => 'work', :address => 'seymour@example.com')
-          s.phones << ::Phone.new(:kind => 'mobile', :area_code => '202', :number => '555-0000')
-          s.save
-          s
-        end
+      let(:staff_user) { FactoryGirl.create(:user) }
+      let(:staff) do
+        s = FactoryGirl.create(:person, :with_work_email, :male)
+        s.user = staff_user
+        s.first_name = "Seymour"
+        s.emails.clear
+        s.emails << ::Email.new(:kind => 'work', :address => 'seymour@example.com')
+        s.phones << ::Phone.new(:kind => 'mobile', :area_code => '202', :number => '555-0000')
+        s.save
+        s
+      end
 
-        let(:staff_user2) { FactoryGirl.create(:user) }
-        let(:staff2) do
-          s = FactoryGirl.create(:person, :with_work_email, :male)
-          s.user = staff_user2
-          s.first_name = "Beatrice"
-          s.emails.clear
-          s.emails << ::Email.new(:kind => 'work', :address => 'beatrice@example.com')
-          s.phones << ::Phone.new(:kind => 'work', :area_code => '202', :number => '555-0001')
-          s.phones << ::Phone.new(:kind => 'mobile', :area_code => '202', :number => '555-0002')
-          s.save
-          s
-        end
+      let(:staff_user2) { FactoryGirl.create(:user) }
+      let(:staff2) do
+        s = FactoryGirl.create(:person, :with_work_email, :male)
+        s.user = staff_user2
+        s.first_name = "Beatrice"
+        s.emails.clear
+        s.emails << ::Email.new(:kind => 'work', :address => 'beatrice@example.com')
+        s.phones << ::Phone.new(:kind => 'work', :area_code => '202', :number => '555-0001')
+        s.phones << ::Phone.new(:kind => 'mobile', :area_code => '202', :number => '555-0002')
+        s.save
+        s
+      end
 
-      let!(:benefit_group_assignment) {send(benefit_group_assignment_id)}
-      let!(:hbx_enrollment) {send(shop_enrollment_id)}
+      let!(:benefit_group_assignment) { send(benefit_group_assignment_id) }
+      let!(:hbx_enrollment) { send(shop_enrollment_id) }
 
       before do
         allow(send(employee_role_id)).to receive(:benefit_group).and_return(benefit_group_assignment.benefit_group)
         allow(send(census_employee_id)).to receive(:active_benefit_group_assignment).and_return(benefit_group_assignment)
         allow(send(shop_enrollment_id)).to receive(:employee_role).and_return(send(employee_role_id))
-        @employer = Api::V1::Mobile::EmployerUtil.new
+        @employer = Api::V1::Mobile::Util::EmployerUtil.new
       end
     end
   end
