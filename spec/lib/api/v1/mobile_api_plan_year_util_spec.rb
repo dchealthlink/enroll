@@ -1,32 +1,33 @@
 require "rails_helper"
 require 'lib/api/v1/support/mobile_employer_data'
 
-RSpec.describe Api::V1::Mobile::PlanYearUtil, dbclean: :after_each do
+RSpec.describe Api::V1::Mobile::Util::PlanYearUtil, dbclean: :after_each do
   include_context 'employer_data'
+  Util = Api::V1::Mobile::Util
 
   context 'Plan' do
 
     it 'should check if the plan is in open enrollment' do
-      plan_year = Api::V1::Mobile::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2016-12-05')
+      plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2016-12-05')
       expect(plan_year.open_enrollment?).to be_truthy
 
-      plan_year = Api::V1::Mobile::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2014-12-05')
+      plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2014-12-05')
       expect(plan_year.open_enrollment?).to be_falsey
 
-      plan_year = Api::V1::Mobile::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year
+      plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year
       expect(plan_year.open_enrollment?).to be_falsey
 
       allow(employer_profile_cafe.show_plan_year).to receive_message_chain(:employer_profile, :census_employees, :count).and_return(99)
-      plan_year = Api::V1::Mobile::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2016-12-05')
+      plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2016-12-05')
       expect(plan_year.open_enrollment?).to be_truthy
 
       allow(employer_profile_cafe.show_plan_year).to receive_message_chain(:employer_profile, :census_employees, :count).and_return(100)
-      plan_year = Api::V1::Mobile::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2016-12-05')
+      plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2016-12-05')
       expect(plan_year.open_enrollment?).to be_falsey
     end
 
     it 'should return plan offerings' do
-      plan_year = Api::V1::Mobile::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2016-12-05')
+      plan_year = Util::PlanYearUtil.new plan_year: employer_profile_cafe.show_plan_year, as_of: Date.parse('2016-12-05')
       plan_offerings = plan_year.plan_offerings
       expect(plan_offerings).to be_a_kind_of Array
       expect(plan_offerings.size).to eq 2
@@ -43,7 +44,7 @@ RSpec.describe Api::V1::Mobile::PlanYearUtil, dbclean: :after_each do
                                 :estimated_plan_participant_max_monthly_cost, :plans_by, :plans_by_summary_text)
       expect(health[:reference_plan_HIOS_id].split('').length).to eq 17
       expect(health[:carrier_name]).to eq 'United Health Care'
-      expect(health[:plan_type]).to eq 'HMO'
+      expect(health[:plan_type]).to eq 'POS'
       expect(health[:metal_level]).to eq 'Silver'
       expect(health[:plan_option_kind]).to eq 'single_plan'
       expect(health[:plans_by]).to eq 'A Single Plan'
@@ -66,7 +67,7 @@ RSpec.describe Api::V1::Mobile::PlanYearUtil, dbclean: :after_each do
                                 :estimated_plan_participant_max_monthly_cost, :plans_by, :plans_by_summary_text)
       expect(dental[:reference_plan_HIOS_id].split('').length).to eq 17
       expect(dental[:carrier_name]).to eq 'United Health Care'
-      expect(dental[:plan_type]).to eq 'HMO'
+      expect(dental[:plan_type]).to eq 'POS'
       expect(dental[:metal_level]).to eq 'Silver'
       expect(dental[:plan_option_kind]).to eq 'single_plan'
       expect(dental[:plans_by]).to eq 'Custom (1 Plans)'

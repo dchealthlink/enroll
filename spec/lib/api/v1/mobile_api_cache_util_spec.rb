@@ -3,15 +3,14 @@ require 'support/brady_bunch'
 require 'lib/api/v1/support/mobile_employer_data'
 require 'lib/api/v1/support/mobile_employee_data'
 
-RSpec.describe Api::V1::Mobile::CacheUtil, dbclean: :after_each do
+RSpec.describe Api::V1::Mobile::Cache::PlanCache, dbclean: :after_each do
   include_context 'employer_data'
-  include Api::V1::Mobile::CacheUtil
 
   context "Caching" do
     include_context 'employee_data'
 
     it 'caches plans and benefit groups' do
-      cache = plan_and_benefit_group [ce_employee], employer_profile_salon
+      cache = Api::V1::Mobile::Cache::PlanCache.new(employees: [ce_employee], employer_profile: employer_profile_salon).plan_and_benefit_group
       expect(cache).to include(:employees_benefits, :grouped_bga_enrollments)
       expect(cache[:employees_benefits]).to be_a_kind_of Array
       expect(cache[:employees_benefits].first).to be_a_kind_of Hash

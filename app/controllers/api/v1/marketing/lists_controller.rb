@@ -9,3 +9,4 @@ class Api::V1::Marketing::ListsController < ActionController::Base # instead of 
         listh.get_list
     end
 end
+
