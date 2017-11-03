@@ -1,0 +1,48 @@
+module Api
+  module V2
+    module Mobile::Insured
+      class InsuredPerson < Api::V2::Mobile::Base
+
+        def basic_person
+          begin
+            format_name = ->(name) {name.try(:titleize)}
+          end #lambda
+
+          Jbuilder.encode do |json|
+            json.first_name format_name[@person.first_name]
+            json.middle_name format_name[@person.middle_name]
+            json.last_name format_name[@person.last_name]
+            json.name_suffix @person.name_sfx
+            json.date_of_birth @person.dob
+            json.ssn_masked __ssn_masked @person
+            json.gender @person.gender
+            json.id @person.id
+          end
+        end
+
+        def addresses
+          Jbuilder.encode do |json|
+            json.addresses(@person.addresses) do |address|
+              json.kind address.kind
+              json.address_1 address.address_1
+              json.address_2 address.address_2
+              json.city address.city
+              json.county address.county
+              json.state address.state
+              json.location_state_code address.location_state_code
+              json.zip address.zip
+              json.country_name address.country_name
+            end
+          end
+        end
+
+        def ins_dependents
+          Jbuilder.encode do |json|
+            json.dependents Api::V2::Mobile::Util::DependentUtil.new(person: @person).include_dependents
+          end
+        end
+
+      end
+    end
+  end
+end

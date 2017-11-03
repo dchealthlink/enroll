@@ -407,6 +407,25 @@ Rails.application.routes.draw do
         get :employee_roster, action: :my_employee_roster
       end
     end
+    namespace :v2 do
+      namespace :mobile do
+        get :broker
+        get 'broker/:broker_agency_profile_id', action: :broker
+        get 'employers/:employer_profile_id/details', action: :employer_details
+        get 'employers/:employer_profile_id/employees', action: :employee_roster
+        get 'employer/details', action: :my_employer_details
+        get 'employer/employees', action: :my_employee_roster
+        get :insured
+        get 'insured/:person_id', action: :insured_person
+        get :services_rates
+        get :plans
+        post :verify_identity
+        post 'verify_identity/answers', action: :verify_identity_answers
+        post 'verify_identity/check_override', action: :verify_identify_check_override
+        post :check_user_existence
+        post :check_user_coverage
+      end
+    end
   end
 
   match 'api/marketing/lists', to: 'api/v1/marketing/lists#get_list', via: [:get, :post]
