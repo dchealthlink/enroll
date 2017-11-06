@@ -7,14 +7,8 @@ module Api
 
         def initialize args={}
           begin
-            current_or_upcoming_assignments = ->(&block) {
-              block.call @benefit_group_assignments.select {|a| __is_current_or_upcoming? a.plan_year.start_on}
-            }
-
             unique_assignments = ->() {
-              current_or_upcoming_assignments.call {|bgas|
-                Util::BenefitGroupAssignmentsUtil.new(assignments: bgas).unique_by_year
-              }
+                Util::BenefitGroupAssignmentsUtil.new(assignments: @benefit_group_assignments).unique_by_year
             }
           end
 
@@ -24,6 +18,10 @@ module Api
 
         def populate_enrollments dependent_count, insured_employee=nil, apply_ivl_rules=false
           begin
+            current_or_upcoming_assignments = ->() {
+              apply_ivl_rules ? @assignments : @assignments.select {|a| __is_current_or_upcoming? a.plan_year.start_on}
+            }
+
             hbx_enrollments = ->(assignment) {
               enrollments = @grouped_bga_enrollments[assignment.id.to_s] if @grouped_bga_enrollments && !@grouped_bga_enrollments.empty?
               enrollments ? enrollments : assignment.hbx_enrollments
@@ -35,7 +33,7 @@ module Api
             }
 
             add_enrollments = ->() {
-              @assignments.map {|assignment|
+              current_or_upcoming_assignments.call.map {|assignment|
                 response = {}
                 add_base_fields[insured_employee, assignment, response]
                 hbx_enrollments[assignment].map {|e|
