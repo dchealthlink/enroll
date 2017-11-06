@@ -2,6 +2,7 @@ module IdentityVerification
   class InteractiveVerificationService
     class SlugRequestor
       def self.request(key, opts, timeout)
+          case key.to_s
           when "identity_verification.interactive_verification.initiate_session"
             {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml"))}
           when "identity_verification.interactive_verification.respond_to_questions"
@@ -70,6 +71,6 @@ module IdentityVerification
   end
 end
 
-if !Rails.env.production?
-  ::IdentityVerification::InteractiveVerificationService.slug!
-end
+#if !Rails.env.production?
+#  ::IdentityVerification::InteractiveVerificationService.slug!
+#end
