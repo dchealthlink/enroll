@@ -3,7 +3,7 @@ module Api
     module Mobile::Enrollment
       class IndividualEnrollment < BaseEnrollment
 
-        def populate_enrollments dependent_count
+        def populate_enrollments dependent_count, apply_ivl_rules=false
           begin
             #
             # Add the health and dental enrollments but do not override the enrollment if we already have one
@@ -12,7 +12,7 @@ module Api
             add_health_and_dental = ->(start_on, enrollments) {
               response = {}
               __add_default_fields! start_on, start_on.at_end_of_year, response
-              enrollments.each {|y| __health_and_dental! response, y, dependent_count unless __has_enrolled? response, y}
+              enrollments.each {|y| __health_and_dental! response, y, dependent_count, apply_ivl_rules unless __has_enrolled? response, y}
               response
             }
 
@@ -21,7 +21,7 @@ module Api
               @person.primary_family.tap {|family|
                 family && family.households.each {|h|
                   h.hbx_enrollments.show_enrollments_sans_canceled.group_by {|x| x.effective_on}.each {|x|
-                    next unless __is_current_or_upcoming? x.first
+                    next unless apply_ivl_rules || __is_current_or_upcoming?(x.first)
                     enrollments << add_health_and_dental[x.first, x.last]
                   }
                 }
