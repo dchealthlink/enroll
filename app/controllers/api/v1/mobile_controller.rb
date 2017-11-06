@@ -70,18 +70,22 @@ module Api
         _execute {Mobile::Renderer::PlanRenderer::render_details params, self}
       end
 
+
+      SSNS = %w{010101010 666024882 666444438}
       #
       # /verify_identity
       #
       def verify_identity
-        _execute {Mobile::Renderer::RidpRenderer::render_questions session, request, self}
+         _slug_ridp
+         _execute {Mobile::Renderer::RidpRenderer::render_questions session, request, self}
       end
 
       #
       # /verify_identity/answers
       #
       def verify_identity_answers
-        _execute {Mobile::Renderer::RidpRenderer::render_answers session, request, self}
+         _slug_ridp_answers
++        _execute {Mobile::Renderer::RidpRenderer::render_answers session, request, params, self}
       end
 
       #
@@ -122,6 +126,25 @@ module Api
 
       def _require_login
         render json: {error: 'user not authenticated'} unless current_user
+      end
+
+      def _slug_ridp
+        _slug_check SSNS.include?(JSON.parse(request.body.read).with_indifferent_access[:person_demographics][:ssn])
+
+      end
+
+      def _slug_ridp_answers
+        _slug_check SSNS.include?(session[:pii_data][:ssn])
+      end
+
+      def _slug_check slug_ssn
+        unless slug_ssn
+          ::IdentityVerification::InteractiveVerificationService.new
+          ::IdentityVerification::InteractiveVerificationService.slug!
+        else
+          ::IdentityVerification::InteractiveVerificationService.no_slug!
+        end
+        request.body.rewind
       end
 
     end

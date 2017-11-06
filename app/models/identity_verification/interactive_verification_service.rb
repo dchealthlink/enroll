@@ -2,21 +2,25 @@ module IdentityVerification
   class InteractiveVerificationService
     class SlugRequestor
       def self.request(key, opts, timeout)
-        case key.to_s
-        when "identity_verification.interactive_verification.initiate_session"
-          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml")) }
-        when "identity_verification.interactive_verification.respond_to_questions"
-          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "failed_start_response.xml")) }
-        when "identity_verification.interactive_verification.override"
-          { :return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_fars_response.xml")) }
-        else
-          raise "I don't understand this request!"
-        end
+          when "identity_verification.interactive_verification.initiate_session"
+            {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_start_response.xml"))}
+          when "identity_verification.interactive_verification.respond_to_questions"
+            file = Api::V1::Mobile::Ridp::RidpVerification.status == 'success' ? 'successful_question_response.xml' : 'failed_start_response.xml'
+            {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", file))}
+          when "identity_verification.interactive_verification.override"
+            {:return_status => 200, :body => File.read(File.join(Rails.root, "spec", "test_data", "ridp_payloads", "successful_fars_response.xml"))}
+          else
+            raise "I don't understand this request!"
+          end
       end
     end
 
     def self.slug!
       set_requestor(SlugRequestor)
+    end
+
+    def self.no_slug!
+      set_requestor(nil)
     end
 
     def self.set_requestor(val)
