@@ -85,7 +85,7 @@ module Api
       #
       def verify_identity_answers
          _slug_ridp_answers
-+        _execute {Mobile::Renderer::RidpRenderer::render_answers session, request, params, self}
+         _execute {Mobile::Renderer::RidpRenderer::render_answers session, request, params, self}
       end
 
       #
