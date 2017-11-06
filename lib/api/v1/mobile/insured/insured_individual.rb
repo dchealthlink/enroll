@@ -7,7 +7,7 @@ module Api
         def ins_enrollments dependent_count
           result = []
           enrollment = Mobile::Enrollment::IndividualEnrollment.new person: @person
-          result << enrollment.populate_enrollments(dependent_count)
+          result << enrollment.populate_enrollments(dependent_count, true)
           result
         end
 
