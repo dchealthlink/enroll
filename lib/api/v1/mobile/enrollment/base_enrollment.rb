@@ -35,7 +35,7 @@ module Api
         # Protected
         #
         protected
-        
+
         def __add_default_fields! start_on, end_on, response
           response[:start_on] = start_on
           response[:end_on] = end_on
@@ -66,7 +66,7 @@ module Api
 
             calculate_deductible = ->(enrollment) {
               family_deductible = enrollment.plan.try(:family_deductible)
-              family_deductible = family_deductible ? family_deductible.gsub(',','') : ''
+              family_deductible = family_deductible ? family_deductible.gsub(',', '') : ''
               deductibles = family_deductible.scan(/\$\d+/)
               if deductibles.empty?
                 deductibles = ZERO_DOLLARS
@@ -80,7 +80,7 @@ module Api
 
             deductible_fields = ->(enrollment, result) {
               result[:family_deductible] = enrollment.plan.try(:family_deductible)
-              result[:deductible] = calculate_deductible[enrollment]
+              result[:deductible] = apply_ivl_rules ? calculate_deductible[enrollment] : enrollment.plan.try(:deductible)
             }
 
             other_enrollment_fields = ->(enrollment, result) {

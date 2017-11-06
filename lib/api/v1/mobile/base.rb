@@ -66,7 +66,8 @@ module Api
         end
 
         def __is_current_or_upcoming? start_on
-          TimeKeeper.date_of_record.tap {|now| (now - 1.year..now + 1.year).include? start_on}
+          now = TimeKeeper.date_of_record
+          (now - 1.year..now + 1.year).include? start_on
         end
 
         def __pem_file_exists?
