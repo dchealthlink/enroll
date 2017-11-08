@@ -43,6 +43,7 @@ module Api
           response[:dental] = {status: NOT_ENROLLED}
         end
 
+#TODO remove dependent_count everywhere it should be unnecessary now
         def __initialize_enrollment hbx_enrollment, coverage_kind, dependent_count=0, apply_ivl_rules=false
           begin
             enrollment_waived = ->(enrollment, result) {
@@ -65,6 +66,9 @@ module Api
             }
 
             calculate_deductible = ->(enrollment) {
+              members = enrollment.try(:hbx_enrollment_members) || []
+              is_family = members.size > 1
+         #     Rails.logger.info "is_family=#{is_family} because #{enrollment} has #{members.map} with size "
               family_deductible = enrollment.plan.try(:family_deductible)
               family_deductible = family_deductible ? family_deductible.gsub(',', '') : ''
               deductibles = family_deductible.scan(/\$\d+/)
@@ -73,7 +77,7 @@ module Api
               elsif deductibles.size == 1
                 deductibles = deductibles.pop
               else
-                deductibles = dependent_count > 0 ? deductibles.last : deductibles.first
+                deductibles = is_family ? deductibles.last : deductibles.first
               end
               deductibles
             }
