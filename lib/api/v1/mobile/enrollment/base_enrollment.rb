@@ -66,7 +66,9 @@ module Api
             }
 
             calculate_deductible = ->(enrollment) {
-              is_family = (enrollment.try(:hbx_enrollment_members) || 0).size > 1
+              members = enrollment.try(:hbx_enrollment_members) || []
+              is_family = members.size > 1
+         #     Rails.logger.info "is_family=#{is_family} because #{enrollment} has #{members.map} with size "
               family_deductible = enrollment.plan.try(:family_deductible)
               family_deductible = family_deductible ? family_deductible.gsub(',', '') : ''
               deductibles = family_deductible.scan(/\$\d+/)
