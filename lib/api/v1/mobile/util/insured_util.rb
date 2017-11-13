@@ -42,7 +42,7 @@ module Api
 
             # Remove dental enrollments and enrollments that don't have a health component altogether.
             ivl_rules_filter = ->(enrollments) {
-              enrollments.delete_if {|e| e[:health][:status] == Mobile::Enrollment::BaseEnrollment::NOT_ENROLLED}
+              enrollments.delete_if {|e| !Mobile::Enrollment::BaseEnrollment.is_enrolled_or_terminated(e) }
               enrollments.map{|e| e.delete :dental}
               enrollments
             }
