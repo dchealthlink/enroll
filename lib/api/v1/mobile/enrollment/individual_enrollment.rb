@@ -20,7 +20,7 @@ module Api
               enrollments = []
               @person.primary_family.tap {|family|
                 family && family.households.each {|h|
-                  h.hbx_enrollments.show_enrollments_sans_canceled.group_by {|x| x.effective_on}.each {|x|
+                  BaseEnrollment.excluding_invisible(h.hbx_enrollments.show_enrollments_sans_canceled).group_by {|x| x.effective_on}.each {|x|
                     next unless apply_ivl_rules || __is_current_or_upcoming?(x.first)
                     enrollments << add_health_and_dental[x.first, x.last]
                   }
