@@ -36,7 +36,7 @@ module Api
               current_or_upcoming_assignments.call.map {|assignment|
                 response = {}
                 add_base_fields[insured_employee, assignment, response]
-                hbx_enrollments[assignment].map {|e|
+                BaseEnrollment.excluding_invisible(hbx_enrollments[assignment]).map {|e|
                   __health_and_dental! response, e, dependent_count, apply_ivl_rules unless __has_enrolled? response, e
                 }
                 response
@@ -44,7 +44,7 @@ module Api
             }
           end
 
-          BaseEnrollment.excluding_invisible add_enrollments.call
+          add_enrollments.call
         end
 
         #
