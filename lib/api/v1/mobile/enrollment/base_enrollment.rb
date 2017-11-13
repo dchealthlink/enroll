@@ -31,6 +31,10 @@ module Api
           hios_id && active_year && coverage_kind ? services_rates_details[active_year, coverage_kind, hios_id] : {}
         end
 
+        def self.excluding_invisible enrollments
+          enrollments.reject{ |e| e.external_enrollment || ['void', 'coverage_canceled'].include?(e.aasm_state) }.sort_by(&:submitted_at)
+        end
+
         #
         # Protected
         #

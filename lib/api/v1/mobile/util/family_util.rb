@@ -11,7 +11,8 @@ module Api
                 :aasm_state.in => @aasm_states,
                 :kind => 'employer_sponsored',
                 :coverage_kind => 'health',
-                :is_active => true
+                :is_active => true, 
+                :external_enrollment => false
               })
             }
           end
