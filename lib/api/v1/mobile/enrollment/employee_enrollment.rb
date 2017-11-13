@@ -44,7 +44,7 @@ module Api
             }
           end
 
-          add_enrollments.call
+          BaseEnrollment.excluding_invisible add_enrollments.call
         end
 
         #
