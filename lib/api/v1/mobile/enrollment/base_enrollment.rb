@@ -32,7 +32,7 @@ module Api
         end
 
         def self.excluding_invisible enrollments
-          enrollments.reject{ |e| e.external_enrollment || ['void', 'coverage_canceled'].include?(e.aasm_state) }.sort_by(&:submitted_at)
+          enrollments.reject{ |e| e.external_enrollment || ['void', 'coverage_canceled'].include?(e.aasm_state) ||!e.is_active || e.submitted_at.nil? }.sort_by(&:submitted_at) 
         end
 
         def self.is_enrolled_or_terminated enrollment_representation
