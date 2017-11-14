@@ -149,6 +149,15 @@ module Api
           response[enrollment.coverage_kind.to_sym] &&
             response[enrollment.coverage_kind.to_sym][:status] == EnrollmentConstants::ENROLLED
         end
+
+        def __specific_enrollment_fields enrollment, apply_ivl_rules=false
+          if enrollment.is_shop?
+            EmployeeEnrollment.specific_enrollment_fields enrollment, apply_ivl_rules
+          else
+            IndividualEnrollment.specific_enrollment_fields enrollment, apply_ivl_rules
+          end
+        end
+    
       end
 
       module EnrollmentConstants
