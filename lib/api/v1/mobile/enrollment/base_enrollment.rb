@@ -32,7 +32,7 @@ module Api
         end
 
         def self.excluding_invisible enrollments
-          enrollments.reject{ |e| e.external_enrollment || ['void', 'coverage_canceled'].include?(e.aasm_state) || e.submitted_at.nil? }.sort_by(&:submitted_at) 
+          enrollments.reject{ |e| e.external_enrollment || ['void', 'coverage_canceled'].include?(e.aasm_state)}.sort_by{|e| e.submitted_at.to_i }
         end
 
         def self.is_enrolled_or_terminated enrollment_representation
@@ -149,6 +149,15 @@ module Api
           response[enrollment.coverage_kind.to_sym] &&
             response[enrollment.coverage_kind.to_sym][:status] == EnrollmentConstants::ENROLLED
         end
+
+        def __specific_enrollment_fields enrollment, apply_ivl_rules=false
+          if enrollment.is_shop?
+            EmployeeEnrollment.specific_enrollment_fields enrollment, apply_ivl_rules
+          else
+            IndividualEnrollment.specific_enrollment_fields enrollment, apply_ivl_rules
+          end
+        end
+    
       end
 
       module EnrollmentConstants
