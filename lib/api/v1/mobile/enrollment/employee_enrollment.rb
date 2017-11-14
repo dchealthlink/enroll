@@ -47,12 +47,7 @@ module Api
           add_enrollments.call
         end
 
-        #
-        # Protected
-        #
-        protected
-
-        def __specific_enrollment_fields enrollment, apply_ivl_rules=false
+        def self.specific_enrollment_fields enrollment, apply_ivl_rules=false
           begin
             add_contributions = ->(enrollment_attributes) {
               if apply_ivl_rules
