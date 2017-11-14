@@ -7,7 +7,7 @@ module Api
         Util = Api::V1::Mobile::Util
         ENROLLMENT_PLAN_FIELDS = [:plan_type, :provider_directory_url, :rx_formulary_url]
         ZERO_DOLLARS = '$0'
-        NOT_ENROLLED = 'Not Enrolled'
+        
 
         def services_rates hios_id, active_year, coverage_kind
           begin
@@ -32,7 +32,11 @@ module Api
         end
 
         def self.excluding_invisible enrollments
-          enrollments.reject{ |e| e.external_enrollment || ['void', 'coverage_canceled'].include?(e.aasm_state) }.sort_by(&:submitted_at)
+          enrollments.reject{ |e| e.external_enrollment || ['void', 'coverage_canceled'].include?(e.aasm_state) || e.submitted_at.nil? }.sort_by(&:submitted_at) 
+        end
+
+        def self.is_enrolled_or_terminated enrollment_representation
+          [EnrollmentConstants::ENROLLED, EnrollmentConstants::TERMINATED].include? enrollment_representation[:health][:status]
         end
 
         #
@@ -43,8 +47,8 @@ module Api
         def __add_default_fields! start_on, end_on, response
           response[:start_on] = start_on
           response[:end_on] = end_on
-          response[:health] = {status: NOT_ENROLLED}
-          response[:dental] = {status: NOT_ENROLLED}
+          response[:health] = {status: EnrollmentConstants::NOT_ENROLLED}
+          response[:dental] = {status: EnrollmentConstants::NOT_ENROLLED}
         end
 
 #TODO remove dependent_count everywhere it should be unnecessary now
@@ -151,6 +155,7 @@ module Api
         WAIVED = 'Waived'
         TERMINATED = 'Terminated'
         ENROLLED = 'Enrolled'
+        NOT_ENROLLED = 'Not Enrolled'
       end
 
     end
