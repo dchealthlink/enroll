@@ -55,7 +55,7 @@ module Api
               filter_duplicates[ivl_enrollments, ee_enrollments]
 
               Jbuilder.encode do |json|
-                json.enrollments ivl_rules_filter[sort_enrollments[ivl_enrollments] + sort_enrollments[ee_enrollments]]
+                json.enrollments ivl_rules_filter[sort_enrollments[ivl_enrollments + ee_enrollments]]
               end
             }
           end
