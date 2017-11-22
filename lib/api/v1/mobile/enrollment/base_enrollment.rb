@@ -77,6 +77,7 @@ module Api
               members = enrollment.try(:hbx_enrollment_members) || []
               is_family = members.size > 1
          #     Rails.logger.info "is_family=#{is_family} because #{enrollment} has #{members.map} with size "
+              single_deductible = enrollment.plan.try(:deductible)
               family_deductible = enrollment.plan.try(:family_deductible)
               family_deductible = family_deductible ? family_deductible.gsub(',', '') : ''
               deductibles = family_deductible.scan(/\$\d+/)
@@ -87,7 +88,7 @@ module Api
               else
                 deductibles = is_family ? deductibles.last : deductibles.first
               end
-              deductibles
+              (single_deductible && !is_family) ? single_deductible : deductibles
             }
 
             deductible_fields = ->(enrollment, result) {
