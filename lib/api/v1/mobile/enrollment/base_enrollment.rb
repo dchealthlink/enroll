@@ -84,11 +84,11 @@ module Api
               if deductibles.empty?
                 deductibles = ZERO_DOLLARS
               elsif deductibles.size == 1
-                deductibles = single_deductible ? single_deductible : deductibles.pop
+                deductibles = deductibles.pop
               else
                 deductibles = is_family ? deductibles.last : deductibles.first
               end
-              deductibles
+              (single_deductible && !is_family) ? single_deductible : deductibles
             }
 
             deductible_fields = ->(enrollment, result) {
