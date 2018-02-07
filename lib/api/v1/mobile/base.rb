@@ -6,8 +6,10 @@ module Api
       class Base
         PEM_FILE = 'pem/symmetric.pem'
 
-        HBX_ROOT = "https://dchealthlink.com"
-        DRUPAL_PLANS_URL = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
+        #HBX_ROOT = "https://dchealthlink.com"
+        #DRUPAL_PLANS_URL = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
+        HBX_ROOT = "https://predev.dchealthlink.com"
+        DRUPAL_PLANS_URL = "https://predev.dchealthlink.com/individuals/plan-info/health-plans/json"
 
         def initialize args={}
           args.each do |k, v|
@@ -53,7 +55,14 @@ module Api
             plan = plans.detect do |p|
               p[:coverage_kind] == coverage_kind && p[:year] == plan_year && p[:market] == market
             end
-            plan[:pdf_link] if plan
+            if plan
+              if plan[:sbc_variants]
+                csr = (plan.csr_variant_id.nil? || plan.csr_variant_id == "")? "00" : plan.csr_variant_id
+                plan[:sbc_variants][csr]
+              else
+                plan[:pdf_link]
+              end
+            end
           end
         end
 
@@ -128,6 +137,7 @@ module Api
                 plan = {}
                 pdf = p['pdf_file']
                 plan[:pdf_link] = pdf ? "#{HBX_ROOT}#{pdf}" : nil
+                plan[:sbc_variants] = p['sbc_variants'].map{|k, v| [k, "#{HBX_ROOT}#{v}"]} 
                 if p['group_year'] =~ /(\d*) ([\w ]*)/
                   plan[:year] = $1.to_i
                   plan[:market] = $2
