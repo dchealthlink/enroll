@@ -49,7 +49,7 @@ module Api
           coverage_kind = plan.coverage_kind.to_sym
           hios_id = plan.hios_base_id
           plan_year = plan.active_year
-          csr =  (plan.csr_variant_id.nil? || plan.csr_variant_id == "")? "00" : plan.csr_variant_id
+          csr =  (plan.csr_variant_id.nil? || plan.csr_variant_id == "")? "00" : plan.csr_variant_id.to_s
 
           plans = PlanPdfLinks.plan_pdf_links[hios_id]
           if plans
