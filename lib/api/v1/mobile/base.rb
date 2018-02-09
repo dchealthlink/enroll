@@ -51,6 +51,8 @@ module Api
           plan_year = plan.active_year
           csr =  (plan.csr_variant_id.nil? || plan.csr_variant_id == "")? "00" : plan.csr_variant_id.to_s
 
+          Rails.logger.info "summary for #{plan.name}, csr [#{csr}]\n"
+
           plans = PlanPdfLinks.plan_pdf_links[hios_id]
           if plans
             plan = plans.detect do |p|
@@ -58,7 +60,9 @@ module Api
             end
             if plan
               if plan[:sbc_variants]
-                plan[:sbc_variants][csr]
+                variants = plan[:sbc_variants]
+                Rails.logger.info "Found variants #{variants} (#{variants.size} items), looking in #{variants.keys} for [#{csr}]\n"
+                [csr]
               else
                 plan[:pdf_link]
               end
