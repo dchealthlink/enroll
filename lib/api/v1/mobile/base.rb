@@ -51,7 +51,7 @@ module Api
           plan_year = plan.active_year
           csr =  (plan.csr_variant_id.nil? || plan.csr_variant_id == "")? "00" : plan.csr_variant_id.to_s
 
-          Rails.logger.info "summary for #{plan.name}, csr [#{csr}]\n"
+          #Rails.logger.info "summary for #{plan.name}, csr [#{csr}]\n"
 
           plans = PlanPdfLinks.plan_pdf_links[hios_id]
           if plans
@@ -60,9 +60,8 @@ module Api
             end
             if plan
               if plan[:sbc_variants]
-                variants = plan[:sbc_variants]
-                Rails.logger.info "Found variants #{variants} (#{variants.size} items), looking in #{variants.keys} for [#{csr}]\n"
-                [csr]
+                #Rails.logger.info "Found variants #{variants} (#{variants.size} items), looking in #{variants.keys} for [#{csr}]\n"
+                plan[:sbc_variants][csr]
               else
                 plan[:pdf_link]
               end
@@ -141,7 +140,8 @@ module Api
                 plan = {}
                 pdf = p['pdf_file']
                 plan[:pdf_link] = pdf ? "#{HBX_ROOT}#{pdf}" : nil
-                plan[:sbc_variants] = p['sbc_variants'].map{|k, v| [k, "#{HBX_ROOT}#{v}"]} 
+                plan[:sbc_variants] = {}
+                p['sbc_variants'].each{ |k, v| plan[:sbc_variants][k] = "#{HBX_ROOT}#{v}" } 
                 if p['group_year'] =~ /(\d*) ([\w ]*)/
                   plan[:year] = $1.to_i
                   plan[:market] = $2
