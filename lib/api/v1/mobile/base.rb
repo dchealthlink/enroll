@@ -8,9 +8,7 @@ module Api
 
         HBX_ROOT = "https://dchealthlink.com"
         DRUPAL_PLANS_URL = "https://dchealthlink.com/individuals/plan-info/health-plans/json"
-        #HBX_ROOT = "https://predev.dchealthlink.com"
-        #DRUPAL_PLANS_URL = "https://predev.dchealthlink.com/t/plans.json"
-
+      
         def initialize args={}
           args.each do |k, v|
             instance_variable_set("@#{k}", v) unless v.nil?
